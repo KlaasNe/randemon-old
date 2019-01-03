@@ -1,4 +1,10 @@
-import time, datetime, pygame, os
+import time
+import datetime
+import pygame
+import os
+import random
+import math
+from noise import pnoise2, snoise2
 
 
 def get_int(lower_bound, upper_bound, message):
@@ -9,7 +15,6 @@ def get_int(lower_bound, upper_bound, message):
 
 
 def random_grass(decoration_rate):
-    import random
     if random.random() > (decoration_rate / 100):
         temp_grass = random.randint(0, 3)
         return "g_" + str(temp_grass)
@@ -33,7 +38,6 @@ def fill_up_grass(layer, decoration_rate):
 
 
 def generate_path(layer, path_Type, path_Amount, path_Length):
-    import random
     """
     //random path generation
 
@@ -44,7 +48,6 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
     calculate_Paths(layer)
     """
     for house in range(0, len(houses_Connecters) - 1):
-        import math
         distance1 = int(houses_Connecters[house]["Left_Connect"][0] - houses_Connecters[house + 1]["Right_Connect"][0])
         distance2 = int(houses_Connecters[house]["Right_Connect"][0] - houses_Connecters[house + 1]["Left_Connect"][0])
         if distance1 <= -2 and distance2 <= -2:
@@ -105,7 +108,6 @@ def out_Of_Bounds(x, y):
 
 
 def random_adjacent_tile(layer, current_X, current_Y):
-    import random
     direction = random.randint(0, 3)
     temp_x_change = direction_To_Change(direction)[0]
     temp_y_change = direction_To_Change(direction)[1]
@@ -126,7 +128,6 @@ def random_adjacent_tile(layer, current_X, current_Y):
 
 
 def path_start_random(layer, path_Type):
-    import random
     temp_path_point_X = random.randint(1, map_Size_X - 1)
     temp_path_point_Y = random.randint(1, map_Size_Y - 1)
     while (temp_path_point_X, temp_path_point_Y) in layer.keys():
@@ -228,7 +229,6 @@ def calculate_bridge_look(layer, x, y):
 
 
 def calculate_path_look(layer, x, y):
-    import math
     tiles_around = []
     for around in range(0, 9):
         path_around = layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
@@ -262,7 +262,6 @@ def calculate_ponds(layer):
 
 
 def generate_ponds(layer, land_rate):
-    import random, math
     """
     for ponds in range(0, amount):
         pool_point_x = random.randint(0, map_Size_X - 1)
@@ -275,8 +274,6 @@ def generate_ponds(layer, land_rate):
         for pond in range(0, (opposing_corner[0] - pool_point_x) * (opposing_corner[1] - pool_point_y)):
             layer[pool_point_x + (pond % (opposing_corner[0] - pool_point_x)), pool_point_y + math.floor(pond / (opposing_corner[0] - pool_point_x))] = "pd_"
     """
-    from noise import pnoise2, snoise2
-    import random
     octaves = 2
     freq = 40
     off_x = random.random() * 1000000
@@ -289,7 +286,6 @@ def generate_ponds(layer, land_rate):
 
 
 def calculate_pond_look(layer, x, y):
-    import random, math
     tiles_around = []
     for around in range(0, 9):
         path_around = (layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), "0"))
@@ -339,8 +335,6 @@ def calculate_pond_look(layer, x, y):
 
 
 def spawn_mne(layer, spawn_rate):
-    from noise import pnoise2, snoise2
-    import random
     octaves = 3
     freq = 40
     off_x = random.random() * 1000000
@@ -358,7 +352,6 @@ def spawn_mne(layer, spawn_rate):
                     layer[(x, y - 2)] = "st_2"
 
 def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
-    import random, math
     for houses in range(0, amount):
         house_x = random.randint(1, map_Size_X - house_size_y)
         house_y = random.randint(1, map_Size_Y - house_size_x)
@@ -373,7 +366,6 @@ def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
 
 
 def check_availability_zone(layer, start_x, start_y, x_size, y_size):
-    import math
     availability = True
     for tile in range(x_size * y_size):
         if (start_x + tile % x_size, start_y + math.floor(tile / y_size)) in layer.keys() or out_Of_Bounds(start_x + tile % x_size, start_y + math.floor(tile / y_size)): availability = False
