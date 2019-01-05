@@ -6,15 +6,17 @@ import random
 import math
 from noise import pnoise2, snoise2
 
+map_Size_X = 0
+map_Size_Y = 0
 
 def get_int(lower_bound, upper_bound, message):
-    integer = int(input(message + " (" + str(lower_bound) + "-" + str(upper_bound) + "): "))
+    integer = lower_bound-1 # make sure we enter while at least once
     while integer < lower_bound or integer > upper_bound:
-        integer = int(input(message + " (" + str(lower_bound) + "-" + str(upper_bound) + "): "))
+        integer = int(input("%s (%d-%d):" % (message, lower_bound, upper_bound)))
     return integer
 
 
-def random_grass(decoration_rate):
+def random_grass(ground_Tiles, decoration_rate):
     if random.random() > (decoration_rate / 100):
         temp_grass = random.randint(0, 3)
         return "g_" + str(temp_grass)
@@ -30,14 +32,14 @@ def random_grass(decoration_rate):
             return "sne_" + str(temp_sne)
 
 
-def fill_up_grass(layer, decoration_rate):
+def fill_up_grass(layer, ground_Tiles, decoration_rate):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if not (x, y) in layer.keys():
-                layer[(x, y)] = random_grass(decoration_rate)
+                layer[(x, y)] = random_grass(ground_Tiles, decoration_rate)
 
 
-def generate_path(layer, path_Type, path_Amount, path_Length):
+def generate_path(layer, houses_Connectors, path_Type, path_Amount, path_Length):
     """
     //random path generation
 
@@ -45,39 +47,39 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
         start_coordinates = path_start_random(layer, path_Type)
         extend_Path(layer, path_Type, start_coordinates[0], start_coordinates[1], start_coordinates[2], start_coordinates[3], start_coordinates[4], random.randint(2, path_Length))
     calculate_bridges(layer)
-    calculate_Paths(layer)
+    calculate_Paths(layer, house_Tiles)
     """
-    for house in range(0, len(houses_Connecters) - 1):
-        distance1 = int(houses_Connecters[house]["Left_Connect"][0] - houses_Connecters[house + 1]["Right_Connect"][0])
-        distance2 = int(houses_Connecters[house]["Right_Connect"][0] - houses_Connecters[house + 1]["Left_Connect"][0])
+    for house in range(0, len(houses_Connectors) - 1):
+        distance1 = int(houses_Connectors[house]["Left_Connect"][0] - houses_Connectors[house + 1]["Right_Connect"][0])
+        distance2 = int(houses_Connectors[house]["Right_Connect"][0] - houses_Connectors[house + 1]["Left_Connect"][0])
         if distance1 <= -2 and distance2 <= -2:
             x_difference = max(distance1, distance2)
-            y_difference = houses_Connecters[house]["Left_Connect"][1] - houses_Connecters[house + 1]["Left_Connect"][1]
-            start_x_horizontal = int(houses_Connecters[house]["Right_Connect"][0])
-            start_y_horizontal = int(houses_Connecters[house + 1]["Left_Connect"][1])
-            start_x_vertical = int(houses_Connecters[house]["Right_Connect"][0])
-            start_y_vertical = min(int(houses_Connecters[house]["Left_Connect"][1]), houses_Connecters[house + 1]["Left_Connect"][1])
+            y_difference = houses_Connectors[house]["Left_Connect"][1] - houses_Connectors[house + 1]["Left_Connect"][1]
+            start_x_horizontal = int(houses_Connectors[house]["Right_Connect"][0])
+            start_y_horizontal = int(houses_Connectors[house + 1]["Left_Connect"][1])
+            start_x_vertical = int(houses_Connectors[house]["Right_Connect"][0])
+            start_y_vertical = min(int(houses_Connectors[house]["Left_Connect"][1]), houses_Connectors[house + 1]["Left_Connect"][1])
         elif distance1 >= 2 and distance2 >= 2:
             x_difference = min(distance1, distance2)
-            y_difference = houses_Connecters[house]["Left_Connect"][1] - houses_Connecters[house + 1]["Left_Connect"][1]
-            start_x_horizontal = int(houses_Connecters[house + 1]["Right_Connect"][0])
-            start_y_horizontal =int(houses_Connecters[house]["Left_Connect"][1])
-            start_x_vertical = int(houses_Connecters[house + 1]["Right_Connect"][0])
-            start_y_vertical = min(int(houses_Connecters[house]["Left_Connect"][1]), houses_Connecters[house + 1]["Left_Connect"][1])
+            y_difference = houses_Connectors[house]["Left_Connect"][1] - houses_Connectors[house + 1]["Left_Connect"][1]
+            start_x_horizontal = int(houses_Connectors[house + 1]["Right_Connect"][0])
+            start_y_horizontal =int(houses_Connectors[house]["Left_Connect"][1])
+            start_x_vertical = int(houses_Connectors[house + 1]["Right_Connect"][0])
+            start_y_vertical = min(int(houses_Connectors[house]["Left_Connect"][1]), houses_Connectors[house + 1]["Left_Connect"][1])
         elif distance1 <= 2 and distance2 >= 0:
-            x_difference = int(houses_Connecters[house]["Left_Connect"][0] - houses_Connecters[house + 1]["Left_Connect"][0])
-            y_difference = houses_Connecters[house]["Left_Connect"][1] - houses_Connecters[house + 1]["Left_Connect"][1]
-            start_x_horizontal = int(houses_Connecters[house + 1]["Left_Connect"][0])
-            start_y_horizontal = int(houses_Connecters[house]["Left_Connect"][1])
-            start_x_vertical = int(houses_Connecters[house + 1]["Left_Connect"][0])
-            start_y_vertical = min(int(houses_Connecters[house]["Left_Connect"][1]), houses_Connecters[house + 1]["Left_Connect"][1])
+            x_difference = int(houses_Connectors[house]["Left_Connect"][0] - houses_Connectors[house + 1]["Left_Connect"][0])
+            y_difference = houses_Connectors[house]["Left_Connect"][1] - houses_Connectors[house + 1]["Left_Connect"][1]
+            start_x_horizontal = int(houses_Connectors[house + 1]["Left_Connect"][0])
+            start_y_horizontal = int(houses_Connectors[house]["Left_Connect"][1])
+            start_x_vertical = int(houses_Connectors[house + 1]["Left_Connect"][0])
+            start_y_vertical = min(int(houses_Connectors[house]["Left_Connect"][1]), houses_Connectors[house + 1]["Left_Connect"][1])
         else:
-            x_difference = int(houses_Connecters[house]["Right_Connect"][0] - houses_Connecters[house + 1]["Right_Connect"][0])
-            y_difference = houses_Connecters[house]["Left_Connect"][1] - houses_Connecters[house + 1]["Left_Connect"][1]
-            start_x_horizontal = int(houses_Connecters[house]["Right_Connect"][0])
-            start_y_horizontal = int(houses_Connecters[house]["Left_Connect"][1])
-            start_x_vertical = int(houses_Connecters[house + 1]["Right_Connect"][0])
-            start_y_vertical = min(int(houses_Connecters[house]["Left_Connect"][1]), houses_Connecters[house + 1]["Left_Connect"][1])
+            x_difference = int(houses_Connectors[house]["Right_Connect"][0] - houses_Connectors[house + 1]["Right_Connect"][0])
+            y_difference = houses_Connectors[house]["Left_Connect"][1] - houses_Connectors[house + 1]["Left_Connect"][1]
+            start_x_horizontal = int(houses_Connectors[house]["Right_Connect"][0])
+            start_y_horizontal = int(houses_Connectors[house]["Left_Connect"][1])
+            start_x_vertical = int(houses_Connectors[house + 1]["Right_Connect"][0])
+            start_y_vertical = min(int(houses_Connectors[house]["Left_Connect"][1]), houses_Connectors[house + 1]["Left_Connect"][1])
 
         x_difference = abs(x_difference)
         y_difference = abs(y_difference)
@@ -189,11 +191,11 @@ def direction_To_Change(direction):
     return (x_change, y_change)
 
 
-def calculate_Paths(layer):
+def calculate_Paths(layer, house_Tiles):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if (x, y) in layer and "p_" in layer[(x, y)]:
-                path = calculate_path_look(layer, x, y)
+                path = calculate_path_look(layer, house_Tiles, x, y)
                 layer[(x, y)] = str(layer[(x, y)]) + str(path)
 
 
@@ -228,7 +230,7 @@ def calculate_bridge_look(layer, x, y):
     return 0
 
 
-def calculate_path_look(layer, x, y):
+def calculate_path_look(layer, house_Tiles, x, y):
     tiles_around = []
     for around in range(0, 9):
         path_around = layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
@@ -262,6 +264,7 @@ def calculate_ponds(layer):
 
 
 def generate_ponds(layer, land_rate):
+    print(layer)
     """
     for ponds in range(0, amount):
         pool_point_x = random.randint(0, map_Size_X - 1)
@@ -278,11 +281,10 @@ def generate_ponds(layer, land_rate):
     freq = 40
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
-
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) > land_rate:
-                    layer[(x, y)] = "pd_"
+                layer[(x, y)] = "pd_"
 
 
 def calculate_pond_look(layer, x, y):
@@ -334,7 +336,8 @@ def calculate_pond_look(layer, x, y):
     return "15"
 
 
-def spawn_mne(layer, spawn_rate):
+def spawn_mne(layer, house_Tiles, spawn_rate):
+    mne_biomes = {}
     octaves = 3
     freq = 40
     off_x = random.random() * 1000000
@@ -351,7 +354,7 @@ def spawn_mne(layer, spawn_rate):
                     layer[(x, y - 1)] = "st_1"
                     layer[(x, y - 2)] = "st_2"
 
-def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
+def spawn_house(layer, houses_Connectors, house_type, house_size_x, house_size_y, amount):
     for houses in range(0, amount):
         house_x = random.randint(1, map_Size_X - house_size_y)
         house_y = random.randint(1, map_Size_Y - house_size_x)
@@ -362,56 +365,51 @@ def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
             layer[(house_x + (house_tile - 1) % house_size_x, house_y  + math.floor((house_tile - 1) / house_size_x))] = "h_" + str(house_type) + "_" + str(house_tile)
         for front in range(2 * house_size_x):
             ground_Tiles[(house_x + front % house_size_x, house_y + math.floor(front / house_size_x) + house_size_y)] = "p_2"
-        houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + house_size_y), "Right_Connect": (house_x + house_size_x, house_y + house_size_y)}
+        houses_Connectors[len(houses_Connectors)] = {"Left_Connect": (house_x - 2, house_y + house_size_y), "Right_Connect": (house_x + house_size_x, house_y + house_size_y)}
 
 
 def check_availability_zone(layer, start_x, start_y, x_size, y_size):
     availability = True
     for tile in range(x_size * y_size):
-        if (start_x + tile % x_size, start_y + math.floor(tile / y_size)) in layer.keys() or out_Of_Bounds(start_x + tile % x_size, start_y + math.floor(tile / y_size)): availability = False
+        if (start_x + tile % x_size, start_y + math.floor(tile / x_size)) in layer.keys() or out_Of_Bounds(start_x + tile % x_size, start_y + math.floor(tile / x_size)): availability = False
     return availability
 
 
-def render(layer):
+def render(screen, layer, tile_Size):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if (x, y) in layer.keys():
                 tile = str(layer[(x, y)])
-                screen.blit(pygame.image.load(os.path.join("resources", tile + ".png")), (x * tile_Size, y * tile_Size))
+                resource_dir = os.path.join(os.path.dirname(__file__), "resources")
+                screen.blit(pygame.image.load(os.path.join(resource_dir, "%s.png" % tile)), (x * tile_Size, y * tile_Size))
     pygame.display.update()
 
-ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False}
-#while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"]:
+def genMap(tile_s=16, map_x=100, map_y=100, pond_rate=0.4, house_1_amount=5, house_2_amount=5, sne_rate=7, mne_rate=20, user_Path_Amount=2, user_Path_Length=25, pkmn={}, filename=None):
+    global map_Size_X
+    global map_Size_Y
 
-tile_Size = 16
-map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
-map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
-screen_Size_X = tile_Size * map_Size_X
-screen_Size_Y = tile_Size * map_Size_Y
-sne_rate = 7 #get_int(0, 100, "Small size nature elements spawn rate")
-mne_rate = 20 #get_int(0, 100, "Medium size nature elements spawn rate")
+    map_Size_X = map_x
+    map_Size_Y = map_y
+    ground_Tiles = pkmn
+    house_Tiles = {}
+    houses_Connectors = {}
 
-user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
-user_Path_Length = 25
-#if user_Path_Amount != 0: user_Path_Length = get_int(1, 24, "Maximum length of a path")
+    generate_ponds(ground_Tiles, pond_rate)
+    spawn_house(house_Tiles, houses_Connectors, 1, 4, 4, house_1_amount)
+    spawn_house(house_Tiles, houses_Connectors, 2, 5, 3, house_2_amount)
+    generate_path(ground_Tiles, houses_Connectors, 1, user_Path_Amount, user_Path_Length)
+    calculate_Paths(ground_Tiles, house_Tiles)
+    calculate_ponds(ground_Tiles)
+    spawn_mne(ground_Tiles, house_Tiles, mne_rate)
+    fill_up_grass(ground_Tiles, ground_Tiles, sne_rate)
 
-ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False}
-mne_biomes = {}
-house_Tiles = {}
-houses_Connecters = {}
-generate_ponds(ground_Tiles, 0.4)
-spawn_house(house_Tiles, 1, 4, 4, 5)
-spawn_house(house_Tiles, 2, 5, 3, 5)
-generate_path(ground_Tiles, 1, user_Path_Amount, user_Path_Length)
-calculate_Paths(ground_Tiles)
-calculate_ponds(ground_Tiles)
-spawn_mne(ground_Tiles, mne_rate)
-fill_up_grass(ground_Tiles, sne_rate)
+    screen = pygame.display.set_mode((tile_s*map_x, tile_s*map_y))
+    render(screen, ground_Tiles, tile_s)
+    render(screen, house_Tiles, tile_s)
 
-screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
-render(ground_Tiles)
-render(house_Tiles)
-
-save = input("Save this image? (y/n): ")
-t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
-if save == "y": pygame.image.save(screen, os.path.join("saved images", t+".png"))
+    if filename is None:
+        t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
+        filename = os.path.join("saved images", "%s.png" % t)
+        filename = os.path.join(os.path.dirname(__file__),filename)
+    pygame.image.save(screen, filename)
+    return filename
