@@ -97,8 +97,8 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             else:
                 if not (x, y) in layer.keys(): ground_Tiles[(x, y)] = "p_" + str(path_Type)
 
-        calculate_bridges(layer)
-        calculate_platforms(layer)
+    calculate_bridges(layer)
+    calculate_platforms(layer)
 
 
 def out_Of_Bounds(x, y):
@@ -211,6 +211,7 @@ def calculate_bridges(layer):
                 if bridge == 2: layer[(x, y - 1)] = "b_1"
                 if bridge == 3: layer[(x + 1, y)] = "b_4"
                 if bridge == 4: layer[(x - 1, y)] = "b_3"
+
     finish_bridges(layer)
 
 
@@ -284,18 +285,6 @@ def calculate_ponds(layer):
 
 
 def generate_ponds(layer, land_rate):
-    """
-    for ponds in range(0, amount):
-        pool_point_x = random.randint(0, map_Size_X - 1)
-        pool_point_y = random.randint(0, map_Size_Y - 1)
-        while (pool_point_x, pool_point_y) in layer.keys():
-            pool_point_x = random.randint(1, map_Size_X - 1)
-            pool_point_y = random.randint(1, map_Size_Y - 1)
-
-        opposing_corner = (pool_point_x + random.randint(2, maximum_size), pool_point_y + (random.randint(2, maximum_size)))
-        for pond in range(0, (opposing_corner[0] - pool_point_x) * (opposing_corner[1] - pool_point_y)):
-            layer[pool_point_x + (pond % (opposing_corner[0] - pool_point_x)), pool_point_y + math.floor(pond / (opposing_corner[0] - pool_point_x))] = "pd_"
-    """
     octaves = 2
     freq = 70
     off_x = random.random() * 1000000
@@ -312,7 +301,7 @@ def calculate_pond_look(layer, x, y):
     tiles_around = []
     for around in range(0, 9):
         path_around = (layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), "0"))
-        if not "p_" in str(path_around) and ("pd_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around)):
+        if not "p_" in str(path_around) and ("pd_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around) or out_Of_Bounds(x + (around % 3) - 1, y + math.floor(around / 3) - 1)):
             tiles_around.append(1)
         else:
             tiles_around.append(0)
@@ -332,12 +321,15 @@ def calculate_pond_look(layer, x, y):
                     direction = 7
             layer[(x, y + 1)] = "pd_l_" + str(direction + 1)
             return "l_" + str(direction)
-        elif random.random() < 0.001 and not layer["Gyarados"]:
-            layer["Gyarados"] = True
-            layer[(x + 1, y)] = "pd_g_2"
-            layer[(x, y + 1)] = "pd_g_3"
-            layer[(x + 1, y + 1)] = "pd_g_4"
-            return "g_1"
+        elif check_availability_water(layer, x - 1, y - 1, 3, 3):
+            if random.random() < 0.001 and not layer["Gyarados"]:
+                layer["Gyarados"] = True
+                layer[(x + 1, y)] = "pd_g_2"
+                layer[(x, y + 1)] = "pd_g_3"
+                layer[(x + 1, y + 1)] = "pd_g_4"
+                return "g_1"
+            else:
+                return 0
         else:
             return 0
     if tiles_around[1] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1: return "1"
@@ -395,6 +387,13 @@ def check_availability_zone(layer, start_x, start_y, x_size, y_size):
     return availability
 
 
+def check_availability_water(layer, start_x, start_y, x_size, y_size):
+    availability = True
+    for tile in range(x_size * y_size):
+        if not "pd_" in layer.get((start_x + tile % x_size, start_y + math.floor(tile / y_size)), ""): availability = False
+    return availability
+
+
 def render(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
@@ -422,9 +421,9 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False}
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
-generate_ponds(ground_Tiles, 0.0)
-spawn_house(house_Tiles, 1, 4, 4, 4)
-spawn_house(house_Tiles, 2, 5, 3, 4)
+generate_ponds(ground_Tiles, 0.08)
+spawn_house(house_Tiles, 1, 4, 4, 2)
+spawn_house(house_Tiles, 2, 5, 3, 2)
 generate_path(ground_Tiles, 1, user_Path_Amount, user_Path_Length)
 calculate_Paths(ground_Tiles)
 calculate_ponds(ground_Tiles)
