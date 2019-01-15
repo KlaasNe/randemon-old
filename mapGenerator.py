@@ -256,7 +256,7 @@ def calculate_path_look(layer, x, y):
     for around in range(0, 9):
         path_around = layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
         if path_around == 0: path_around = house_Tiles.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
-        if "p_" in str(path_around) or "b_" in str(path_around) or "pd_" in str(path_around) or "h_" in str(path_around) or "pl_" in str(path_around):
+        if "p_" in str(path_around) or "b_" in str(path_around) or "h_" in str(path_around) or "pl_" in str(path_around):
             tiles_around.append(1)
         else:
             tiles_around.append(0)
