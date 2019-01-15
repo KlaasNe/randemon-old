@@ -85,7 +85,7 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             x = start_x_vertical + (path % 2)
             y = start_y_vertical + math.floor(path / 2)
             if (x, y) in layer.keys() and ("pd_" in layer[(x, y)] or "b_" in layer[(x, y)]):
-                ground_Tiles[(x, y)] = "b_"
+                layer[(x, y)] = "b_"
             else:
                 if not (x, y) in layer.keys(): ground_Tiles[(x, y)] = "p_" + str(path_Type)
 
@@ -93,11 +93,12 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             x = start_x_horizontal + (path % (x_difference + 2))
             y = start_y_horizontal + math.floor(path / (x_difference + 2))
             if (x, y) in layer.keys() and ("pd_" in layer[(x, y)] or "b_" in layer[(x, y)]):
-                ground_Tiles[(x, y)] = "b_"
+                layer[(x, y)] = "b_"
             else:
                 if not (x, y) in layer.keys(): ground_Tiles[(x, y)] = "p_" + str(path_Type)
 
         calculate_bridges(layer)
+        calculate_platforms(layer)
 
 
 def out_Of_Bounds(x, y):
@@ -203,13 +204,24 @@ def calculate_bridges(layer):
             if (x, y) in layer and layer[(x, y)] == "b_":
                 bridge = calculate_bridge_look(layer, x, y)
                 if bridge == 0:
-                    layer[(x, y)] = "p_1"
+                    layer[(x, y)] = "pl_"
                 else:
-                    layer[(x, y)] = str(layer[(x, y)]) + str(bridge)
+                    layer[(x, y)] = "b_" + str(bridge)
                 if bridge == 1: layer[(x, y + 1)] = "b_2"
                 if bridge == 2: layer[(x, y - 1)] = "b_1"
                 if bridge == 3: layer[(x + 1, y)] = "b_4"
                 if bridge == 4: layer[(x - 1, y)] = "b_3"
+    finish_bridges(layer)
+
+
+def finish_bridges(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if "b_" in layer.get((x, y), ""):
+                if (layer.get((x - 1, y), "") == "b_3" or layer.get((x - 1, y), "") == "b_6") and (layer.get((x + 1, y), "") == "b_3" or layer.get((x + 1, y), "") == "b_4"):
+                    layer[(x, y)] = "b_6"
+                if (layer.get((x, y - 1), "") == "b_1" or layer.get((x, y - 1), "") == "b_5") and (layer.get((x, y + 1), "") == "b_1" or layer.get((x, y + 1), "") == "b_2"):
+                    layer[(x, y)] = "b_5"
 
 
 def calculate_bridge_look(layer, x, y):
@@ -228,12 +240,22 @@ def calculate_bridge_look(layer, x, y):
     return 0
 
 
+def calculate_platforms(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if layer.get((x, y), "") == "pl_":
+                layer[(x, y)] = "pl_1"
+                layer[(x + 1, y)] = "pl_2"
+                layer[(x, y + 1)] = "pl_3"
+                layer[(x + 1, y + 1)] = "pl_4"
+
+
 def calculate_path_look(layer, x, y):
     tiles_around = []
     for around in range(0, 9):
         path_around = layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
         if path_around == 0: path_around = house_Tiles.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
-        if "p_" in str(path_around) or "b_" in str(path_around) or "pd_" in str(path_around) or "h_" in str(path_around):
+        if "p_" in str(path_around) or "b_" in str(path_around) or "pd_" in str(path_around) or "h_" in str(path_around) or "pl_" in str(path_around):
             tiles_around.append(1)
         else:
             tiles_around.append(0)
@@ -290,7 +312,7 @@ def calculate_pond_look(layer, x, y):
     tiles_around = []
     for around in range(0, 9):
         path_around = (layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), "0"))
-        if not "p_" in str(path_around) and "pd_" in str(path_around) or "b_" in str(path_around) :
+        if not "p_" in str(path_around) and ("pd_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around)):
             tiles_around.append(1)
         else:
             tiles_around.append(0)
@@ -385,7 +407,7 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False}
 #while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"]:
 
 tile_Size = 16
-map_Size_X = 100 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
 map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
@@ -400,9 +422,9 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False}
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
-generate_ponds(ground_Tiles, 0.1)
-spawn_house(house_Tiles, 1, 4, 4, 2)
-spawn_house(house_Tiles, 2, 5, 3, 2)
+generate_ponds(ground_Tiles, 0.0)
+spawn_house(house_Tiles, 1, 4, 4, 4)
+spawn_house(house_Tiles, 2, 5, 3, 4)
 generate_path(ground_Tiles, 1, user_Path_Amount, user_Path_Length)
 calculate_Paths(ground_Tiles)
 calculate_ponds(ground_Tiles)
