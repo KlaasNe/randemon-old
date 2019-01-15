@@ -237,15 +237,15 @@ def calculate_path_look(layer, x, y):
             tiles_around.append(1)
         else:
             tiles_around.append(0)
+    if tiles_around == [1, 1, 1, 1, 1, 1, 0, 1, 1]: return "_9"
+    if tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 0]: return "_10"
+    if tiles_around == [1, 1, 0, 1, 1, 1, 1, 1, 1]: return "_11"
+    if tiles_around == [0, 1, 1, 1, 1, 1, 1, 1, 1]: return "_12"
     if tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 1] or tiles_around == [0, 1, 0, 1, 0, 1, 0, 1, 0]: return "_0"
     if tiles_around == [0, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [0, 1, 1, 0, 1, 1, 1, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 1, 1, 1]: return "_1"
     if tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 1] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 1]: return "_2"
     if tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 1] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 1]: return "_3"
     if tiles_around == [0, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [0, 0, 1, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 1, 1, 1, 1, 1, 1, 1]: return "_4"
-    if tiles_around == [1, 1, 1, 1, 1, 1, 0, 1, 1]: return "_9"
-    if tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 0]: return "_10"
-    if tiles_around == [1, 1, 0, 1, 1, 1, 1, 1, 1]: return "_11"
-    if tiles_around == [0, 1, 1, 1, 1, 1, 1, 1, 1]: return "_12"
     if tiles_around[5] == 1 and tiles_around[7] == 1 and tiles_around[8] == 1: return "_5"
     if tiles_around[1] == 1 and tiles_around[2] == 1 and tiles_around[5] == 1: return "_6"
     if tiles_around[0] == 1 and tiles_around[1] == 1 and tiles_around[3] == 1: return "_7"
@@ -275,13 +275,14 @@ def generate_ponds(layer, land_rate):
             layer[pool_point_x + (pond % (opposing_corner[0] - pool_point_x)), pool_point_y + math.floor(pond / (opposing_corner[0] - pool_point_x))] = "pd_"
     """
     octaves = 2
-    freq = 40
+    freq = 70
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
 
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) > land_rate:
+            tile_height = snoise2((x + off_x) / freq, (y + off_y) / freq, octaves)
+            if tile_height < 0 - land_rate and tile_height > land_rate - 0.4:
                     layer[(x, y)] = "pd_"
 
 
@@ -384,7 +385,7 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False}
 #while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"]:
 
 tile_Size = 16
-map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_X = 100 #get_int(10, 100, "Amount of tiles in x-direction")
 map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
@@ -399,9 +400,9 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False}
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
-generate_ponds(ground_Tiles, 0.4)
-spawn_house(house_Tiles, 1, 4, 4, 5)
-spawn_house(house_Tiles, 2, 5, 3, 5)
+generate_ponds(ground_Tiles, 0.1)
+spawn_house(house_Tiles, 1, 4, 4, 2)
+spawn_house(house_Tiles, 2, 5, 3, 2)
 generate_path(ground_Tiles, 1, user_Path_Amount, user_Path_Length)
 calculate_Paths(ground_Tiles)
 calculate_ponds(ground_Tiles)
