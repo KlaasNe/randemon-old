@@ -375,8 +375,8 @@ def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
             house_y = random.randint(1, map_Size_Y - house_size_y)
         for house_tile in range(1, house_size_x * house_size_y + 1):
             layer[(house_x + (house_tile - 1) % house_size_x, house_y  + math.floor((house_tile - 1) / house_size_x))] = "h_" + str(house_type) + "_" + str(house_tile)
-        for front in range(2 * house_size_x):
-            ground_Tiles[(house_x + front % house_size_x, house_y + math.floor(front / house_size_x) + house_size_y)] = "p_2"
+        for front in range(3 * house_size_x):
+            ground_Tiles[(house_x + front % house_size_x, house_y + math.floor(front / house_size_x) + house_size_y - 1)] = "p_2"
         houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + house_size_y), "Right_Connect": (house_x + house_size_x, house_y + house_size_y)}
 
 
@@ -422,8 +422,10 @@ mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
 generate_ponds(ground_Tiles, 0.08)
-spawn_house(house_Tiles, 1, 4, 4, 2)
-spawn_house(house_Tiles, 2, 5, 3, 2)
+spawn_house(house_Tiles, 1, 4, 4, 1)
+spawn_house(house_Tiles, 2, 5, 3, 1)
+spawn_house(house_Tiles, 3, 5, 4, 1)
+spawn_house(house_Tiles, 4, 4, 5, 1)
 generate_path(ground_Tiles, 1, user_Path_Amount, user_Path_Length)
 calculate_Paths(ground_Tiles)
 calculate_ponds(ground_Tiles)
