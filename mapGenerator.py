@@ -91,7 +91,8 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             if (x, y) in layer.keys() and ("pd_" in layer[(x, y)] or "b_" in layer[(x, y)]):
                 layer[(x, y)] = "b_"
             else:
-                if not (x, y) in layer.keys(): ground_Tiles[(x, y)] = "p_" + str(path_layout)
+                if not (x, y) in layer.keys():
+                    ground_Tiles[(x, y)] = "p_" + str(path_layout)
 
         for path in range(2 * x_difference + 4):
             x = start_x_horizontal + (path % (x_difference + 2))
@@ -99,7 +100,8 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             if (x, y) in layer.keys() and ("pd_" in layer[(x, y)] or "b_" in layer[(x, y)]):
                 layer[(x, y)] = "b_"
             else:
-                if not (x, y) in layer.keys(): ground_Tiles[(x, y)] = "p_" + str(path_layout)
+                if not (x, y) in layer.keys():
+                    ground_Tiles[(x, y)] = "p_" + str(path_layout)
 
     calculate_bridges(layer)
     calculate_platforms(layer)
@@ -401,6 +403,20 @@ def spawn_pokecenter(layer):
     houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + 5), "Right_Connect": (house_x + 5, house_y + 5)}
 
 
+def spawn_pokemarket(layer):
+    house_x = random.randint(1, map_Size_X - 4)
+    house_y = random.randint(1, map_Size_Y - 4)
+    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 4 + 1, 4 + 4) or not check_availability_zone(house_Tiles, house_x - 1, 4, 4 + 1, 4 + 4):
+        house_x = random.randint(1, map_Size_X - 4)
+        house_y = random.randint(1, map_Size_Y - 4)
+    for house_tile in range(1, 4 * 4 + 1):
+        layer[(
+        house_x + (house_tile - 1) % 4, house_y + math.floor((house_tile - 1) / 4))] = "pm_" + str(house_tile)
+    for front in range(4 * 4):
+        ground_Tiles[(house_x + front % 4, house_y + math.floor(front / 4) + 4 - 2)] = "p_2"
+    houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + 4), "Right_Connect": (house_x + 4, house_y + 4)}
+
+
 def spawn_truck(layer):
     import math, random
     for x in range(0, map_Size_X):
@@ -421,6 +437,21 @@ def spawn_snorlax(layer):
                     for snorlax_tile in range(4):
                         layer[(x + snorlax_tile % 2, y + math.floor(snorlax_tile / 2))] = "sn_" + str(snorlax_tile + 1)
                         ground_Tiles["Snorlax"] = True
+
+
+def spawn_lanterns(layer):
+    import random
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if layer.get((x - 1, y), "") == "p_1_3" and random.random() < 0.03 and check_availability_zone(layer, x, y - 2, 2, 3):
+                layer[(x, y)] = "l_1"
+                layer[(x, y - 1)] = "l_2"
+                layer[(x, y - 2)] = "l_3"
+                layer[(x + 1, y)] = "l_4"
+            if layer.get((x + 1, y), "") == "p_1_1" and random.random() < 0.03 and check_availability_zone(layer, x, y - 2, 1, 3):
+                layer[(x, y)] = "l_5"
+                layer[(x, y - 1)] = "l_6"
+                layer[(x, y - 2)] = "l_7"
 
 
 def check_bridge_space(layer, x, y, x_size, y_size):
@@ -465,14 +496,17 @@ mne_rate = 20 #get_int(0, 100, "Medium size nature elements spawn rate")
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
 #if user_Path_Amount != 0: user_Path_Length = get_int(1, 24, "Maximum length of a path")
-
-#while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"]:
+"""
+ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False}
+while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"] or not ground_Tiles["Snorlax"]:
+"""
 ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False}
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
 generate_ponds(ground_Tiles, 0.1)
 spawn_pokecenter(house_Tiles)
+spawn_pokemarket(house_Tiles)
 spawn_house(house_Tiles, 1, 4, 4, 1)
 spawn_house(house_Tiles, 2, 5, 3, 1)
 spawn_house(house_Tiles, 3, 5, 4, 1)
@@ -483,6 +517,7 @@ spawn_truck(house_Tiles)
 calculate_Paths(ground_Tiles)
 calculate_ponds(ground_Tiles)
 spawn_snorlax(house_Tiles)
+spawn_lanterns(ground_Tiles)
 spawn_mne(ground_Tiles, mne_rate)
 fill_up_grass(ground_Tiles, sne_rate)
 
