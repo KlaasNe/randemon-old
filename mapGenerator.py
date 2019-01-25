@@ -9,8 +9,12 @@ def get_int(lower_bound, upper_bound, message):
     return integer
 
 
-def random_grass(decoration_rate):
-    if random.random() > (decoration_rate / 100):
+def random_grass(decoration_rate, x, y, off_x, off_y):
+    octaves = 1
+    freq = 7
+
+    sne_prob = snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) + 0.5
+    if sne_prob > (decoration_rate / 100):
         temp_grass = random.randint(0, 3)
         return "g_" + str(temp_grass)
     else:
@@ -29,10 +33,12 @@ def random_grass(decoration_rate):
 
 
 def fill_up_grass(layer, decoration_rate):
+    off_x = random.random() * 1000000
+    off_y = random.random() * 1000000
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if not (x, y) in layer.keys():
-                layer[(x, y)] = random_grass(decoration_rate)
+                layer[(x, y)] = random_grass(decoration_rate, x, y, off_x, off_y)
 
 
 def generate_path(layer, path_Type, path_Amount, path_Length):
@@ -504,7 +510,7 @@ map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
 map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
-sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
+sne_rate = 65 #get_int(0, 100, "Small size nature elements spawn rate")
 mne_rate = 20 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
@@ -518,7 +524,7 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": Fa
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
-generate_ponds(ground_Tiles, 0.2)
+generate_ponds(ground_Tiles, 0.1)
 spawn_pokecenter(house_Tiles)
 spawn_pokemarket(house_Tiles)
 spawn_house(house_Tiles, 1, 4, 4, 1)
