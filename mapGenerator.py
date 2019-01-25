@@ -372,12 +372,12 @@ def spawn_mne(layer, spawn_rate):
     off_y = random.random() * 1000000
     for y in range(map_Size_Y):
         for x in range(map_Size_X):
-            mne_biomes[(x, y)] = snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2 + (spawn_rate / 100)
+            mne_biomes[(x, y)] = snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2
 
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if not (x, y) in layer.keys() and not (x, y - 1) in layer.keys() and not (x, y - 2) in layer.keys() and not (x, y) in house_Tiles.keys() and not (x, y - 1) in house_Tiles.keys() and not (x, y - 2) in house_Tiles.keys():
-                if mne_biomes[(x, y)] > 0.5 and random.random() > 0.6:
+                if mne_biomes[(x, y)] > 0 and random.random() < spawn_rate / 100:
                     layer[(x, y)] = "st_0"
                     layer[(x, y - 1)] = "st_1"
                     layer[(x, y - 2)] = "st_2"
@@ -511,7 +511,7 @@ map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 sne_rate = 65 #get_int(0, 100, "Small size nature elements spawn rate")
-mne_rate = 20 #get_int(0, 100, "Medium size nature elements spawn rate")
+mne_rate = 30 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
