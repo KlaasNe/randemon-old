@@ -1,9 +1,4 @@
-import time
-import datetime
-import pygame
-import os
-import random
-import math
+import time, datetime, pygame, os, random, math
 from noise import pnoise2, snoise2
 
 
@@ -27,6 +22,9 @@ def random_grass(decoration_rate):
                 return "diglet_1"
         else:
             temp_sne = random.randint(0, 4)
+            while not (temp_sne == 0 or temp_sne == 2):
+                temp_sne = random.randint(0, 4)
+            if temp_sne == 2 and random.random() < 0.8: temp_sne = 0
             return "sne_" + str(temp_sne)
 
 
@@ -61,7 +59,7 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             x_difference = min(distance1, distance2)
             y_difference = houses_Connecters[house]["Left_Connect"][1] - houses_Connecters[house + 1]["Left_Connect"][1]
             start_x_horizontal = int(houses_Connecters[house + 1]["Right_Connect"][0])
-            start_y_horizontal =int(houses_Connecters[house]["Left_Connect"][1])
+            start_y_horizontal = int(houses_Connecters[house]["Left_Connect"][1])
             start_x_vertical = int(houses_Connecters[house + 1]["Right_Connect"][0])
             start_y_vertical = min(int(houses_Connecters[house]["Left_Connect"][1]), houses_Connecters[house + 1]["Left_Connect"][1])
         elif distance1 <= 2 and distance2 >= 0:
@@ -196,7 +194,7 @@ def direction_To_Change(direction):
     return (x_change, y_change)
 
 
-def calculate_Paths(layer):
+def calculate_paths(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if (x, y) in layer and "p_" in layer[(x, y)]:
@@ -312,32 +310,7 @@ def calculate_pond_look(layer, x, y):
         else:
             tiles_around.append(0)
     if tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1:
-        if random.random() < 0.001 and layer.get((x, y + 2), 0) == "pd_" and not layer["Lapras"]:
-            layer["Lapras"] = True
-
-            if random.randint(1, 2) == 1:
-                direction = 1
-            else:
-                direction = 3
-
-            if random.random() < 0.02:
-                if random.randint(1, 2) == 1:
-                    direction = 5
-                else:
-                    direction = 7
-            layer[(x, y + 1)] = "pd_l_" + str(direction + 1)
-            return "l_" + str(direction)
-        elif check_availability_water(layer, x - 1, y - 1, 4, 4):
-            if random.random() < 0.001 and not layer["Gyarados"]:
-                layer["Gyarados"] = True
-                layer[(x + 1, y)] = "pd_g_2"
-                layer[(x, y + 1)] = "pd_g_3"
-                layer[(x + 1, y + 1)] = "pd_g_4"
-                return "g_1"
-            else:
-                return 0
-        else:
-            return 0
+        return 0
     if tiles_around[1] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1: return "1"
     if tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1: return "2"
     if tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[7] == 1: return "3"
@@ -353,6 +326,37 @@ def calculate_pond_look(layer, x, y):
     if tiles_around[5] == 1: return "12"
     if tiles_around[7] == 1: return "11"
     return "15"
+
+
+def spawn_lapras(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if random.random() < 0.001 and check_availability_water(layer, x - 1, y - 1, 3, 4) and not layer["Lapras"]:
+                layer["Lapras"] = True
+
+                if random.randint(1, 2) == 1:
+                    direction = 1
+                else:
+                    direction = 3
+
+                if random.random() < 0.02:
+                    if random.randint(1, 2) == 1:
+                        direction = 5
+                    else:
+                        direction = 7
+                layer[(x, y + 1)] = "pd_l_" + str(direction + 1)
+                layer[(x, y)] = "pd_l_" + str(direction)
+
+
+def spawn_gyarados(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if check_availability_water(layer, x - 1, y - 1, 4, 4) and random.random() < 0.001 and not layer["Gyarados"]:
+                layer["Gyarados"] = True
+                layer[(x + 1, y)] = "pd_g_2"
+                layer[(x, y + 1)] = "pd_g_3"
+                layer[(x + 1, y + 1)] = "pd_g_4"
+                layer[(x, y)] = "pd_g_1"
 
 
 def spawn_mne(layer, spawn_rate):
@@ -372,21 +376,32 @@ def spawn_mne(layer, spawn_rate):
                     layer[(x, y - 1)] = "st_1"
                     layer[(x, y - 2)] = "st_2"
 
+
 def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
     for houses in range(0, amount):
         house_x = random.randint(1, map_Size_X - house_size_y)
         house_y = random.randint(1, map_Size_Y - house_size_x)
-        while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, house_size_x + 1, house_size_y + 4) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, house_size_x + 1, house_size_y + 4):
+        while not check_availability_zone(ground_Tiles, house_x, house_y, house_size_x + 1, house_size_y + 2) or not check_availability_zone(house_Tiles, house_x, house_y, house_size_x, house_size_y + 2):
             house_x = random.randint(1, map_Size_X - house_size_x)
             house_y = random.randint(1, map_Size_Y - house_size_y)
+            if "h_" in layer.get((house_x, house_y), ""):
+                house_x = find_lower_right(layer, house_x, house_y, house_size_y)[0]
+                house_y = find_lower_right(layer, house_x, house_y, house_size_y)[1]
         for house_tile in range(1, house_size_x * house_size_y + 1):
             layer[(house_x + (house_tile - 1) % house_size_x, house_y  + math.floor((house_tile - 1) / house_size_x))] = "h_" + str(house_type) + "_" + str(house_tile)
         for front in range(4 * house_size_x):
             ground_Tiles[(house_x + front % house_size_x, house_y + math.floor(front / house_size_x) + house_size_y - 2)] = "p_3"
         houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + house_size_y), "Right_Connect": (house_x + house_size_x, house_y + house_size_y)}
-        if random.randint(0, 1) == 1:
+        if random.randint(0, 1) == 1 and "h_" not in layer.get((house_x - 1, house_y + house_size_y - 1), ""):
             layer[(house_x - 1, house_y + house_size_y - 1)] = "mbx_0"
             layer[(house_x - 1, house_y + house_size_y - 2)] = "mbx_1"
+
+
+def find_lower_right(layer, x, y, size_y):
+    while "h_" in layer.get((x - 1, y), "") or "h_" in layer.get((x, y - 1), ""):
+        if "h_" in layer.get((x - 1, y), ""): y += 1
+        if "h_" in layer.get((x, y - 1), ""): x += 1
+    return (x, y - size_y)
 
 
 def spawn_pokecenter(layer):
@@ -461,7 +476,6 @@ def check_bridge_space(layer, x, y, x_size, y_size):
     return True
 
 
-
 def check_availability_zone(layer, start_x, start_y, x_size, y_size):
     availability = True
     for tile in range(x_size * y_size + 1):
@@ -490,7 +504,7 @@ map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
 map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
-sne_rate = 7 #get_int(0, 100, "Small size nature elements spawn rate")
+sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
 mne_rate = 20 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
@@ -504,7 +518,7 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": Fa
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
-generate_ponds(ground_Tiles, 0.1)
+generate_ponds(ground_Tiles, 0.2)
 spawn_pokecenter(house_Tiles)
 spawn_pokemarket(house_Tiles)
 spawn_house(house_Tiles, 1, 4, 4, 1)
@@ -514,8 +528,10 @@ spawn_house(house_Tiles, 4, 4, 5, 1)
 spawn_house(house_Tiles, 5, 4, 7, 1)
 generate_path(ground_Tiles, "1", user_Path_Amount, user_Path_Length)
 spawn_truck(house_Tiles)
-calculate_Paths(ground_Tiles)
+calculate_paths(ground_Tiles)
 calculate_ponds(ground_Tiles)
+spawn_lapras(ground_Tiles)
+spawn_gyarados(ground_Tiles)
 spawn_snorlax(house_Tiles)
 spawn_lanterns(ground_Tiles)
 spawn_mne(ground_Tiles, mne_rate)
