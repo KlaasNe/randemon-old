@@ -460,6 +460,14 @@ def spawn_snorlax(layer):
                         ground_Tiles["Snorlax"] = True
 
 
+def spawn_pikachu(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if random.random() < 0.001 and layer.get((x, y), "") == "" and "pd_" not in ground_Tiles.get((x, y), "") and not ground_Tiles["Pikachu"]:
+                layer[(x, y)] = "pikachu_" + str(random.randint(1, 4))
+                ground_Tiles["Pikachu"] = True
+
+
 def spawn_lanterns(layer):
     import random
     for x in range(0, map_Size_X):
@@ -517,10 +525,10 @@ user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
 #if user_Path_Amount != 0: user_Path_Length = get_int(1, 24, "Maximum length of a path")
 """
-ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False}
+ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False}
 while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"] or not ground_Tiles["Snorlax"]:
 """
-ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False}
+ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False}
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
@@ -539,6 +547,7 @@ calculate_ponds(ground_Tiles)
 spawn_lapras(ground_Tiles)
 spawn_gyarados(ground_Tiles)
 spawn_snorlax(house_Tiles)
+spawn_pikachu(house_Tiles)
 spawn_lanterns(ground_Tiles)
 spawn_mne(ground_Tiles, mne_rate)
 fill_up_grass(ground_Tiles, sne_rate)
