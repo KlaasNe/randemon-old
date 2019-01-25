@@ -294,16 +294,17 @@ def calculate_ponds(layer):
                 layer[(x, y)] = str(layer[(x, y)]) + str(pond)
 
 
-def generate_ponds(layer, land_rate):
-    octaves = 2
-    freq = 70
+def generate_ponds(layer, land_height):
+    octaves = 1
+    freq = 60
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
 
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            tile_height = snoise2((x + off_x) / freq, (y + off_y) / freq, octaves)
-            if tile_height < 0 - land_rate and tile_height > land_rate - 0.4:
+            tile_height = abs(snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2)
+            print(tile_height)
+            if tile_height + land_height - 0.25 < 0:
                     layer[(x, y)] = "pd_"
 
 
@@ -398,7 +399,7 @@ def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
         for front in range(4 * house_size_x):
             ground_Tiles[(house_x + front % house_size_x, house_y + math.floor(front / house_size_x) + house_size_y - 2)] = "p_3"
         houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + house_size_y), "Right_Connect": (house_x + house_size_x, house_y + house_size_y)}
-        if random.randint(0, 1) == 1 and "h_" not in layer.get((house_x - 1, house_y + house_size_y - 1), ""):
+        if random.randint(0, 1) == 1 and layer.get((house_x - 1, house_y + house_size_y - 1), "") == "":
             layer[(house_x - 1, house_y + house_size_y - 1)] = "mbx_0"
             layer[(house_x - 1, house_y + house_size_y - 2)] = "mbx_1"
 
@@ -518,7 +519,7 @@ map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
 map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
-sne_rate = 65 #get_int(0, 100, "Small size nature elements spawn rate")
+sne_rate = 30 #get_int(0, 100, "Small size nature elements spawn rate")
 mne_rate = 30 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
@@ -532,7 +533,7 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": Fa
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
-generate_ponds(ground_Tiles, 0.1)
+generate_ponds(ground_Tiles, 0)
 spawn_pokecenter(house_Tiles)
 spawn_pokemarket(house_Tiles)
 spawn_house(house_Tiles, 1, 4, 4, 1)
