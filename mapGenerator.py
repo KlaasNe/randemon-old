@@ -41,7 +41,7 @@ def fill_up_grass(layer, decoration_rate):
                 layer[(x, y)] = random_grass(decoration_rate, x, y, off_x, off_y)
 
 
-def generate_path(layer, path_Type, path_Amount, path_Length):
+def generate_path(layer, path_Type, path_width):
     """
     //random path generation
 
@@ -90,16 +90,16 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             path_layout = random.randint(1, 3)
         else:
             path_layout = path_Type
-        for path in range(2 * y_difference + 4):
-            x = start_x_vertical + (path % 2)
-            y = start_y_vertical + math.floor(path / 2)
+        for path in range(path_width * y_difference + 2 * path_width):
+            x = start_x_vertical + (path % path_width)
+            y = start_y_vertical + math.floor(path / path_width)
             if (x, y) in layer.keys() and ("pd_" in layer[(x, y)] or "b_" in layer[(x, y)]):
                 layer[(x, y)] = "b_" + str((path % 2) + 3)
             else:
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
 
-        for path in range(2 * x_difference + 4):
+        for path in range(path_width * x_difference + 2 * path_width):
             x = start_x_horizontal + (path % (x_difference + 2))
             y = start_y_horizontal + math.floor(path / (x_difference + 2))
             if (x, y) in layer.keys() and ("pd_" in layer[(x, y)] or "b_" in layer[(x, y)]):
@@ -108,6 +108,7 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
 
+    finish_bridges(layer)
     finish_bridges(layer)
     calculate_platforms(layer)
 
@@ -502,7 +503,7 @@ def add_watermark():
 
 
 tile_Size = 16
-map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_X = 100 #get_int(10, 100, "Amount of tiles in x-direction")
 map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
@@ -528,7 +529,7 @@ spawn_house(house_Tiles, 2, 5, 3, 1)
 spawn_house(house_Tiles, 3, 5, 4, 1)
 spawn_house(house_Tiles, 4, 4, 5, 1)
 spawn_house(house_Tiles, 5, 4, 7, 1)
-generate_path(ground_Tiles, "1", user_Path_Amount, user_Path_Length)
+generate_path(ground_Tiles, "1", 2)
 spawn_truck(house_Tiles)
 calculate_paths(ground_Tiles)
 calculate_ponds(ground_Tiles)
