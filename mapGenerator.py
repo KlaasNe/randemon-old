@@ -51,6 +51,7 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
     calculate_bridges(layer)
     calculate_Paths(layer)
     """
+    from math import floor
     for house in range(0, len(houses_Connecters) - 1):
         distance1 = int(houses_Connecters[house]["Left_Connect"][0] - houses_Connecters[house + 1]["Right_Connect"][0])
         distance2 = int(houses_Connecters[house]["Right_Connect"][0] - houses_Connecters[house + 1]["Left_Connect"][0])
@@ -93,7 +94,7 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             x = start_x_vertical + (path % 2)
             y = start_y_vertical + math.floor(path / 2)
             if (x, y) in layer.keys() and ("pd_" in layer[(x, y)] or "b_" in layer[(x, y)]):
-                layer[(x, y)] = "b_"
+                layer[(x, y)] = "b_" + str((path % 2) + 3)
             else:
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
@@ -102,12 +103,12 @@ def generate_path(layer, path_Type, path_Amount, path_Length):
             x = start_x_horizontal + (path % (x_difference + 2))
             y = start_y_horizontal + math.floor(path / (x_difference + 2))
             if (x, y) in layer.keys() and ("pd_" in layer[(x, y)] or "b_" in layer[(x, y)]):
-                layer[(x, y)] = "b_"
+                layer[(x, y)] = "b_" + str(floor(path / (x_difference + 2)) + 1)
             else:
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
 
-    calculate_bridges(layer)
+    finish_bridges(layer)
     calculate_platforms(layer)
 
 
@@ -208,24 +209,13 @@ def calculate_paths(layer):
                 layer[(x, y)] = str(layer[(x, y)]) + str(path)
 
 
-def calculate_bridges(layer):
+def finish_bridges(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if (x, y) in layer and layer[(x, y)] == "b_":
-                bridge = calculate_bridge_look(layer, x, y)
-                if bridge == 0:
-                    layer[(x, y)] = "pl_"
-                else:
-                    layer[(x, y)] = "b_" + str(bridge)
-                if bridge == 1: layer[(x, y + 1)] = "b_2"
-                if bridge == 2: layer[(x, y - 1)] = "b_1"
-                if bridge == 3: layer[(x + 1, y)] = "b_4"
-                if bridge == 4: layer[(x - 1, y)] = "b_3"
-
-    finish_bridges(layer)
-
-
-def finish_bridges(layer):
+            if layer.get((x, y), "") == "b_1" and "p_" in layer.get((x, y + 1), ""): layer[(x, y + 1)] = "b_2"
+            if layer.get((x, y), "") == "b_2" and "p_" in  layer.get((x, y - 1), ""): layer[(x, y - 1)] = "b_1"
+            if layer.get((x, y), "") == "b_3" and "p_" in layer.get((x + 1, y), ""): layer[(x + 1, y)] = "b_4"
+            if layer.get((x, y), "") == "b_4" and "p_" in layer.get((x - 1, y), ""): layer[(x - 1, y)] = "b_3"
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if "b_" in layer.get((x, y), ""):
@@ -233,22 +223,6 @@ def finish_bridges(layer):
                     layer[(x, y)] = "b_6"
                 if (layer.get((x, y - 1), "") == "b_1" or layer.get((x, y - 1), "") == "b_5") and (layer.get((x, y + 1), "") == "b_1" or layer.get((x, y + 1), "") == "b_2"):
                     layer[(x, y)] = "b_5"
-
-
-def calculate_bridge_look(layer, x, y):
-    if layer.get((x - 1, y), 0) == "pd_":
-        if not (x + 2, y) in layer.keys(): layer[(x + 2, y)] = "pd_"
-        return 3
-    if layer.get((x + 1, y), 0) == "pd_":
-        if not (x - 2, y) in layer.keys(): layer[(x - 2, y)] = "pd_"
-        return 4
-    if layer.get((x, y - 1), 0) == "pd_":
-        if not (x, y + 2) in layer.keys(): layer[(x, y + 2)] = "pd_"
-        return 1
-    if layer.get((x, y + 1), 0) == "pd_":
-        if not (x, y - 2) in layer.keys(): layer[(x, y - 2)] = "pd_"
-        return 2
-    return 0
 
 
 def calculate_platforms(layer):
@@ -303,7 +277,6 @@ def generate_ponds(layer, land_height):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             tile_height = abs(snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2)
-            print(tile_height)
             if tile_height + land_height - 0.25 < 0:
                     layer[(x, y)] = "pd_"
 
@@ -358,12 +331,14 @@ def spawn_lapras(layer):
 def spawn_gyarados(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
+            shiny = 0
             if check_availability_water(layer, x - 1, y - 1, 4, 4) and random.random() < 0.001 and not layer["Gyarados"]:
+                if random.random() < 0.02: shiny = 4
                 layer["Gyarados"] = True
-                layer[(x + 1, y)] = "pd_g_2"
-                layer[(x, y + 1)] = "pd_g_3"
-                layer[(x + 1, y + 1)] = "pd_g_4"
-                layer[(x, y)] = "pd_g_1"
+                layer[(x + 1, y)] = "pd_g_" + str(2 + shiny)
+                layer[(x, y + 1)] = "pd_g_" + str(3 + shiny)
+                layer[(x + 1, y + 1)] = "pd_g_" + str(4 + shiny)
+                layer[(x, y)] = "pd_g_" + str(1 + shiny)
 
 
 def spawn_mne(layer, spawn_rate):
@@ -444,7 +419,7 @@ def spawn_truck(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if random.random() < 0.005 and "p_" in ground_Tiles.get((x, y + 3), "") and "p_" in ground_Tiles.get((x + 2, y + 3), ""):
-                if check_availability_zone(house_Tiles, x, y, 3, 3) and not ground_Tiles["Truck"]:
+                if check_availability_zone(house_Tiles, x, y, 3, 3) and check_availability_zone(ground_Tiles, x, y, 3, 1) and not ground_Tiles["Truck"]:
                     for truck_tile in range(9):
                         layer[(x + truck_tile % 3, y + math.floor(truck_tile / 3))] = "t_" + str(truck_tile + 1)
                     ground_Tiles["Truck"] = True
@@ -452,12 +427,14 @@ def spawn_truck(layer):
 
 def spawn_snorlax(layer):
     import math, random
+    shiny = 0
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if ("b_" in ground_Tiles.get((x, y), "") or "pl_" in ground_Tiles.get((x, y), "")) and random.random() < 0.015:
                 if check_bridge_space(ground_Tiles, x, y, 2, 2) and not ground_Tiles["Snorlax"]:
+                    if random.random() < 0.02: shiny = 4
                     for snorlax_tile in range(4):
-                        layer[(x + snorlax_tile % 2, y + math.floor(snorlax_tile / 2))] = "sn_" + str(snorlax_tile + 1)
+                        layer[(x + snorlax_tile % 2, y + math.floor(snorlax_tile / 2))] = "sn_" + str(snorlax_tile + 1 + shiny)
                         ground_Tiles["Snorlax"] = True
 
 
@@ -506,12 +483,22 @@ def check_availability_water(layer, start_x, start_y, x_size, y_size):
 
 
 def render(layer):
+    #add_watermark()
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if (x, y) in layer.keys():
                 tile = str(layer[(x, y)])
-                screen.blit(pygame.image.load(os.path.join("resources", tile + ".png")), (x * tile_Size, y * tile_Size))
+                try:
+                    screen.blit(pygame.image.load(os.path.join("resources", tile + ".png")), (x * tile_Size, y * tile_Size))
+                except Exception as e:
+                    screen.blit(pygame.image.load(os.path.join("resources", "missing.png")), (x * tile_Size, y * tile_Size))
+                    print(e)
     pygame.display.update()
+
+
+def add_watermark():
+    for amount in range(0, math.ceil(screen_Size_X / 48)):
+        screen.blit(pygame.image.load(os.path.join("resources", "randemon watermark" + ".png")), (amount * 48, screen_Size_Y - 16))
 
 
 tile_Size = 16
