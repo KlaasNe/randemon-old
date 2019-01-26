@@ -462,6 +462,20 @@ def spawn_lanterns(layer):
                 layer[(x, y - 2)] = "l_7"
 
 
+def spawn_fountain(layer):
+    house_x = random.randint(1, map_Size_X - 5)
+    house_y = random.randint(1, map_Size_Y - 5)
+    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5, 5) or not check_availability_zone(house_Tiles, house_x - 1, 3, 5, 5):
+        house_x = random.randint(1, map_Size_X - 5)
+        house_y = random.randint(1, map_Size_Y - 5)
+    for house_tile in range(1, 10):
+        layer[(
+        house_x + (house_tile - 1) % 3, house_y + math.floor((house_tile - 1) / 3) + 3)] = "f_" + str(house_tile)
+    for front in range(25):
+        ground_Tiles[(house_x - 1 + front % 5, house_y - 1 + math.floor(front / 5) + 5 - 2)] = "p_2"
+    houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + 4), "Right_Connect": (house_x + 4, house_y + 4)}
+
+
 def check_bridge_space(layer, x, y, x_size, y_size):
     for bridge_tile in range(x_size * y_size):
         if not "b_" in layer.get((x + bridge_tile % x_size, y + math.floor(bridge_tile / x_size)), "") and not "pl_" in layer.get((x + bridge_tile % x_size, y + math.floor(bridge_tile / x_size)), ""):
@@ -524,6 +538,7 @@ houses_Connecters = {}
 generate_ponds(ground_Tiles, 0)
 spawn_pokecenter(house_Tiles)
 spawn_pokemarket(house_Tiles)
+spawn_fountain(house_Tiles)
 spawn_house(house_Tiles, 1, 4, 4, 1)
 spawn_house(house_Tiles, 2, 5, 3, 1)
 spawn_house(house_Tiles, 3, 5, 4, 1)
