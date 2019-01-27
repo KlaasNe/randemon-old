@@ -4,13 +4,49 @@ from math import floor
 
 
 def random_grass(decoration_rate, x, y, off_x, off_y):
-    temp_grass = random.randint(0, 3)
-    return "g_" + str(temp_grass)
+    octaves = 1
+    freq = 7
+
+    sne_prob = snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) + 1
+    if sne_prob > (decoration_rate / 100):
+        temp_grass = random.randint(0, 3)
+        return "g_" + str(temp_grass)
+    else:
+        if random.random() < 0.001 and not ground_Tiles["Diglet"]:
+            ground_Tiles["Diglet"] = True
+            if random.random() < 0.02:
+                return "diglet_2"
+            else:
+                return "diglet_1"
+        else:
+            temp_sne = random.randint(0, 4)
+            while not (temp_sne == 0 or temp_sne == 2):
+                temp_sne = random.randint(0, 4)
+            if temp_sne == 2 and random.random() < 0.8: temp_sne = 0
+            return "sne_" + str(temp_sne)
+
+
+def fill_up_grass(layer, decoration_rate):
+    off_x = random.random() * 1000000
+    off_y = random.random() * 1000000
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if not (x, y) in layer.keys():
+                layer[(x, y)] = random_grass(decoration_rate, x, y, off_x, off_y)
+
+
+def generate_hills(layer):
+    mountainize(tile_Heights, 10)
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            hill_texture = str(calculate_hill_texture(tile_Heights, x, y))
+            if not hill_texture == "-1":
+                layer[(x, y)] = "m_" + hill_texture
 
 
 def mountainize(layer, max_height):
-    octaves = 1
-    freq = 200
+    octaves = 2
+    freq = 400
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
     for x in range(0, map_Size_X):
@@ -31,7 +67,7 @@ def calculate_hill_texture(height_list, x, y):
     if hills_around[5] == 0 and hills_around[7] == 0 and hills_around[8] == -1: return 10
     if hills_around[0] == -1 and hills_around[1] == 0 and hills_around[3] == 0: return 4
     if hills_around[1] == 0 and hills_around[2] == -1 and hills_around[5] == 0: return 4
-    if hills_around[1] == 0 and hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == 0: return 0
+    if hills_around[1] == 0 and hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == 0: return -1
     if hills_around[1] == 0 and hills_around[3] == -1 and hills_around[7] == 0: return 1
     if hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == -1: return 2
     if hills_around[1] == 0 and hills_around[5] == -1 and hills_around[7] == 0: return 3
@@ -40,7 +76,7 @@ def calculate_hill_texture(height_list, x, y):
     if hills_around[3] == -1 and hills_around[7] == -1: return 6
     if hills_around[5] == -1 and hills_around[7] == -1: return 7
     if hills_around[1] == -1 and hills_around[5] == -1: return 8
-    return 0
+    return -1
 
 
 
@@ -75,21 +111,18 @@ ground_Tiles = {}
 height_Tiles = {}
 tile_Heights = {}
 tile_Size = 16
-map_Size_X = 100
-map_Size_Y = 100
+map_Size_X = 50
+map_Size_Y = 50
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 
-mountainize(tile_Heights, 10)
-#generate_height_map(height_Tiles, tile_Heights)
-generate_height_map(ground_Tiles, tile_Heights)
 
-for x in range(0, map_Size_X):
-    for y in range(0, map_Size_Y):
-        ground_Tiles[(x, y)] = "m_" + str(calculate_hill_texture(tile_Heights, x, y))
+#generate_height_map(height_Tiles, tile_Heights)
+#generate_height_map(ground_Tiles, tile_Heights)
+generate_hills(ground_Tiles)
+fill_up_grass(ground_Tiles, 0)
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
-reference_screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 #render(height_Tiles)
 #time.sleep(2)
 render(ground_Tiles)
