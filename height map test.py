@@ -36,7 +36,7 @@ def fill_up_grass(layer, decoration_rate):
 
 
 def generate_hills(layer):
-    mountainize(tile_Heights, 10)
+    #mountainize(tile_Heights, 10)
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             hill_texture = str(calculate_hill_texture(tile_Heights, x, y))
@@ -45,13 +45,13 @@ def generate_hills(layer):
 
 
 def mountainize(layer, max_height):
-    octaves = 2
-    freq = 400
+    octaves = 5
+    freq = 500
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            tile_height = abs(floor((snoise2((x + off_x) / freq, (y + off_y) / freq, octaves)) * max_height))
+            tile_height = abs(floor((snoise2(round((x + off_x) / freq, 2), round((y + off_y) / freq, 2), octaves)) * max_height))
             layer[(x, y)] = tile_height
 
 
@@ -116,15 +116,15 @@ map_Size_Y = 50
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 
-
-#generate_height_map(height_Tiles, tile_Heights)
+mountainize(tile_Heights, 10)
+generate_height_map(height_Tiles, tile_Heights)
 #generate_height_map(ground_Tiles, tile_Heights)
 generate_hills(ground_Tiles)
 fill_up_grass(ground_Tiles, 0)
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
-#render(height_Tiles)
-#time.sleep(2)
+render(height_Tiles)
+time.sleep(4)
 render(ground_Tiles)
 
 save = input("Save this image? (y/n): ")
