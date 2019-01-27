@@ -517,7 +517,7 @@ def add_watermark():
 
 
 tile_Size = 16
-map_Size_X = 100 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
 map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
