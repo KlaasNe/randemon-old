@@ -29,6 +29,7 @@ def random_grass(decoration_rate, x, y, off_x, off_y):
             while not (temp_sne == 0 or temp_sne == 2):
                 temp_sne = random.randint(0, 4)
             if temp_sne == 2 and random.random() < 0.8: temp_sne = 0
+            if temp_sne == 0 and random.random() < 0.005: temp_sne = "0_p"
             return "sne_" + str(temp_sne)
 
 
@@ -254,7 +255,7 @@ def calculate_path_look(layer, x, y):
     for around in range(0, 9):
         path_around = layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
         if path_around == 0: path_around = house_Tiles.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
-        if "p_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around) or "sta_" in str(path_around):
+        if "p_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around) or "sta_" in str(path_around) or "m_4_p" in str(path_around):
             tiles_around.append(1)
         else:
             tiles_around.append(0)
@@ -262,7 +263,7 @@ def calculate_path_look(layer, x, y):
     if tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 0]: return "_10"
     if tiles_around == [1, 1, 0, 1, 1, 1, 1, 1, 1]: return "_11"
     if tiles_around == [0, 1, 1, 1, 1, 1, 1, 1, 1]: return "_12"
-    if tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 1] or tiles_around == [0, 1, 0, 1, 0, 1, 0, 1, 0]: return "_0"
+    if tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 1] or (tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1): return "_0"
     if tiles_around == [0, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [0, 1, 1, 0, 1, 1, 1, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 1, 1, 1]: return "_1"
     if tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 1] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 1]: return "_2"
     if tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 1] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 1]: return "_3"
@@ -290,8 +291,8 @@ def generate_ponds(layer, land_height):
 
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            tile_height = abs(snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2)
-            if tile_height + land_height - 0.25 < 0 and not "m_" in layer.get((x, y), ""):
+            tile_height = tile_Heights[(x, y)]#abs(snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2)
+            if tile_height == 0:#tile_height + land_height - 0.25 < 0 and not "m_" in layer.get((x, y), ""):
                     layer[(x, y)] = "pd_"
 
 
@@ -455,7 +456,7 @@ def spawn_snorlax(layer):
 def spawn_pikachu(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if random.random() < 0.001 and layer.get((x, y), "") == "" and "pd_" not in ground_Tiles.get((x, y), "") and not ground_Tiles["Pikachu"]:
+            if random.random() < 0.001 and layer.get((x, y), "") == "" and "pd_" not in ground_Tiles.get((x, y), "") and "m_" not in ground_Tiles.get((x, y), "") and not ground_Tiles["Pikachu"]:
                 layer[(x, y)] = "pikachu_" + str(random.randint(1, 4))
                 ground_Tiles["Pikachu"] = True
 
@@ -489,6 +490,24 @@ def spawn_fountain(layer):
     houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + 4), "Right_Connect": (house_x + 4, house_y + 4)}
 
 
+def spawn_npc(layer, total_npcs, population, path_only):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            direction = random.randint(1, 4)
+            if (x, y) not in layer.keys() and (x, y) not in house_Tiles.keys() and random.random() < 0.001 * population:
+                if path_only:
+                    if "p_" in ground_Tiles.get((x, y), "") or "b_" in ground_Tiles.get((x, y), ""):
+                        layer[(x, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_" + str(direction)
+                        if random.random() < 0.5 and direction == 2:
+                            if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys():
+                                layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
+                else:
+                    layer[(x, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_" + str(direction)
+                    if random.random() < 0.5 and direction == 2:
+                        if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys():
+                            layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
+
+
 def check_bridge_space(layer, x, y, x_size, y_size):
     for bridge_tile in range(x_size * y_size):
         if "b_" not in layer.get((x + bridge_tile % x_size, y + math.floor(bridge_tile / x_size)), "") and not "pl_" in layer.get((x + bridge_tile % x_size, y + math.floor(bridge_tile / x_size)), ""):
@@ -511,7 +530,7 @@ def check_availability_water(layer, start_x, start_y, x_size, y_size):
 
 
 def generate_hills(layer):
-    mountainize(tile_Heights, 10)
+    mountainize(tile_Heights, 4)
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             hill_texture = str(calculate_hill_texture(tile_Heights, x, y))
@@ -522,7 +541,7 @@ def generate_hills(layer):
 def mountainize(layer, max_height):
     from math import floor
     octaves = 1
-    freq = 1000
+    freq = 100
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
     for x in range(0, map_Size_X):
@@ -571,16 +590,19 @@ def test_hills_around(height_list, x, y):
 
 
 def render(layer):
-    add_watermark()
+    #add_watermark()
+    correction = 0
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if (x, y) in layer.keys():
                 tile = str(layer[(x, y)])
+                if "npc_" in layer[(x, y)]: correction = 3
                 try:
-                    screen.blit(pygame.image.load(os.path.join("resources", tile + ".png")), (x * tile_Size, y * tile_Size))
+                    screen.blit(pygame.image.load(os.path.join("resources", tile + ".png")), (x * tile_Size, y * tile_Size - correction))
                 except Exception as e:
-                    screen.blit(pygame.image.load(os.path.join("resources", "missing.png")), (x * tile_Size, y * tile_Size))
+                    screen.blit(pygame.image.load(os.path.join("resources", "missing.png")), (x * tile_Size, y * tile_Size - correction))
                     print(e)
+
     pygame.display.update()
 
 
@@ -590,12 +612,12 @@ def add_watermark():
 
 
 tile_Size = 16
-map_Size_X = 120 #get_int(10, 100, "Amount of tiles in x-direction")
-map_Size_Y = 68 #get_int(10, 100, "Amount of tiles in y-direction")
+map_Size_X = 100 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 sne_rate = 30 #get_int(0, 100, "Small size nature elements spawn rate")
-mne_rate = 5 #get_int(0, 100, "Medium size nature elements spawn rate")
+mne_rate = 20 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
@@ -605,12 +627,14 @@ ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": Fa
 while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"] or not ground_Tiles["Snorlax"]:
 """
 ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False}
+npc_Layer = {}
 tile_Heights = {}
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
 generate_hills(ground_Tiles)
 generate_ponds(ground_Tiles, 0)
+
 spawn_pokecenter(house_Tiles)
 spawn_pokemarket(house_Tiles)
 #spawn_fountain(house_Tiles)
@@ -621,6 +645,7 @@ spawn_house(house_Tiles, 4, 4, 5, 1)
 spawn_house(house_Tiles, 5, 4, 7, 1)
 generate_path(ground_Tiles, "1", 2)
 spawn_truck(house_Tiles)
+spawn_npc(npc_Layer, 6, 20, True)
 calculate_paths(ground_Tiles)
 calculate_ponds(ground_Tiles)
 spawn_lapras(ground_Tiles)
@@ -632,8 +657,13 @@ spawn_mne(ground_Tiles, mne_rate)
 fill_up_grass(ground_Tiles, sne_rate)
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
+print("rendering ground tiles")
 render(ground_Tiles)
+print("rendering house tiles")
 render(house_Tiles)
+print("rendering npc's")
+render(npc_Layer)
+print("finished rendering")
 
 save = input("Save this image? (y/n): ")
 t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
