@@ -1,7 +1,9 @@
-import time, datetime, pygame, os, random, math
+import datetime, pygame, os, random, math
 from noise import pnoise2, snoise2
 
-random.seed(69)
+#random.seed(69)
+
+
 def get_int(lower_bound, upper_bound, message):
     integer = int(input(message + " (" + str(lower_bound) + "-" + str(upper_bound) + "): "))
     while integer < lower_bound or integer > upper_bound:
@@ -33,9 +35,9 @@ def random_grass(decoration_rate, x, y, off_x, off_y):
             return "sne_" + str(temp_sne)
 
 
-def fill_up_grass(layer, decoration_rate):
-    off_x = random.random() * 1000000
-    off_y = random.random() * 1000000
+def fill_up_grass(layer, decoration_rate, offset_x, offset_y):
+    off_x = offset_x
+    off_y = offset_y
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if not (x, y) in layer.keys():
@@ -52,7 +54,6 @@ def generate_path(layer, path_Type, path_width):
     calculate_bridges(layer)
     calculate_Paths(layer)
     """
-    from math import floor
     for house in range(0, len(houses_Connecters) - 1):
         distance1 = int(houses_Connecters[house]["Left_Connect"][0] - houses_Connecters[house + 1]["Right_Connect"][0])
         distance2 = int(houses_Connecters[house]["Right_Connect"][0] - houses_Connecters[house + 1]["Left_Connect"][0])
@@ -93,6 +94,7 @@ def generate_path(layer, path_Type, path_width):
             path_layout = path_Type
 
 #vertical path
+
         path_height = tile_Heights[(start_x_vertical, start_y_vertical)]
 
         for path in range(path_width * y_difference + 2 * path_width):
@@ -101,8 +103,9 @@ def generate_path(layer, path_Type, path_width):
 
             if path % 2 == 0 and path_height > 0:
                 try_horizontal_stairs(x, y, path_height)
-                tile_Heights[(x - 1, y)] = path_height
-                tile_Heights[(x + 2, y)] = path_height
+                if tile_Heights[(x - 1, y)] < path_height: tile_Heights[(x - 1, y)] = path_height
+                if tile_Heights[(x + 2, y)] < path_height: tile_Heights[(x + 2, y)] = path_height
+                #if "p_" in layer.get((x, y), "") and "p_" in layer.get((x + 1, y), ""): break
             path_height = tile_Heights[(x, y + 1)]
 
             if layer.get((x, y), "") == "pd_" or layer.get((x, y), "") == "b_" or layer.get((x, y + 1), "") == "pd_":
@@ -120,16 +123,15 @@ def generate_path(layer, path_Type, path_width):
 
             if path // (x_difference + 2) == 0 and path_height > 0:
                 try_vertical_stairs(x, y, path_height)
-                tile_Heights[(x, y - 1)] = path_height
-                tile_Heights[(x, y + 2)] = path_height
+                if tile_Heights[(x, y - 1)] < path_height: tile_Heights[(x, y - 1)] = path_height
+                if tile_Heights[(x, y + 2)] < path_height: tile_Heights[(x, y + 2)] = path_height
             path_height = tile_Heights[(x + 1, y)]
 
-            if layer.get((x, y), "") == "pd_" or layer.get((x, y), "") == "b_" or layer.get((x + 1, y), "") == "pd_":
+            if layer.get((x, y), "") == "pd_" or layer.get((x, y), "") == "b_" or layer.get((x + 1, y), "") == "pd_" or tile_Heights[(x - 1, y)] < 1:
                 layer[(x, y)] = "b_" + str(path // x_difference + 1)
             else:
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
-
 
     finish_bridges(layer)
     finish_bridges(layer)
@@ -145,7 +147,7 @@ def try_horizontal_stairs(x, y, path_height):
     if tile_Heights[(x, y + 1)] < path_height and tile_Heights[(x, y + 1)] > 0:
         ground_Tiles[(x, y)] = "sta_1"
         ground_Tiles[(x + 1, y)] = "sta_1"
-    elif tile_Heights[(x, y + 1)] > path_height:
+    elif tile_Heights[(x, y + 1)] > path_height and tile_Heights[(x, y + 1)] > 0:
         ground_Tiles[(x, y + 1)] = "sta_8"
         ground_Tiles[(x + 1, y + 1)] = "sta_8"
 
@@ -155,12 +157,13 @@ def try_vertical_stairs(x, y, path_height):
         tile_Heights[(x + 1, y)] = min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)])
         tile_Heights[(x + 1, y + 1)] = min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)])
 
-    if tile_Heights[(x + 1, y)] < path_height and tile_Heights[(x, y + 1)] > 0:
+    if tile_Heights[(x + 1, y)] < path_height and tile_Heights[(x + 1, y)] > 0:
         ground_Tiles[(x, y)] = "sta_6"
         ground_Tiles[(x, y + 1)] = "sta_6"
-    elif tile_Heights[(x + 1, y)] > path_height:
+    elif tile_Heights[(x + 1, y)] > path_height and tile_Heights[(x + 1, y)] > 0:
         ground_Tiles[(x + 1, y)] = "sta_3"
         ground_Tiles[(x + 1, y + 1)] = "sta_3"
+
 
 def out_Of_Bounds(x, y):
     if x < 0 or y < 0 or x >= map_Size_X or y >= map_Size_Y:
@@ -171,8 +174,8 @@ def out_Of_Bounds(x, y):
 
 def random_adjacent_tile(layer, current_X, current_Y):
     direction = random.randint(0, 3)
-    temp_x_change = direction_To_Change(direction)[0]
-    temp_y_change = direction_To_Change(direction)[1]
+    temp_x_change = direction_to_change(direction)[0]
+    temp_y_change = direction_to_change(direction)[1]
     new_X = current_X
     new_Y = current_Y
     new_X += temp_x_change
@@ -181,8 +184,8 @@ def random_adjacent_tile(layer, current_X, current_Y):
         new_X = current_X
         new_Y = current_Y
         direction = random.randint(0, 3)
-        temp_x_change = direction_To_Change(direction)[0]
-        temp_y_change = direction_To_Change(direction)[1]
+        temp_x_change = direction_to_change(direction)[0]
+        temp_y_change = direction_to_change(direction)[1]
         new_X += temp_x_change
         new_Y += temp_y_change
 
@@ -211,8 +214,8 @@ def taken(layer, x, y):
 
 
 def extend_Path(layer, path_Type, x1, y1, x2, y2, direction, length):
-    x_change = direction_To_Change((direction + 1) % 4)[0]
-    y_change = direction_To_Change((direction + 1) % 4)[1]
+    x_change = direction_to_change((direction + 1) % 4)[0]
+    y_change = direction_to_change((direction + 1) % 4)[1]
     new_x1 = x1
     new_y1 = y1
     new_x2 = x2
@@ -241,7 +244,7 @@ def extend_Path(layer, path_Type, x1, y1, x2, y2, direction, length):
     return new_coordinates
 
 
-def direction_To_Change(direction):
+def direction_to_change(direction):
     x_change = 0
     y_change = 0
     if direction == 0: x_change = 1
@@ -321,16 +324,11 @@ def calculate_ponds(layer):
                 layer[(x, y)] = str(layer[(x, y)]) + str(pond)
 
 
-def generate_ponds(layer, land_height):
-    octaves = 1
-    freq = 60
-    off_x = random.random() * 1000000
-    off_y = random.random() * 1000000
-
+def generate_ponds(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            tile_height = tile_Heights[(x, y)]#abs(snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2)
-            if tile_height == 0:#tile_height + land_height - 0.25 < 0 and not "m_" in layer.get((x, y), ""):
+            tile_height = tile_Heights[(x, y)]
+            if tile_height == 0:
                     layer[(x, y)] = "pd_"
 
 
@@ -394,11 +392,11 @@ def spawn_gyarados(layer):
                 layer[(x, y)] = "pd_g_" + str(1 + shiny)
 
 
-def spawn_mne(layer, spawn_rate):
+def spawn_mne(layer, spawn_rate, offset_x, offset_y):
     octaves = 3
     freq = 40
-    off_x = random.random() * 1000000
-    off_y = random.random() * 1000000
+    off_x = offset_x
+    off_y = offset_y
     for y in range(map_Size_Y):
         for x in range(map_Size_X):
             mne_biomes[(x, y)] = snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2
@@ -575,17 +573,17 @@ def check_availability_water(layer, start_x, start_y, x_size, y_size):
     return availability
 
 
-def generate_hills(layer):
-    mountainize(tile_Heights, 4)
+def generate_hills(layer, offset_x, offset_y):
+    mountainize(tile_Heights, 4, offset_x, offset_y)
     #finish_hills(layer)
 
 
-def mountainize(layer, max_height):
+def mountainize(layer, max_height, offset_x, offset_y):
     from math import floor
     octaves = 1
     freq = 100
-    off_x = random.random() * 1000000
-    off_y = random.random() * 1000000
+    off_x = offset_x
+    off_y = offset_y
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             tile_height = abs(floor((snoise2(round((x + off_x) / freq, 2), round((y + off_y) / freq, 2), octaves)) * max_height))
@@ -677,6 +675,8 @@ mne_rate = 20 #get_int(0, 100, "Medium size nature elements spawn rate")
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
 #if user_Path_Amount != 0: user_Path_Length = get_int(1, 24, "Maximum length of a path")
+x_offset = random.randint(0, 1000000)
+y_offset = random.randint(0, 1000000)
 """
 ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False}
 while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"] or not ground_Tiles["Snorlax"]:
@@ -687,8 +687,8 @@ tile_Heights = {}
 mne_biomes = {}
 house_Tiles = {}
 houses_Connecters = {}
-generate_hills(ground_Tiles)
-generate_ponds(ground_Tiles, 0)
+generate_hills(ground_Tiles, x_offset, y_offset)
+generate_ponds(ground_Tiles)
 
 spawn_pokecenter(house_Tiles)
 spawn_pokemarket(house_Tiles)
@@ -709,8 +709,8 @@ spawn_gyarados(ground_Tiles)
 spawn_snorlax(house_Tiles)
 spawn_pikachu(house_Tiles)
 spawn_lanterns(ground_Tiles)
-spawn_mne(ground_Tiles, mne_rate)
-fill_up_grass(ground_Tiles, sne_rate)
+spawn_mne(ground_Tiles, mne_rate, x_offset, y_offset)
+fill_up_grass(ground_Tiles, sne_rate, x_offset, y_offset)
 finish_hills(ground_Tiles)
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
