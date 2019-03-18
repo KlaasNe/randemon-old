@@ -147,6 +147,7 @@ def generate_path(layer, path_Type, path_width):
     finish_stairs(layer)
     calculate_platforms(layer)
     finish_hills(layer)
+    finishing_touches_bridges(layer)
 
 
 def try_horizontal_stairs(x, y, path_height):
@@ -311,6 +312,13 @@ def finish_bridges(layer):
                     layer[(x, y)] = "b_6"
                 if (layer.get((x, y - 1), "") == "b_1" or layer.get((x, y - 1), "") == "b_5") and (layer.get((x, y + 1), "") == "b_1" or layer.get((x, y + 1), "") == "b_2"):
                     layer[(x, y)] = "b_5"
+
+
+def finishing_touches_bridges(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if "b_" in layer.get((x, y - 1), "") and "pd_" in layer.get((x, y), ""):
+                decoration_Tiles[(x, y)] = "bu_0"
 
 
 def calculate_platforms(layer):
@@ -481,7 +489,7 @@ def find_lower_right(layer, x, y, size_y):
 def spawn_pokecenter(layer):
     house_x = random.randint(1, map_Size_X - 5)
     house_y = random.randint(1, map_Size_Y - 5)
-    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5 + 1, 5 + 4) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5 + 1, 5 + 4) or not flat_surface(house_x - 1, house_y + 2, 5 + 2, 5 + 1):
+    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5 + 1, 5 + 4) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5 + 1, 5 + 4) or not flat_surface(house_x - 1, house_y + 1, 5 + 2, 5 + 2):
         house_x = random.randint(1, map_Size_X - 5)
         house_y = random.randint(1, map_Size_Y - 5)
     for house_tile in range(1, 5 * 5 + 1):
@@ -495,7 +503,7 @@ def spawn_pokecenter(layer):
 def spawn_pokemarket(layer):
     house_x = random.randint(1, map_Size_X - 4)
     house_y = random.randint(1, map_Size_Y - 4)
-    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 4 + 1, 4 + 4) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 4 + 1, 4 + 4) or not flat_surface(house_x - 1, house_y + 2, 4 + 2, 4 + 1):
+    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 4 + 1, 4 + 4) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 4 + 1, 4 + 4) or not flat_surface(house_x - 1, house_y + 1, 4 + 2, 4 + 2):
         house_x = random.randint(1, map_Size_X - 4)
         house_y = random.randint(1, map_Size_Y - 4)
     for house_tile in range(1, 4 * 4 + 1):
@@ -556,7 +564,7 @@ def spawn_lanterns(layer):
 def spawn_fountain(layer):
     house_x = random.randint(1, map_Size_X - 5)
     house_y = random.randint(1, map_Size_Y - 5)
-    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5, 5) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5, 5) or not flat_surface(house_x - 2, house_y - 2, 5 + 2, 5 + 2):
+    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5, 5) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5, 5) or not flat_surface(house_x - 1, house_y - 1, 5 + 2, 5 + 2):
         house_x = random.randint(1, map_Size_X - 5)
         house_y = random.randint(1, map_Size_Y - 5)
 
@@ -713,12 +721,12 @@ def add_watermark():
 
 
 tile_Size = 16
-map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
-map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
+map_Size_X = 68 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_Y = 120 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
-sne_rate = 30 #get_int(0, 100, "Small size nature elements spawn rate")
-mne_rate = 20 #get_int(0, 100, "Medium size nature elements spawn rate")
+sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
+mne_rate = 50 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
@@ -744,7 +752,7 @@ for background in range(friendshipgoals):
     houses_Connecters = {}
     decoration_Tiles = {}
     rain = {}
-    generate_hills(ground_Tiles, 4, x_offset_friendship, y_offset_friendship)
+    generate_hills(ground_Tiles, 5, x_offset_friendship, y_offset_friendship)
     generate_ponds(ground_Tiles)
 
     spawn_pokecenter(house_Tiles)
@@ -755,9 +763,12 @@ for background in range(friendshipgoals):
     spawn_house(house_Tiles, 3, 5, 4, 1)
     spawn_house(house_Tiles, 4, 4, 5, 1)
     spawn_house(house_Tiles, 5, 4, 7, 1)
+    spawn_house(house_Tiles, 6, 5, 4, 1)
+    spawn_house(house_Tiles, 7, 5, 4, 1)
+    spawn_house(house_Tiles, 8, 4, 5, 1)
+    spawn_house(house_Tiles, 9, 6, 4, 1)
     generate_path(ground_Tiles, "1", 2)
     spawn_truck(house_Tiles)
-    spawn_npc(npc_Layer, 6, 20, True)
     calculate_paths(ground_Tiles)
     finish_hills(ground_Tiles)
     calculate_ponds(ground_Tiles)
@@ -767,6 +778,7 @@ for background in range(friendshipgoals):
     spawn_pikachu(house_Tiles)
     spawn_lanterns(ground_Tiles)
     spawn_mne(ground_Tiles, mne_rate, x_offset_friendship, y_offset_friendship)
+    spawn_npc(npc_Layer, 6, 30, True)
     fill_up_grass(ground_Tiles, sne_rate, x_offset_friendship, y_offset_friendship)
     finish_hills(ground_Tiles)
     generate_rain(rain, 20, 20)
