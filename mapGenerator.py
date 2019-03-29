@@ -3,7 +3,8 @@ from noise import pnoise2, snoise2
 from time import sleep
 
 seed = random.randint(0, sys.maxsize)
-random.seed(seed)
+zaad = seed
+random.seed(zaad)
 
 
 def get_int(lower_bound, upper_bound, message):
@@ -111,8 +112,8 @@ def generate_path(layer, path_Type, path_width):
                 layer[(x, y)] = "b_" + str((path % 2) + 3)
             else:
                 if path % 2 == 0 and path_height > 0:
-                    if tile_Heights.get((x - 1, y), path_height) < path_height: tile_Heights[(x - 1, y)] = path_height
-                    if tile_Heights.get((x + 2, y), path_height) < path_height: tile_Heights[(x + 2, y)] = path_height
+                    if tile_Heights.get((x - 1, y), path_height) < path_height and "p_" not in layer.get((x - 1, y), ""): tile_Heights[(x - 1, y)] = path_height
+                    if tile_Heights.get((x + 2, y), path_height) < path_height and "p_" not in layer.get((x + 2, y), ""): tile_Heights[(x + 2, y)] = path_height
 
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
@@ -135,16 +136,19 @@ def generate_path(layer, path_Type, path_width):
                 layer[(x, y)] = "b_" + str(path // (x_difference + 2) + 1)
             else:
                 if path // (x_difference + 2) == 0 and path_height > 0:
-                    if tile_Heights.get((x, y - 1), path_height) < path_height: tile_Heights[(x, y - 1)] = path_height
-                    if tile_Heights.get((x, y + 2), path_height) < path_height: tile_Heights[(x, y + 2)] = path_height
+                    if tile_Heights.get((x, y - 1), path_height) < path_height and "p_" not in layer.get((x, y - 1), ""):tile_Heights[(x, y - 1)] = path_height
+                    if tile_Heights.get((x, y + 2), path_height) < path_height and "p_" not in layer.get((x, y + 2), ""): tile_Heights[(x, y + 2)] = path_height
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
 
             path_height = tile_Heights.get((x + 1, y), path_height)
 
         finish_bridges(layer)
+        remove_half_stairs(layer)
+        #move_faulty_stairs(layer)
+        finish_stairs(layer)
 
-    finish_stairs(layer)
+    #remove_half_stairs(layer)
     calculate_platforms(layer)
     finish_hills(layer)
     finishing_touches_bridges(layer)
@@ -157,8 +161,8 @@ def try_horizontal_stairs(x, y, path_height):
             tile_Heights[(x + 1, y + 1)] = min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)])
         if path_height > 0:
             if tile_Heights[(x, y + 1)] < path_height and tile_Heights[(x, y + 1)] > 0:
-                ground_Tiles[(x, y)] = "sta_0"
-                ground_Tiles[(x + 1, y)] = "sta_1"
+                ground_Tiles[(x, y)] = "sta_1_0"
+                ground_Tiles[(x + 1, y)] = "sta_1_1"
             elif tile_Heights[(x, y + 1)] > path_height and tile_Heights[(x, y + 1)] > 0:
                 ground_Tiles[(x, y + 1)] = "sta_8_0"
                 ground_Tiles[(x + 1, y + 1)] = "sta_8_1"
@@ -178,24 +182,115 @@ def try_vertical_stairs(x, y, path_height):
                 ground_Tiles[(x + 1, y + 1)] = "sta_3_0"
 
 
-def try_backdoor(layer, x, y):
+def  try_backdoor(layer, x, y):
     if "h_" in layer.get((x, y), "") and "h_" in layer.get((x + 1, y), "") and not "h_" in layer.get((x, y - 1), ""):
-        decoration_Tiles[(x, y)] = "bd_0"
-        decoration_Tiles[(x + 1, y)] = "bd_2"
+        if "bd_" in decoration_Tiles.get((x - 1, y), ""):
+            decoration_Tiles[(x, y)] = "bd_1"
+            if decoration_Tiles.get((x - 1, y), "") == "bd_2": decoration_Tiles[(x - 1, y)] = "bd_1"
+        else:
+            decoration_Tiles[(x, y)] = "bd_0"
+        if "bd_" in decoration_Tiles.get((x + 2, y), ""):
+            decoration_Tiles[(x + 1, y)] = "bd_1"
+            if decoration_Tiles.get((x + 1, y), "") == "bd_0": decoration_Tiles[(x + 1, y)] = "bd_1"
+        else:
+            decoration_Tiles[(x + 1, y)] = "bd_2"
 
 
 def finish_stairs(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if "sta_" in layer.get((x, y),""):
-                if (layer.get((x, y - 1), "") == "sta_3_1" or layer.get((x, y - 1),"") == "sta_3") and "sta_" in layer.get((x, y + 1), ""):
+                if layer.get((x, y), "") == "sta_1_0" and "sta_" in layer.get((x - 1, y), ""):
+                    layer[(x, y)] = "sta_1_1"
+                if layer.get((x, y), "") == "sta_3_0" and "sta_" in layer.get((x, y + 1), ""):
+                    layer[(x, y)] = "sta_3_1"
+                if layer.get((x, y), "") == "sta_6_0" and "sta_" in layer.get((x, y + 1), ""):
+                    layer[(x, y)] = "sta_6_1"
+
+                if "sta_3" in layer.get((x, y - 1), "") and "sta_" in layer.get((x, y + 1), ""):
                     layer[(x, y)] = "sta_3"
-                if (layer.get((x, y - 1), "") == "sta_6_1" or layer.get((x, y - 1),"") == "sta_6") and "sta_" in layer.get((x, y + 1), ""):
+                if "sta_6" in layer.get((x, y - 1), "") and "sta_" in layer.get((x, y + 1), ""):
                     layer[(x, y)] = "sta_6"
-                if (layer.get((x - 1, y), "") == "sta_8_0" or layer.get((x - 1, y), "") == "sta_8") and "sta_" in layer.get((x + 1, y), ""):
+                if "sta_8" in layer.get((x - 1, y), "") and "sta_" in layer.get((x + 1, y), ""):
                     layer[(x, y)] = "sta_8"
-                if (layer.get((x - 1, y), "") == "sta_0" or layer.get((x - 1, y), "") == "sta_1") and "sta_" in layer.get((x + 1, y), ""):
-                    layer[(x, y)] = "sta_1"
+                if "sta_1" in layer.get((x - 1, y), "") and "sta_" in layer.get((x + 1, y), ""):
+                    layer[(x, y)] = "sta_1_1"
+
+
+def remove_half_stairs(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if "sta_" in layer.get((x, y), ""):
+                stair_type = layer[(x, y)][4]
+                if not check_stairs_around(layer, x, y, stair_type): layer[(x, y)] = "p_1"
+
+
+def check_stairs_around(layer, x, y, stair_type):
+    for tile in range(4):
+        if "sta_" + stair_type in layer.get((x - 1 + ((2 * tile) + 1) % 3, y - 1 + ((2 * tile) + 1) // 3), ""): return True
+    return False
+
+
+def move_faulty_stairs(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if "sta_" in layer.get((x, y), ""):
+                move_stair(layer, x, y)
+
+
+def move_stair(layer, x, y):
+    if "sta_" in layer.get((x, y), ""):
+        stair = layer.get((x, y), "")
+        stair_type = int(stair[4])
+        try:
+            stair_subtype = int(stair[6])
+        except Exception as e:
+            stair_subtype = -1
+        move_stair_tile(layer, x, y, stair, stair_type)
+        fix_adjacent_hill(layer, x, y, stair_type, stair_subtype)
+
+
+def move_stair_tile(layer, x, y, stair, stair_type):
+    if stair_type == 1:
+        if tile_Heights.get((x, y), 0) < tile_Heights.get((x, y - 1), 0):
+            move_stair_tile_to(layer, x, y, x, y - 1, "p_1", stair)
+        elif tile_Heights.get((x, y), 0) == tile_Heights.get((x, y + 1), 0):
+            move_stair_tile_to(layer, x, y, x, y + 1, "p_1", stair)
+    elif stair_type == 3:
+        if tile_Heights.get((x, y), 0) < tile_Heights.get((x + 1, y), 0):
+            move_stair_tile_to(layer, x, y, x + 1, y, "p_1", stair)
+        elif tile_Heights.get((x, y), 0) == tile_Heights.get((x - 1, y), 0):
+            move_stair_tile_to(layer, x, y, x - 1, y, "p_1", stair)
+    elif stair_type == 6:
+        if tile_Heights.get((x, y), 0) < tile_Heights.get((x - 1, y), 0):
+            move_stair_tile_to(layer, x, y, x - 1, y, "p_1", stair)
+        elif tile_Heights.get((x, y), 0) == tile_Heights.get((x + 1, y), 0):
+            move_stair_tile_to(layer, x, y, x + 1, y, "p_1", stair)
+    elif stair_type == 8:
+        if tile_Heights.get((x, y), 0) < tile_Heights.get((x, y + 1), 0):
+            move_stair_tile_to(layer, x, y, x, y + 1, "p_1", stair)
+        elif tile_Heights.get((x, y), 0) == tile_Heights.get((x, y - 1), 0):
+            move_stair_tile_to(layer, x, y, x, y - 1, "p_1", stair)
+
+
+def move_stair_tile_to(layer, x, y, new_x, new_y, replace_tile, stair):
+    if "sta_" in layer.get((x, y), ""):
+        stair_type = int(stair[4])
+        layer[(new_x, new_y)] = stair
+        layer[(x, y)] = replace_tile
+
+
+def fix_adjacent_hill(layer, x, y, stair_type, stair_subtype):
+    if stair_type == 1 or stair_type == 8:
+        if stair_subtype == 0:
+            tile_Heights[(x - 1, y)] = tile_Heights[(x, y)]
+        elif stair_subtype == 1:
+            tile_Heights[(x + 1, y)] = tile_Heights[(x, y)]
+    elif stair_type == 3 or stair_type == 6:
+        if stair_subtype == 1:
+            tile_Heights[(x, y - 1)] = tile_Heights[(x, y)]
+        elif stair_subtype == 0:
+            tile_Heights[(x, y + 1)] = tile_Heights[(x, y)]
 
 
 def out_Of_Bounds(x, y):
@@ -297,6 +392,8 @@ def calculate_paths(layer):
                 else:
                     layer[(x, y)] = "g_0"
 
+    finish_path_edges(layer)
+
 
 def finish_bridges(layer):
     for x in range(0, map_Size_X):
@@ -308,9 +405,9 @@ def finish_bridges(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if "b_" in layer.get((x, y), ""):
-                if (layer.get((x - 1, y), "") == "b_3" or layer.get((x - 1, y), "") == "b_6") and (layer.get((x + 1, y), "") == "b_3" or layer.get((x + 1, y), "") == "b_4"):
+                if (layer.get((x - 1, y), "") == "b_3" or layer.get((x - 1, y), "") == "b_6") and (layer.get((x + 1, y), "") == "b_3" or layer.get((x + 1, y), "") == "b_4" or layer.get((x + 1, y), "") == "b_6"):
                     layer[(x, y)] = "b_6"
-                if (layer.get((x, y - 1), "") == "b_1" or layer.get((x, y - 1), "") == "b_5") and (layer.get((x, y + 1), "") == "b_1" or layer.get((x, y + 1), "") == "b_2"):
+                if (layer.get((x, y - 1), "") == "b_1" or layer.get((x, y - 1), "") == "b_5") and (layer.get((x, y + 1), "") == "b_1" or layer.get((x, y + 1), "") == "b_2" or layer.get((x, y + 1), "") == "b_5"):
                     layer[(x, y)] = "b_5"
 
 
@@ -354,6 +451,19 @@ def calculate_path_look(layer, x, y):
     if tiles_around[0] == 1 and tiles_around[1] == 1 and tiles_around[3] == 1: return "_7"
     if tiles_around[3] == 1 and tiles_around[6] == 1 and tiles_around[7] == 1: return "_8"
     return "_er"
+
+
+def finish_path_edges(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y + 1), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x, y + 1), ""):
+                layer[(x, y)] = "p_1_2_m"
+            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x, y - 1), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x, y - 1), ""):
+                layer[(x, y)] = "p_1_4_m"
+            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x + 1, y), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x + 1, y), ""):
+                layer[(x, y)] = "p_1_3_m"
+            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x + 1, y), ""):
+                layer[(x, y)] = "p_1_1_m"
 
 
 def calculate_ponds(layer):
@@ -454,7 +564,9 @@ def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
     for houses in range(0, amount):
         house_x = random.randint(1, map_Size_X - house_size_y)
         house_y = random.randint(1, map_Size_Y - house_size_x)
-        while not check_availability_zone(ground_Tiles, house_x, house_y, house_size_x + 1, house_size_y + 2) or not check_availability_zone(house_Tiles, house_x, house_y, house_size_x, house_size_y + 2) or not flat_surface(house_x - 1, house_y + 2, house_size_x + 2, house_size_y + 1):
+        attempt = 0
+        while not check_availability_zone(ground_Tiles, house_x, house_y, house_size_x + 1, house_size_y + 2) or not check_availability_zone(house_Tiles, house_x, house_y, house_size_x, house_size_y + 2) or not flat_surface(house_x - 3, house_y + 2, house_size_x + 6, house_size_y + 1):
+            attempt += 1
             house_x = random.randint(1, map_Size_X - house_size_x)
             house_y = random.randint(1, map_Size_Y - house_size_y)
             if "h_" in layer.get((house_x, house_y), ""):
@@ -519,7 +631,7 @@ def spawn_truck(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if random.random() < 0.05 and "p_" in ground_Tiles.get((x, y + 3), "") and "p_" in ground_Tiles.get((x + 2, y + 3), ""):
-                if check_availability_zone(house_Tiles, x, y, 3, 3) and check_availability_zone(ground_Tiles, x, y, 3, 1) and not ground_Tiles["Truck"]:
+                if check_availability_zone(house_Tiles, x, y, 3, 3) and check_availability_zone(ground_Tiles, x, y, 3, 1) and flat_surface(x, y + 1, 3, 2) and not ground_Tiles["Truck"]:
                     for truck_tile in range(9):
                         layer[(x + truck_tile % 3, y + math.floor(truck_tile / 3))] = "t_" + str(truck_tile + 1)
                     ground_Tiles["Truck"] = True
@@ -564,7 +676,7 @@ def spawn_lanterns(layer):
 def spawn_fountain(layer):
     house_x = random.randint(1, map_Size_X - 5)
     house_y = random.randint(1, map_Size_Y - 5)
-    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5, 5) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5, 5) or not flat_surface(house_x - 1, house_y - 1, 5 + 2, 5 + 2):
+    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5, 5) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5, 5) or not flat_surface(house_x - 2, house_y - 2, 5 + 2, 5 + 2):
         house_x = random.randint(1, map_Size_X - 5)
         house_y = random.randint(1, map_Size_Y - 5)
 
@@ -580,17 +692,31 @@ def spawn_npc(layer, total_npcs, population, path_only):
         for y in range(0, map_Size_Y):
             direction = random.randint(1, 4)
             if (x, y) not in layer.keys() and (x, y) not in house_Tiles.keys() and random.random() < 0.001 * population:
+                npc_number = random.randint(1, total_npcs)
                 if path_only:
-                    if "p_" in ground_Tiles.get((x, y), "") or "b_" in ground_Tiles.get((x, y), ""):
-                        layer[(x, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_" + str(direction)
+                    if "p_" in ground_Tiles.get((x, y), ""): #or "b_" in ground_Tiles.get((x, y), ""):x
+                        if npc_number not in off_Path_Npc: layer[(x, y)] = "npc_" + str(npc_number) + "_1"# + str(direction)
+                        """
                         if random.random() < 0.5 and direction == 2:
                             if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys() and ("p_" in ground_Tiles.get((x + 1, y), "") or "b_" in ground_Tiles.get((x, y), "")):
                                 layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
-                else:
-                    layer[(x, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_" + str(direction)
+                        """
+                elif random.randint(0, 4) == 0:
+                    if "pd_" in ground_Tiles.get((x, y), ""):
+                        npc_number = water_Npc[random.randint(1, len(water_Npc) - 1)]
+                    elif "b_" in ground_Tiles.get((x, y), ""):
+                        npc_number = bridge_Npc[random.randint(1, len(bridge_Npc) - 1)]
+                    elif "p_" not in ground_Tiles.get((x, y), ""):
+                        npc_number = outside_Npc[random.randint(1, len(outside_Npc) - 1)]
+                    else:
+                        while npc_number in off_Path_Npc:
+                            npc_number = random.randint(1, total_npcs)
+                    layer[(x, y)] = "npc_" + str(npc_number) + "_1" #+ str(direction)
+                    """
                     if random.random() < 0.5 and direction == 2:
-                        if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys():
+                        if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys() and "m_" not in ground_Tiles.get((x, y), ""):
                             layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
+                    """
 
 
 def check_bridge_space(layer, x, y, x_size, y_size):
@@ -640,14 +766,19 @@ def generate_height_map(layer, height_list):
 
 def calculate_hill_texture(height_list, x, y):
     hills_around = test_hills_around(height_list, x, y)
+
+    #if height_list.get((x, y), 0) < 2: return -1
+
     if hills_around[3] == 0 and hills_around[6] == -1 and hills_around[7] == 0: return 9
     if hills_around[5] == 0 and hills_around[7] == 0 and hills_around[8] == -1: return 10
     if hills_around[0] == -1 and hills_around[1] == 0 and hills_around[3] == 0: return 4
     if hills_around[1] == 0 and hills_around[2] == -1 and hills_around[5] == 0: return 4
 
-    if hills_around[1] == -1 and hills_around[3] == 0 and hills_around[5] == -1 and hills_around [7] == -1: return 15
-    if hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around [7] == 0: return 15
-    if hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == 0 and hills_around [7] == -1: return 15
+    if hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == -1: return 15
+    if hills_around[1] == -1 and hills_around[3] == 0 and hills_around[5] == -1 and hills_around[7] == -1: return 15
+    if hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == 0: return 15
+    if hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == 0 and hills_around[7] == -1: return 15
+    if hills_around[1] == 0 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == -1: return 15
 
     if hills_around[1] == 0 and hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == 0: return -1
     if hills_around[1] == 0 and hills_around[3] == -1 and hills_around[7] == 0: return 1
@@ -721,12 +852,12 @@ def add_watermark():
 
 
 tile_Size = 16
-map_Size_X = 68 #get_int(10, 100, "Amount of tiles in x-direction")
-map_Size_Y = 120 #get_int(10, 100, "Amount of tiles in y-direction")
+map_Size_X = 80 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
-mne_rate = 50 #get_int(0, 100, "Medium size nature elements spawn rate")
+mne_rate = 70 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
@@ -752,13 +883,19 @@ for background in range(friendshipgoals):
     houses_Connecters = {}
     decoration_Tiles = {}
     rain = {}
-    generate_hills(ground_Tiles, 5, x_offset_friendship, y_offset_friendship)
+    off_Path_Npc = [14, 15, 26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 49]
+    water_Npc = [28, 29, 30]
+    bridge_Npc = [31, 32, 36, 37, 38]
+    outside_Npc = [14, 15, 26, 27, 39, 49]
+    height_Tiles = {}
+    generate_hills(ground_Tiles, 4, x_offset_friendship, y_offset_friendship)
     generate_ponds(ground_Tiles)
+
+    #spawn_fountain(house_Tiles)
+    spawn_house(house_Tiles, 1, 4, 4, 1)
 
     spawn_pokecenter(house_Tiles)
     spawn_pokemarket(house_Tiles)
-    spawn_fountain(house_Tiles)
-    spawn_house(house_Tiles, 1, 4, 4, 1)
     spawn_house(house_Tiles, 2, 5, 3, 1)
     spawn_house(house_Tiles, 3, 5, 4, 1)
     spawn_house(house_Tiles, 4, 4, 5, 1)
@@ -778,12 +915,16 @@ for background in range(friendshipgoals):
     spawn_pikachu(house_Tiles)
     spawn_lanterns(ground_Tiles)
     spawn_mne(ground_Tiles, mne_rate, x_offset_friendship, y_offset_friendship)
-    spawn_npc(npc_Layer, 6, 30, True)
+    spawn_npc(npc_Layer, 55, 30, False)
     fill_up_grass(ground_Tiles, sne_rate, x_offset_friendship, y_offset_friendship)
     finish_hills(ground_Tiles)
-    generate_rain(rain, 20, 20)
+    generate_rain(rain, 20, 10)
 
     screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
+
+    generate_height_map(height_Tiles, tile_Heights)
+    render(height_Tiles, False)
+    sleep(0.5)
 
     render(ground_Tiles, False)
     render(decoration_Tiles, False)
@@ -801,7 +942,7 @@ for background in range(friendshipgoals):
 
 if friendshipgoals == 1:
     save = input("Save this image? (y/n/seed): ")
-    while save == "seed":
+    while save == "seed" or save == "zaad":
         print(seed)
         save = input("Save this image? (y/n/seed): ")
     t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
