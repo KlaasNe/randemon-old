@@ -392,7 +392,7 @@ def calculate_paths(layer):
                 else:
                     layer[(x, y)] = "g_0"
 
-    finish_path_edges(layer)
+    #finish_path_edges(layer)
 
 
 def finish_bridges(layer):
@@ -433,7 +433,7 @@ def calculate_path_look(layer, x, y):
     for around in range(0, 9):
         path_around = layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
         if path_around == 0: path_around = house_Tiles.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
-        if "p_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around) or "sta_" in str(path_around) or "m_4_p" in str(path_around):
+        if "p_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around) or "sta_" in str(path_around) or "m_4_p" in str(path_around) or "pd_" in str(path_around) or out_Of_Bounds(x + (around % 3) - 1, y + math.floor(around / 3) - 1):
             tiles_around.append(1)
         else:
             tiles_around.append(0)
@@ -464,6 +464,22 @@ def finish_path_edges(layer):
                 layer[(x, y)] = "p_1_3_m"
             elif tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x + 1, y), ""):
                 layer[(x, y)] = "p_1_1_m"
+
+
+def generate_beach(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if check_for_water_around(layer, x, y, random.randint(3, 5)) and (x, y) not in layer.keys(): layer[(x, y)] = "p_4"
+
+
+def check_for_water_around(layer, x, y, beachwidth):
+    for around in range(0, (beachwidth + 2) ** 2):
+        check_x = x + around % (beachwidth + 2) - beachwidth + 1
+        check_y = y + around // (beachwidth + 2) - beachwidth + 1
+        water_around = layer.get((check_x, check_y), "")
+        if "pd_" in str(water_around): #or "p_4" in str(water_around):
+            return True
+    return False
 
 
 def calculate_ponds(layer):
@@ -658,6 +674,17 @@ def spawn_pikachu(layer):
                 ground_Tiles["Pikachu"] = True
 
 
+def spawn_exceguttor(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if random.random() < 0.001 and "p_4" in ground_Tiles.get((x, y), "") and not ground_Tiles["Exceguttor"]:
+                shiny = 0
+                if random.random() < 0.02: shiny = 2
+                layer[(x, y)] = "exc_" + str(1 + shiny)
+                layer[(x, y - 1)] = "exc_" + str(2 + shiny)
+                ground_Tiles["Exceguttor"] = True
+
+
 def spawn_lanterns(layer):
     import random
     for x in range(0, map_Size_X):
@@ -701,7 +728,7 @@ def spawn_npc(layer, total_npcs, population, path_only):
                             if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys() and ("p_" in ground_Tiles.get((x + 1, y), "") or "b_" in ground_Tiles.get((x, y), "")):
                                 layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
                         """
-                elif random.randint(0, 4) == 0:
+                elif random.randint(0, 4) == 0 and "m_" not in ground_Tiles.get((x, y), ""):
                     if "pd_" in ground_Tiles.get((x, y), ""):
                         npc_number = water_Npc[random.randint(1, len(water_Npc) - 1)]
                     elif "b_" in ground_Tiles.get((x, y), ""):
@@ -714,7 +741,7 @@ def spawn_npc(layer, total_npcs, population, path_only):
                     layer[(x, y)] = "npc_" + str(npc_number) + "_1" #+ str(direction)
                     """
                     if random.random() < 0.5 and direction == 2:
-                        if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys() and "m_" not in ground_Tiles.get((x, y), ""):
+                        if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys():
                             layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
                     """
 
@@ -767,7 +794,7 @@ def generate_height_map(layer, height_list):
 def calculate_hill_texture(height_list, x, y):
     hills_around = test_hills_around(height_list, x, y)
 
-    #if height_list.get((x, y), 0) < 2: return -1
+    if height_list.get((x, y), 0) < 2: return -1
 
     if hills_around[3] == 0 and hills_around[6] == -1 and hills_around[7] == 0: return 9
     if hills_around[5] == 0 and hills_around[7] == 0 and hills_around[8] == -1: return 10
@@ -857,7 +884,7 @@ map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
-mne_rate = 70 #get_int(0, 100, "Medium size nature elements spawn rate")
+mne_rate = 50 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
@@ -875,7 +902,7 @@ while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_T
 for background in range(friendshipgoals):
     x_offset_friendship = x_offset + map_Size_X * (background % x_Wallpapers)
     y_offset_friendship = y_offset + map_Size_Y * (background // x_Wallpapers)
-    ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False}
+    ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False, "Exceguttor": False}
     npc_Layer = {}
     tile_Heights = {}
     mne_biomes = {}
@@ -906,6 +933,7 @@ for background in range(friendshipgoals):
     spawn_house(house_Tiles, 9, 6, 4, 1)
     generate_path(ground_Tiles, "1", 2)
     spawn_truck(house_Tiles)
+    generate_beach(ground_Tiles)
     calculate_paths(ground_Tiles)
     finish_hills(ground_Tiles)
     calculate_ponds(ground_Tiles)
@@ -913,6 +941,7 @@ for background in range(friendshipgoals):
     spawn_gyarados(ground_Tiles)
     spawn_snorlax(house_Tiles)
     spawn_pikachu(house_Tiles)
+    spawn_exceguttor(house_Tiles)
     spawn_lanterns(ground_Tiles)
     spawn_mne(ground_Tiles, mne_rate, x_offset_friendship, y_offset_friendship)
     spawn_npc(npc_Layer, 55, 30, False)
