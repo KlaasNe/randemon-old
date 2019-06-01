@@ -1,6 +1,8 @@
 import datetime, pygame, os, random, math, sys
-from noise import pnoise2, snoise2
+from noise import snoise2
 from time import sleep
+from worldMap import image_grayscale_to_dict
+import time
 
 seed = random.randint(0, sys.maxsize)
 zaad = seed
@@ -100,7 +102,7 @@ def generate_path(layer, path_Type, path_width):
 
         path_height = tile_Heights.get((start_x_vertical, start_y_vertical), 0)
 
-        for path in range(path_width * y_difference + 2 * path_width):
+        for path in range(path_width * y_difference + 4):
             x = start_x_vertical + (path % path_width)
             y = start_y_vertical + math.floor(path / path_width)
 
@@ -136,7 +138,7 @@ def generate_path(layer, path_Type, path_width):
                 layer[(x, y)] = "b_" + str(path // (x_difference + 2) + 1)
             else:
                 if path // (x_difference + 2) == 0 and path_height > 0:
-                    if tile_Heights.get((x, y - 1), path_height) < path_height and "p_" not in layer.get((x, y - 1), ""):tile_Heights[(x, y - 1)] = path_height
+                    if tile_Heights.get((x, y - 1), path_height) < path_height and "p_" not in layer.get((x, y - 1), ""): tile_Heights[(x, y - 1)] = path_height
                     if tile_Heights.get((x, y + 2), path_height) < path_height and "p_" not in layer.get((x, y + 2), ""): tile_Heights[(x, y + 2)] = path_height
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
@@ -144,11 +146,11 @@ def generate_path(layer, path_Type, path_width):
             path_height = tile_Heights.get((x + 1, y), path_height)
 
         finish_bridges(layer)
-        remove_half_stairs(layer)
-        #move_faulty_stairs(layer)
-        finish_stairs(layer)
 
-    #remove_half_stairs(layer)
+    remove_half_stairs(layer)
+    move_faulty_stairs(layer)
+    finish_stairs(layer)
+    remove_half_stairs_down(layer)
     calculate_platforms(layer)
     finish_hills(layer)
     finishing_touches_bridges(layer)
@@ -182,7 +184,7 @@ def try_vertical_stairs(x, y, path_height):
                 ground_Tiles[(x + 1, y + 1)] = "sta_3_0"
 
 
-def  try_backdoor(layer, x, y):
+def try_backdoor(layer, x, y):
     if "h_" in layer.get((x, y), "") and "h_" in layer.get((x + 1, y), "") and not "h_" in layer.get((x, y - 1), ""):
         if "bd_" in decoration_Tiles.get((x - 1, y), ""):
             decoration_Tiles[(x, y)] = "bd_1"
@@ -222,12 +224,24 @@ def remove_half_stairs(layer):
         for y in range(0, map_Size_Y):
             if "sta_" in layer.get((x, y), ""):
                 stair_type = layer[(x, y)][4]
-                if not check_stairs_around(layer, x, y, stair_type): layer[(x, y)] = "p_1"
+                if not check_stairs_around(layer, x, y, stair_type):
+                    layer[(x, y)] = "p_1"
+
+
+def remove_half_stairs_down(layer):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if "sta_" in layer.get((x, y), ""):
+                stair_type = layer[(x, y)][4]
+                if not check_stairs_around(layer, x, y, stair_type):
+                    layer[(x, y)] = "p_1"
+                    tile_Heights[(x, y)] = tile_Heights[(x, y)] - 1
 
 
 def check_stairs_around(layer, x, y, stair_type):
     for tile in range(4):
-        if "sta_" + stair_type in layer.get((x - 1 + ((2 * tile) + 1) % 3, y - 1 + ((2 * tile) + 1) // 3), ""): return True
+        if "sta_" + stair_type in layer.get((x - 1 + ((2 * tile) + 1) % 3, y - 1 + ((2 * tile) + 1) // 3), ""):
+            return True
     return False
 
 
@@ -275,22 +289,23 @@ def move_stair_tile(layer, x, y, stair, stair_type):
 
 def move_stair_tile_to(layer, x, y, new_x, new_y, replace_tile, stair):
     if "sta_" in layer.get((x, y), ""):
-        stair_type = int(stair[4])
         layer[(new_x, new_y)] = stair
         layer[(x, y)] = replace_tile
+        tile_Heights[(x, y)] = min(tile_Heights.get((x, y), 0), tile_Heights.get((new_x, new_y), 0))
+        tile_Heights[(new_x, new_y)] = max(tile_Heights.get((x, y), 0), tile_Heights.get((new_x, new_y), 0))
 
 
 def fix_adjacent_hill(layer, x, y, stair_type, stair_subtype):
     if stair_type == 1 or stair_type == 8:
-        if stair_subtype == 0:
+        if stair_subtype == 0 and "p_" not in ground_Tiles.get((x - 1, y), ""):
             tile_Heights[(x - 1, y)] = tile_Heights[(x, y)]
-        elif stair_subtype == 1:
+        elif stair_subtype == 1 and "p_" not in ground_Tiles.get((x + 1, y), ""):
             tile_Heights[(x + 1, y)] = tile_Heights[(x, y)]
     elif stair_type == 3 or stair_type == 6:
-        if stair_subtype == 1:
+        if stair_subtype == 1 and "p_" not in ground_Tiles.get((x, y - 1), ""):
             tile_Heights[(x, y - 1)] = tile_Heights[(x, y)]
-        elif stair_subtype == 0:
-            tile_Heights[(x, y + 1)] = tile_Heights[(x, y)]
+        elif stair_subtype == 0 and "p_" not in ground_Tiles.get((x, y), ""):
+            tile_Heights[(x, y + 1)] = tile_Heights[(x, y + 1)]
 
 
 def out_Of_Bounds(x, y):
@@ -392,7 +407,7 @@ def calculate_paths(layer):
                 else:
                     layer[(x, y)] = "g_0"
 
-    #finish_path_edges(layer)
+    finish_path_edges(decoration_Tiles)
 
 
 def finish_bridges(layer):
@@ -438,38 +453,38 @@ def calculate_path_look(layer, x, y):
         else:
             tiles_around.append(0)
     if tiles_around == [1, 1, 1, 1, 1, 1, 0, 1, 1]: return "_9"
-    if tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 0]: return "_10"
-    if tiles_around == [1, 1, 0, 1, 1, 1, 1, 1, 1]: return "_11"
-    if tiles_around == [0, 1, 1, 1, 1, 1, 1, 1, 1]: return "_12"
-    if tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 1] or (tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1): return "_0"
-    if tiles_around == [0, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [0, 1, 1, 0, 1, 1, 1, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 1, 1, 1]: return "_1"
-    if tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 1] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 1]: return "_2"
-    if tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 1] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 1]: return "_3"
-    if tiles_around == [0, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [0, 0, 1, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 1, 1, 1, 1, 1, 1, 1]: return "_4"
-    if tiles_around[5] == 1 and tiles_around[7] == 1 and tiles_around[8] == 1: return "_5"
-    if tiles_around[1] == 1 and tiles_around[2] == 1 and tiles_around[5] == 1: return "_6"
-    if tiles_around[0] == 1 and tiles_around[1] == 1 and tiles_around[3] == 1: return "_7"
-    if tiles_around[3] == 1 and tiles_around[6] == 1 and tiles_around[7] == 1: return "_8"
+    elif tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 0]: return "_10"
+    elif tiles_around == [1, 1, 0, 1, 1, 1, 1, 1, 1]: return "_11"
+    elif tiles_around == [0, 1, 1, 1, 1, 1, 1, 1, 1]: return "_12"
+    elif tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 1] or (tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1): return "_0"
+    elif tiles_around == [0, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [0, 1, 1, 0, 1, 1, 1, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 1, 1, 1]: return "_1"
+    elif tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 1] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 1]: return "_2"
+    elif tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 1] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 1]: return "_3"
+    elif tiles_around == [0, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [0, 0, 1, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 1, 1, 1, 1, 1, 1, 1]: return "_4"
+    elif tiles_around[5] == 1 and tiles_around[7] == 1 and tiles_around[8] == 1: return "_5"
+    elif tiles_around[1] == 1 and tiles_around[2] == 1 and tiles_around[5] == 1: return "_6"
+    elif tiles_around[0] == 1 and tiles_around[1] == 1 and tiles_around[3] == 1: return "_7"
+    elif tiles_around[3] == 1 and tiles_around[6] == 1 and tiles_around[7] == 1: return "_8"
     return "_er"
 
 
 def finish_path_edges(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y + 1), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x, y + 1), ""):
-                layer[(x, y)] = "p_1_2_m"
-            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x, y - 1), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x, y - 1), ""):
-                layer[(x, y)] = "p_1_4_m"
-            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x + 1, y), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x + 1, y), ""):
-                layer[(x, y)] = "p_1_3_m"
-            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0) and "p_" in layer.get((x, y), "") and "p_" in layer.get((x + 1, y), ""):
-                layer[(x, y)] = "p_1_1_m"
+            if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y + 1), 0) and "p_" in ground_Tiles.get((x, y), "") and "p_" in ground_Tiles.get((x, y + 1), ""):
+                layer[(x, y)] = "p_2_m"
+            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x, y - 1), 0) and "p_" in ground_Tiles.get((x, y), "") and "p_" in ground_Tiles.get((x, y - 1), ""):
+                layer[(x, y)] = "p_4_m"
+            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x + 1, y), 0) and "p_" in ground_Tiles.get((x, y), "") and "p_" in ground_Tiles.get((x + 1, y), ""):
+                layer[(x, y)] = "p_3_m"
+            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0) and "p_" in ground_Tiles.get((x, y), "") and "p_" in ground_Tiles.get((x - 1, y), ""):
+                layer[(x, y)] = "p_1_m"
 
 
 def generate_beach(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if check_for_water_around(layer, x, y, random.randint(3, 5)) and (x, y) not in layer.keys(): layer[(x, y)] = "p_4"
+            if check_for_water_around(layer, x, y, 4) and (x, y) not in layer.keys(): layer[(x, y)] = "p_4"
 
 
 def check_for_water_around(layer, x, y, beachwidth):
@@ -508,20 +523,20 @@ def calculate_pond_look(layer, x, y):
             tiles_around.append(0)
     if tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1:
         return 0
-    if tiles_around[1] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1: return "1"
-    if tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1: return "2"
-    if tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[7] == 1: return "3"
-    if tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1: return "4"
-    if tiles_around[5] == 1 and tiles_around[7] == 1: return "5"
-    if tiles_around[1] == 1 and tiles_around[5] == 1: return "6"
-    if tiles_around[1] == 1 and tiles_around[3] == 1: return "7"
-    if tiles_around[3] == 1 and tiles_around[7] == 1: return "8"
-    if tiles_around[3] == 1 and tiles_around[5] == 1: return "13"
-    if tiles_around[1] == 1 and tiles_around[7] == 1: return "14"
-    if tiles_around[1] == 1: return "9"
-    if tiles_around[3] == 1: return "10"
-    if tiles_around[5] == 1: return "12"
-    if tiles_around[7] == 1: return "11"
+    elif tiles_around[1] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1: return "1"
+    elif tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1: return "2"
+    elif tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[7] == 1: return "3"
+    elif tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1: return "4"
+    elif tiles_around[5] == 1 and tiles_around[7] == 1: return "5"
+    elif tiles_around[1] == 1 and tiles_around[5] == 1: return "6"
+    elif tiles_around[1] == 1 and tiles_around[3] == 1: return "7"
+    elif tiles_around[3] == 1 and tiles_around[7] == 1: return "8"
+    elif tiles_around[3] == 1 and tiles_around[5] == 1: return "13"
+    elif tiles_around[1] == 1 and tiles_around[7] == 1: return "14"
+    elif tiles_around[1] == 1: return "9"
+    elif tiles_around[3] == 1: return "10"
+    elif tiles_around[5] == 1: return "12"
+    elif tiles_around[7] == 1: return "11"
     return "15"
 
 
@@ -569,7 +584,7 @@ def spawn_mne(layer, spawn_rate, offset_x, offset_y):
 
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if not (x, y) in layer.keys() and not (x, y - 1) in layer.keys() and not (x, y - 2) in layer.keys() and not (x, y) in house_Tiles.keys() and not (x, y - 1) in house_Tiles.keys() and not (x, y - 2) in house_Tiles.keys():
+            if not (x, y) in layer.keys() and not (x, y - 1) in layer.keys() and not (x, y - 2) in layer.keys() and not (x, y) in house_Tiles.keys() and not (x, y - 1) in house_Tiles.keys() and not (x, y - 2) in house_Tiles.keys() and (x, y - 1) not in npc_Layer.keys() and (x, y - 2) not in npc_Layer.keys():
                 if mne_biomes[(x, y)] > 0 and random.random() < spawn_rate / 100:
                     layer[(x, y)] = "st_0"
                     layer[(x, y - 1)] = "st_1"
@@ -646,7 +661,7 @@ def spawn_truck(layer):
     import math, random
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if random.random() < 0.05 and "p_" in ground_Tiles.get((x, y + 3), "") and "p_" in ground_Tiles.get((x + 2, y + 3), ""):
+            if random.random() < 0.05 and "p_" in ground_Tiles.get((x, y + 3), "") and "p_" in ground_Tiles.get((x + 2, y + 3), "") and "p_4" not in ground_Tiles.get((x, y + 3), "") and "p_4" not in ground_Tiles.get((x + 2, y + 3), ""):
                 if check_availability_zone(house_Tiles, x, y, 3, 3) and check_availability_zone(ground_Tiles, x, y, 3, 1) and flat_surface(x, y + 1, 3, 2) and not ground_Tiles["Truck"]:
                     for truck_tile in range(9):
                         layer[(x + truck_tile % 3, y + math.floor(truck_tile / 3))] = "t_" + str(truck_tile + 1)
@@ -718,26 +733,30 @@ def spawn_npc(layer, total_npcs, population, path_only):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             direction = random.randint(1, 4)
-            if (x, y) not in layer.keys() and (x, y) not in house_Tiles.keys() and random.random() < 0.001 * population:
+            if (x, y) not in house_Tiles.keys() and "m_" not in ground_Tiles.get((x, y), "") and random.random() < 0.001 * population:
                 npc_number = random.randint(1, total_npcs)
                 if path_only:
-                    if "p_" in ground_Tiles.get((x, y), ""): #or "b_" in ground_Tiles.get((x, y), ""):x
+                    if "p_" in ground_Tiles.get((x, y), "") and "p_4_" not in ground_Tiles.get((x, y), ""): #or "b_" in ground_Tiles.get((x, y), ""):x
                         if npc_number not in off_Path_Npc: layer[(x, y)] = "npc_" + str(npc_number) + "_1"# + str(direction)
                         """
                         if random.random() < 0.5 and direction == 2:
                             if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys() and ("p_" in ground_Tiles.get((x + 1, y), "") or "b_" in ground_Tiles.get((x, y), "")):
                                 layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
                         """
-                elif random.randint(0, 4) == 0 and "m_" not in ground_Tiles.get((x, y), ""):
+                elif random.randint(0, 4) == 0:
                     if "pd_" in ground_Tiles.get((x, y), ""):
                         npc_number = water_Npc[random.randint(1, len(water_Npc) - 1)]
                     elif "b_" in ground_Tiles.get((x, y), ""):
                         npc_number = bridge_Npc[random.randint(1, len(bridge_Npc) - 1)]
-                    elif "p_" not in ground_Tiles.get((x, y), ""):
+                    elif "p_4" in ground_Tiles.get((x, y), ""):
+                        npc_number = shore_Npc[random.randint(1, len(shore_Npc) - 1)]
+                    elif (x, y) not in ground_Tiles.keys():
                         npc_number = outside_Npc[random.randint(1, len(outside_Npc) - 1)]
-                    else:
+                    elif "p_" in ground_Tiles.get((x, y), ""):
                         while npc_number in off_Path_Npc:
                             npc_number = random.randint(1, total_npcs)
+                    else:
+                        break
                     layer[(x, y)] = "npc_" + str(npc_number) + "_1" #+ str(direction)
                     """
                     if random.random() < 0.5 and direction == 2:
@@ -796,26 +815,26 @@ def calculate_hill_texture(height_list, x, y):
 
     if height_list.get((x, y), 0) < 2: return -1
 
-    if hills_around[3] == 0 and hills_around[6] == -1 and hills_around[7] == 0: return 9
-    if hills_around[5] == 0 and hills_around[7] == 0 and hills_around[8] == -1: return 10
-    if hills_around[0] == -1 and hills_around[1] == 0 and hills_around[3] == 0: return 4
-    if hills_around[1] == 0 and hills_around[2] == -1 and hills_around[5] == 0: return 4
+    elif hills_around[3] == 0 and hills_around[6] == -1 and hills_around[7] == 0: return 9
+    elif hills_around[5] == 0 and hills_around[7] == 0 and hills_around[8] == -1: return 10
+    elif hills_around[0] == -1 and hills_around[1] == 0 and hills_around[3] == 0: return 4
+    elif hills_around[1] == 0 and hills_around[2] == -1 and hills_around[5] == 0: return 4
 
-    if hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == -1: return 15
-    if hills_around[1] == -1 and hills_around[3] == 0 and hills_around[5] == -1 and hills_around[7] == -1: return 15
-    if hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == 0: return 15
-    if hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == 0 and hills_around[7] == -1: return 15
-    if hills_around[1] == 0 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == -1: return 15
+    elif hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == -1: return 15
+    elif hills_around[1] == -1 and hills_around[3] == 0 and hills_around[5] == -1 and hills_around[7] == -1: return 15
+    elif hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == 0: return 15
+    elif hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == 0 and hills_around[7] == -1: return 15
+    elif hills_around[1] == 0 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == -1: return 15
 
-    if hills_around[1] == 0 and hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == 0: return -1
-    if hills_around[1] == 0 and hills_around[3] == -1 and hills_around[7] == 0: return 1
-    if hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == -1: return 2
-    if hills_around[1] == 0 and hills_around[5] == -1 and hills_around[7] == 0: return 3
-    if hills_around[1] == -1 and hills_around[3] == 0 and hills_around[5] == 0: return 4
-    if hills_around[1] == -1 and hills_around[3] == -1: return 5
-    if hills_around[3] == -1 and hills_around[7] == -1: return 6
-    if hills_around[5] == -1 and hills_around[7] == -1: return 7
-    if hills_around[1] == -1 and hills_around[5] == -1: return 8
+    elif hills_around[1] == 0 and hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == 0: return -1
+    elif hills_around[1] == 0 and hills_around[3] == -1 and hills_around[7] == 0: return 1
+    elif hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == -1: return 2
+    elif hills_around[1] == 0 and hills_around[5] == -1 and hills_around[7] == 0: return 3
+    elif hills_around[1] == -1 and hills_around[3] == 0 and hills_around[5] == 0: return 4
+    elif hills_around[1] == -1 and hills_around[3] == -1: return 5
+    elif hills_around[3] == -1 and hills_around[7] == -1: return 6
+    elif hills_around[5] == -1 and hills_around[7] == -1: return 7
+    elif hills_around[1] == -1 and hills_around[5] == -1: return 8
     return -1
 
 
@@ -879,12 +898,12 @@ def add_watermark():
 
 
 tile_Size = 16
-map_Size_X = 80 #get_int(10, 100, "Amount of tiles in x-direction")
-map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
+map_Size_X = 51 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_Y = 90 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
-mne_rate = 50 #get_int(0, 100, "Medium size nature elements spawn rate")
+mne_rate = 30 #get_int(0, 100, "Medium size nature elements spawn rate")
 
 user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
 user_Path_Length = 25
@@ -904,7 +923,7 @@ for background in range(friendshipgoals):
     y_offset_friendship = y_offset + map_Size_Y * (background // x_Wallpapers)
     ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False, "Exceguttor": False}
     npc_Layer = {}
-    tile_Heights = {}
+    tile_Heights = {}#image_grayscale_to_dict("world_height_map_downscaled3.jpg")
     mne_biomes = {}
     house_Tiles = {}
     houses_Connecters = {}
@@ -912,6 +931,7 @@ for background in range(friendshipgoals):
     rain = {}
     off_Path_Npc = [14, 15, 26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 49]
     water_Npc = [28, 29, 30]
+    shore_Npc = [31, 32, 37, 38]
     bridge_Npc = [31, 32, 36, 37, 38]
     outside_Npc = [14, 15, 26, 27, 39, 49]
     height_Tiles = {}
@@ -919,6 +939,7 @@ for background in range(friendshipgoals):
     generate_ponds(ground_Tiles)
 
     #spawn_fountain(house_Tiles)
+
     spawn_house(house_Tiles, 1, 4, 4, 1)
 
     spawn_pokecenter(house_Tiles)
@@ -931,10 +952,11 @@ for background in range(friendshipgoals):
     spawn_house(house_Tiles, 7, 5, 4, 1)
     spawn_house(house_Tiles, 8, 4, 5, 1)
     spawn_house(house_Tiles, 9, 6, 4, 1)
-    generate_path(ground_Tiles, "1", 2)
-    spawn_truck(house_Tiles)
+
     generate_beach(ground_Tiles)
+    generate_path(ground_Tiles, "1", 2)
     calculate_paths(ground_Tiles)
+    spawn_truck(house_Tiles)
     finish_hills(ground_Tiles)
     calculate_ponds(ground_Tiles)
     spawn_lapras(ground_Tiles)
@@ -953,7 +975,7 @@ for background in range(friendshipgoals):
 
     generate_height_map(height_Tiles, tile_Heights)
     render(height_Tiles, False)
-    sleep(0.5)
+    time.sleep(1)
 
     render(ground_Tiles, False)
     render(decoration_Tiles, False)
@@ -967,7 +989,8 @@ for background in range(friendshipgoals):
             background_Number = "0" + str(background)
         else:
             background_Number = background
-        pygame.image.save(screen, os.path.join("saved images", str(background_Number) + ".png"))
+        pygame.image.save(screen, os.path.join("saved images", str(background_Number)+".png"))
+        print("saved")
 
 if friendshipgoals == 1:
     save = input("Save this image? (y/n/seed): ")
