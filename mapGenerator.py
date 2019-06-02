@@ -4,7 +4,7 @@ from time import sleep
 from worldMap import image_grayscale_to_dict
 import time
 
-seed = random.randint(0, sys.maxsize)
+seed =3821614041199208893 #random.randint(0, sys.maxsize)
 zaad = seed
 random.seed(zaad)
 
@@ -150,14 +150,14 @@ def generate_path(layer, path_Type, path_width):
     remove_half_stairs(layer)
     move_faulty_stairs(layer)
     finish_stairs(layer)
-    remove_half_stairs_down(layer)
+    remove_half_stairs(layer)
     calculate_platforms(layer)
     finish_hills(layer)
     finishing_touches_bridges(layer)
 
 
 def try_horizontal_stairs(x, y, path_height):
-    if not out_Of_Bounds(x + 1, y + 1) and not out_Of_Bounds(x, y):
+    if not out_Of_Bounds(x + 1, y + 1) and not out_Of_Bounds(x, y) and min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)]) > 0:
         if tile_Heights[(x, y + 1)] != tile_Heights[(x + 1, y + 1)]:
             tile_Heights[(x, y + 1)] = min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)])
             tile_Heights[(x + 1, y + 1)] = min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)])
@@ -171,7 +171,7 @@ def try_horizontal_stairs(x, y, path_height):
 
 
 def try_vertical_stairs(x, y, path_height):
-    if not out_Of_Bounds(x + 1, y + 1) and not out_Of_Bounds(x, y):
+    if not out_Of_Bounds(x + 1, y + 1) and not out_Of_Bounds(x, y) and min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)]) > 0:
         if tile_Heights[(x + 1, y)] != tile_Heights[(x + 1, y + 1)]:
             tile_Heights[(x + 1, y)] = min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)])
             tile_Heights[(x + 1, y + 1)] = min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)])
@@ -226,21 +226,27 @@ def remove_half_stairs(layer):
                 stair_type = layer[(x, y)][4]
                 if not check_stairs_around(layer, x, y, stair_type):
                     layer[(x, y)] = "p_1"
-
-
-def remove_half_stairs_down(layer):
-    for x in range(0, map_Size_X):
-        for y in range(0, map_Size_Y):
-            if "sta_" in layer.get((x, y), ""):
-                stair_type = layer[(x, y)][4]
-                if not check_stairs_around(layer, x, y, stair_type):
-                    layer[(x, y)] = "p_1"
-                    tile_Heights[(x, y)] = tile_Heights[(x, y)] - 1
+                    if check_height_around(x, y) and not check_any_stairs_around(layer, x, y):
+                        tile_Heights[(x, y)] = tile_Heights[(x, y)] - 1
 
 
 def check_stairs_around(layer, x, y, stair_type):
     for tile in range(4):
         if "sta_" + stair_type in layer.get((x - 1 + ((2 * tile) + 1) % 3, y - 1 + ((2 * tile) + 1) // 3), ""):
+            return True
+    return False
+
+
+def check_any_stairs_around(layer, x, y):
+    for tile in range(4):
+        if "sta_" in layer.get((x - 1 + ((2 * tile) + 1) % 3, y - 1 + ((2 * tile) + 1) // 3), ""):
+            return True
+    return False
+
+
+def check_height_around(x, y):
+    for tile in range(4):
+        if tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1 + ((2 * tile) + 1) % 3, y - 1 + ((2 * tile) + 1) // 3), ""):
             return True
     return False
 
@@ -484,7 +490,7 @@ def finish_path_edges(layer):
 def generate_beach(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if check_for_water_around(layer, x, y, 4) and (x, y) not in layer.keys(): layer[(x, y)] = "p_4"
+            if check_for_water_around(layer, x, y, 4) and (x, y) not in layer.keys() and tile_Heights.get((x, y), 0) == 1: layer[(x, y)] = "p_4"
 
 
 def check_for_water_around(layer, x, y, beachwidth):
@@ -510,7 +516,7 @@ def generate_ponds(layer):
         for y in range(0, map_Size_Y):
             tile_height = tile_Heights[(x, y)]
             if tile_height == 0:
-                    layer[(x, y)] = "pd_"
+                layer[(x, y)] = "pd_"
 
 
 def calculate_pond_look(layer, x, y):
@@ -898,8 +904,8 @@ def add_watermark():
 
 
 tile_Size = 16
-map_Size_X = 51 #get_int(10, 100, "Amount of tiles in x-direction")
-map_Size_Y = 90 #get_int(10, 100, "Amount of tiles in y-direction")
+map_Size_X = 80 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
