@@ -4,10 +4,9 @@ from time import sleep
 from worldMap import image_grayscale_to_dict
 import time
 
-seed =3821614041199208893 #random.randint(0, sys.maxsize)
+seed = random.randint(0, sys.maxsize)
 zaad = seed
 random.seed(zaad)
-
 
 def get_int(lower_bound, upper_bound, message):
     integer = int(input(message + " (" + str(lower_bound) + "-" + str(upper_bound) + "): "))
@@ -138,8 +137,8 @@ def generate_path(layer, path_Type, path_width):
                 layer[(x, y)] = "b_" + str(path // (x_difference + 2) + 1)
             else:
                 if path // (x_difference + 2) == 0 and path_height > 0:
-                    if tile_Heights.get((x, y - 1), path_height) < path_height and "p_" not in layer.get((x, y - 1), ""): tile_Heights[(x, y - 1)] = path_height
-                    if tile_Heights.get((x, y + 2), path_height) < path_height and "p_" not in layer.get((x, y + 2), ""): tile_Heights[(x, y + 2)] = path_height
+                    if tile_Heights.get((x, y - 1), path_height) < path_height and "p_" not in layer.get((x, y - 1), "") and "sta_" not in layer.get((x, y - 1), ""): tile_Heights[(x, y - 1)] = path_height
+                    if tile_Heights.get((x, y + 2), path_height) < path_height and "p_" not in layer.get((x, y + 2), "") and "sta_" not in layer.get((x, y + 2), ""): tile_Heights[(x, y + 2)] = path_height
                 if not (x, y) in layer.keys():
                     ground_Tiles[(x, y)] = "p_" + str(path_layout)
 
@@ -246,7 +245,7 @@ def check_any_stairs_around(layer, x, y):
 
 def check_height_around(x, y):
     for tile in range(4):
-        if tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1 + ((2 * tile) + 1) % 3, y - 1 + ((2 * tile) + 1) // 3), ""):
+        if tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1 + ((2 * tile) + 1) % 3, y - 1 + ((2 * tile) + 1) // 3), 0):
             return True
     return False
 
@@ -477,14 +476,15 @@ def calculate_path_look(layer, x, y):
 def finish_path_edges(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y + 1), 0) and "p_" in ground_Tiles.get((x, y), "") and "p_" in ground_Tiles.get((x, y + 1), ""):
-                layer[(x, y)] = "p_2_m"
-            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x, y - 1), 0) and "p_" in ground_Tiles.get((x, y), "") and "p_" in ground_Tiles.get((x, y - 1), ""):
-                layer[(x, y)] = "p_4_m"
-            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x + 1, y), 0) and "p_" in ground_Tiles.get((x, y), "") and "p_" in ground_Tiles.get((x + 1, y), ""):
-                layer[(x, y)] = "p_3_m"
-            elif tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0) and "p_" in ground_Tiles.get((x, y), "") and "p_" in ground_Tiles.get((x - 1, y), ""):
-                layer[(x, y)] = "p_1_m"
+            if "p_4" not in ground_Tiles.get((x, y), "") and ("p_" in ground_Tiles.get((x, y), "")):
+                if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y + 1), 0) and ("p_" in ground_Tiles.get((x, y + 1), "") or "sta_3" in ground_Tiles.get((x, y + 1), "") or "sta_6" in ground_Tiles.get((x, y + 1), "")):
+                    layer[(x, y)] = "p_2_m"
+                elif tile_Heights.get((x, y), 0) > tile_Heights.get((x, y - 1), 0) and ("p_" in ground_Tiles.get((x, y - 1), "") or "sta_3" in ground_Tiles.get((x, y - 1), "") or "sta_6" in ground_Tiles.get((x, y - 1), "")):
+                    layer[(x, y)] = "p_4_m"
+                elif tile_Heights.get((x, y), 0) > tile_Heights.get((x + 1, y), 0) and ("p_" in ground_Tiles.get((x + 1, y), "") or "sta_1" in ground_Tiles.get((x + 1, y), "") or "sta_8" in ground_Tiles.get((x + 1, y), "")):
+                    layer[(x, y)] = "p_3_m"
+                elif tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0) and ("p_" in ground_Tiles.get((x - 1, y), "")  or "sta_1" in ground_Tiles.get((x - 1, y), "") or "sta_8" in ground_Tiles.get((x - 1, y), "")):
+                    layer[(x, y)] = "p_1_m"
 
 
 def generate_beach(layer):
@@ -832,7 +832,6 @@ def calculate_hill_texture(height_list, x, y):
     elif hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == 0 and hills_around[7] == -1: return 15
     elif hills_around[1] == 0 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == -1: return 15
 
-    elif hills_around[1] == 0 and hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == 0: return -1
     elif hills_around[1] == 0 and hills_around[3] == -1 and hills_around[7] == 0: return 1
     elif hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == -1: return 2
     elif hills_around[1] == 0 and hills_around[5] == -1 and hills_around[7] == 0: return 3
@@ -842,7 +841,6 @@ def calculate_hill_texture(height_list, x, y):
     elif hills_around[5] == -1 and hills_around[7] == -1: return 7
     elif hills_around[1] == -1 and hills_around[5] == -1: return 8
     return -1
-
 
 
 def test_hills_around(height_list, x, y):
@@ -941,7 +939,7 @@ for background in range(friendshipgoals):
     bridge_Npc = [31, 32, 36, 37, 38]
     outside_Npc = [14, 15, 26, 27, 39, 49]
     height_Tiles = {}
-    generate_hills(ground_Tiles, 4, x_offset_friendship, y_offset_friendship)
+    generate_hills(ground_Tiles, 5, x_offset_friendship, y_offset_friendship)
     generate_ponds(ground_Tiles)
 
     #spawn_fountain(house_Tiles)
