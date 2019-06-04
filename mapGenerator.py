@@ -109,20 +109,25 @@ def generate_path(layer, path_type, path_width):
 
 def draw_vertical_path(layer, start_x_vertical, start_y_vertical, y_difference, path_type, path_width):
     path_height = tile_Heights.get((start_x_vertical, start_y_vertical), 0)
+    tile_Heights[(start_x_vertical, start_y_vertical)] = min(tile_Heights[(start_x_vertical, start_y_vertical)], tile_Heights[(start_x_vertical + 1, start_y_vertical)])
+    tile_Heights[(start_x_vertical + 1, start_y_vertical)] = min(tile_Heights[(start_x_vertical, start_y_vertical)], tile_Heights[(start_x_vertical + 1, start_y_vertical)])
 
     for path in range(path_width * y_difference + 4):
         x = start_x_vertical + (path % path_width)
         y = start_y_vertical + math.floor(path / path_width)
 
+        if path % 2 == 0 and path_height > 0:
+            try_horizontal_stairs(x, y, path_height)
+            try_backdoor(house_Tiles, x, y + 1)
+
         if "b_" not in layer.get((x, y), "") and (layer.get((x, y), "") == "pd_" or layer.get((x, y + 1), "") == "pd_"):
             layer[(x, y)] = "b_" + str((path % 2) + 3)
         elif not (x, y) in layer.keys():
             ground_Tiles[(x, y)] = "p_" + str(path_type)
-            if path % 2 == 0 and path_height > 0:
-                try_horizontal_stairs(x, y, path_height)
-                try_backdoor(house_Tiles, x, y + 1)
-                if tile_Heights.get((x - 1, y), path_height) < path_height and "p_" not in layer.get((x - 1, y), "") and "sta_" not in layer.get((x - 1, y), ""): tile_Heights[(x - 1, y)] = path_height
-                if tile_Heights.get((x + 2, y), path_height) < path_height and "p_" not in layer.get((x + 2, y), "") and "sta_" not in layer.get((x + 2, y), ""): tile_Heights[(x + 2, y)] = path_height
+
+        if path % 2 == 0 and path_height > 0:
+            if tile_Heights.get((x - 1, y), path_height) < path_height and not is_actual_path(layer, x - 1, y) and "sta_" not in layer.get((x - 1, y), ""): tile_Heights[(x - 1, y)] = path_height
+            if tile_Heights.get((x + 2, y), path_height) < path_height and not is_actual_path(layer, x + 2, y) and "sta_" not in layer.get((x + 2, y), ""): tile_Heights[(x + 2, y)] = path_height
 
         path_height = tile_Heights.get((x, y + 1), path_height)
 
@@ -131,30 +136,38 @@ def draw_vertical_path(layer, start_x_vertical, start_y_vertical, y_difference, 
 
 def draw_horizontal_path(layer, start_x_horizontal, start_y_horizontal, x_difference, path_type, path_width):
     path_height = tile_Heights.get((start_x_horizontal, start_y_horizontal), 0)
+    tile_Heights[(start_x_horizontal, start_y_horizontal)] = min(tile_Heights[(start_x_horizontal, start_y_horizontal)], tile_Heights[(start_x_horizontal, start_y_horizontal + 1)])
+    tile_Heights[(start_x_horizontal, start_y_horizontal + 1)] = min(tile_Heights[(start_x_horizontal, start_y_horizontal)], tile_Heights[(start_x_horizontal, start_y_horizontal + 1)])
 
     for path in range(path_width * (x_difference + 2)):
         x = start_x_horizontal + (path % (x_difference + 2))
         y = start_y_horizontal + path // (x_difference + 2)
 
+        if path // (x_difference + 2) == 0 and path_height > 0:
+            try_vertical_stairs(x, y, path_height)
+
         if "b_" not in layer.get((x, y), "") and (layer.get((x, y), "") == "pd_" or layer.get((x + 1, y), "") == "pd_" or tile_Heights.get((x - 1, y), path_height) < 1):
             layer[(x, y)] = "b_" + str(path // (x_difference + 2) + 1)
         elif not (x, y) in layer.keys():
             ground_Tiles[(x, y)] = "p_" + str(path_type)
-            if path // (x_difference + 2) == 0 and path_height > 0:
-                try_vertical_stairs(x, y, path_height)
-                if tile_Heights.get((x, y - 1), path_height) < path_height and "p_" not in layer.get((x, y - 1), "") and "sta_" not in layer.get((x, y - 1), ""): tile_Heights[(x, y - 1)] = path_height
-                if tile_Heights.get((x, y + 2), path_height) < path_height and "p_" not in layer.get((x, y + 2), "") and "sta_" not in layer.get((x, y + 2), ""): tile_Heights[(x, y + 2)] = path_height
+
+        if path // (x_difference + 2) == 0 and path_height > 0:
+            if tile_Heights.get((x, y - 1), path_height) < path_height and not is_actual_path(layer, x, y - 1) and "sta_" not in layer.get((x, y - 1), ""): tile_Heights[(x, y - 1)] = path_height
+            if tile_Heights.get((x, y + 2), path_height) < path_height and not is_actual_path(layer, x, y + 2) and "sta_" not in layer.get((x, y + 2), ""): tile_Heights[(x, y + 2)] = path_height
 
         path_height = tile_Heights.get((x + 1, y), path_height)
 
     finish_bridges(layer)
 
 
+def is_actual_path(layer, x, y):
+    return "p_" in layer.get((x, y), "") and "p_4" not in layer.get((x, y), "")
+
+
 def try_horizontal_stairs(x, y, path_height):
     if not out_of_bounds(x + 1, y + 1) and not out_of_bounds(x, y) and min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)]) > 0:
-        if tile_Heights[(x, y + 1)] != tile_Heights[(x + 1, y + 1)]:
-            tile_Heights[(x, y + 1)] = min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)])
-            tile_Heights[(x + 1, y + 1)] = min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)])
+        tile_Heights[(x, y + 1)] = min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)])
+        tile_Heights[(x + 1, y + 1)] = min(tile_Heights[(x, y + 1)], tile_Heights[(x + 1, y + 1)])
         if path_height > 0:
             if tile_Heights[(x, y + 1)] < path_height > 0:
                 ground_Tiles[(x, y)] = "sta_1_0"
@@ -166,9 +179,8 @@ def try_horizontal_stairs(x, y, path_height):
 
 def try_vertical_stairs(x, y, path_height):
     if not out_of_bounds(x + 1, y + 1) and not out_of_bounds(x, y) and min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)]) > 0:
-        if tile_Heights[(x + 1, y)] != tile_Heights[(x + 1, y + 1)]:
-            tile_Heights[(x + 1, y)] = min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)])
-            tile_Heights[(x + 1, y + 1)] = min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)])
+        tile_Heights[(x + 1, y)] = min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)])
+        tile_Heights[(x + 1, y + 1)] = min(tile_Heights[(x + 1, y)], tile_Heights[(x + 1, y + 1)])
         if path_height > 0:
             if tile_Heights[(x + 1, y)] < path_height > 0:
                 ground_Tiles[(x, y)] = "sta_6_1"
@@ -260,39 +272,42 @@ def move_stair(layer, x, y):
             stair_subtype = int(stair[6])
         except Exception as e:
             stair_subtype = -1
-        move_stair_tile(layer, x, y, stair, stair_type)
-        fix_adjacent_hill(x, y, stair_type, stair_subtype)
+        move_stair_tile(layer, x, y, stair, stair_type, stair_subtype)
 
 
-def move_stair_tile(layer, x, y, stair, stair_type):
+def move_stair_tile(layer, x, y, stair, stair_type, stair_subtype):
     if stair_type == 1:
         if tile_Heights.get((x, y), 0) < tile_Heights.get((x, y - 1), 0):
             move_stair_tile_to(layer, x, y, x, y - 1, "p_1", stair)
+            fix_adjacent_hill(x, y - 1, stair_type, stair_subtype)
         elif tile_Heights.get((x, y), 0) == tile_Heights.get((x, y + 1), 0):
-            move_stair_tile_to(layer, x, y, x, y + 1, "p_1", stair)
+            layer[(x, y)] = "p_1"
     elif stair_type == 3:
         if tile_Heights.get((x, y), 0) < tile_Heights.get((x + 1, y), 0):
             move_stair_tile_to(layer, x, y, x + 1, y, "p_1", stair)
+            fix_adjacent_hill(x + 1, y, stair_type, stair_subtype)
         elif tile_Heights.get((x, y), 0) == tile_Heights.get((x - 1, y), 0):
-            move_stair_tile_to(layer, x, y, x - 1, y, "p_1", stair)
+            layer[(x, y)] = "p_1"
     elif stair_type == 6:
         if tile_Heights.get((x, y), 0) < tile_Heights.get((x - 1, y), 0):
             move_stair_tile_to(layer, x, y, x - 1, y, "p_1", stair)
+            fix_adjacent_hill(x - 1, y, stair_type, stair_subtype)
         elif tile_Heights.get((x, y), 0) == tile_Heights.get((x + 1, y), 0):
-            move_stair_tile_to(layer, x, y, x + 1, y, "p_1", stair)
+            layer[(x, y)] = "p_1"
     elif stair_type == 8:
         if tile_Heights.get((x, y), 0) < tile_Heights.get((x, y + 1), 0):
             move_stair_tile_to(layer, x, y, x, y + 1, "p_1", stair)
+            fix_adjacent_hill(x, y + 1, stair_type, stair_subtype)
         elif tile_Heights.get((x, y), 0) == tile_Heights.get((x, y - 1), 0):
-            move_stair_tile_to(layer, x, y, x, y - 1, "p_1", stair)
+            layer[(x, y)] = "p_1"
 
 
 def move_stair_tile_to(layer, x, y, new_x, new_y, replace_tile, stair):
     if "sta_" in layer.get((x, y), ""):
         layer[(new_x, new_y)] = stair
         layer[(x, y)] = replace_tile
-        tile_Heights[(x, y)] = min(tile_Heights.get((x, y), 0), tile_Heights.get((new_x, new_y), 0))
-        tile_Heights[(new_x, new_y)] = max(tile_Heights.get((x, y), 0), tile_Heights.get((new_x, new_y), 0))
+        # tile_Heights[(x, y)] = min(tile_Heights.get((x, y), 0), tile_Heights.get((new_x, new_y), 0))
+        # tile_Heights[(new_x, new_y)] = max(tile_Heights.get((x, y), 0), tile_Heights.get((new_x, new_y), 0))
 
 
 def fix_adjacent_hill(x, y, stair_type, stair_subtype):
@@ -304,8 +319,8 @@ def fix_adjacent_hill(x, y, stair_type, stair_subtype):
     elif stair_type == 3 or stair_type == 6:
         if stair_subtype == 1 and "p_" not in ground_Tiles.get((x, y - 1), ""):
             tile_Heights[(x, y - 1)] = tile_Heights[(x, y)]
-        elif stair_subtype == 0 and "p_" not in ground_Tiles.get((x, y), ""):
-            tile_Heights[(x, y + 1)] = tile_Heights[(x, y + 1)]
+        elif stair_subtype == 0 and "p_" not in ground_Tiles.get((x, y + 1), ""):
+            tile_Heights[(x, y + 1)] = tile_Heights[(x, y)]
 
 
 def out_of_bounds(x, y):
@@ -391,15 +406,47 @@ def calculate_path_sprite(layer, x, y):
 def finish_path_edges(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if "p_4" not in ground_Tiles.get((x, y), "") and ("p_" in ground_Tiles.get((x, y), "")):
-                if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y + 1), 0) and ("p_" in ground_Tiles.get((x, y + 1), "") or "sta_3" in ground_Tiles.get((x, y + 1), "") or "sta_6" in ground_Tiles.get((x, y + 1), "")):
-                    layer[(x, y)] = "p_2_m"
-                elif tile_Heights.get((x, y), 0) > tile_Heights.get((x, y - 1), 0) and ("p_" in ground_Tiles.get((x, y - 1), "") or "sta_3" in ground_Tiles.get((x, y - 1), "") or "sta_6" in ground_Tiles.get((x, y - 1), "")):
-                    layer[(x, y)] = "p_4_m"
-                elif tile_Heights.get((x, y), 0) > tile_Heights.get((x + 1, y), 0) and ("p_" in ground_Tiles.get((x + 1, y), "") or "sta_1" in ground_Tiles.get((x + 1, y), "") or "sta_8" in ground_Tiles.get((x + 1, y), "")):
-                    layer[(x, y)] = "p_3_m"
-                elif tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0) and ("p_" in ground_Tiles.get((x - 1, y), "")  or "sta_1" in ground_Tiles.get((x - 1, y), "") or "sta_8" in ground_Tiles.get((x - 1, y), "")):
-                    layer[(x, y)] = "p_1_m"
+            if is_actual_path(ground_Tiles, x, y):
+                apply_path_edge(layer, x, y)
+            elif "sta_" in ground_Tiles.get((x, y), ""):
+                apply_stair_edge(layer, x, y)
+
+
+def apply_path_edge(layer, x, y):
+    if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y + 1), 0) and ("p_" in ground_Tiles.get((x, y + 1), "") or "sta_3" in ground_Tiles.get((x, y + 1), "") or "sta_6" in ground_Tiles.get((x, y + 1), "")):
+        layer[(x, y)] = "p_2_m"
+    elif tile_Heights.get((x, y), 0) > tile_Heights.get((x, y - 1), 0) and ("p_" in ground_Tiles.get((x, y - 1), "") or "sta_3" in ground_Tiles.get((x, y - 1), "") or "sta_6" in ground_Tiles.get((x, y - 1), "")):
+        layer[(x, y)] = "p_4_m"
+    elif tile_Heights.get((x, y), 0) > tile_Heights.get((x + 1, y), 0) and ("p_" in ground_Tiles.get((x + 1, y), "") or "sta_1" in ground_Tiles.get((x + 1, y), "") or "sta_8" in ground_Tiles.get((x + 1, y), "")):
+        layer[(x, y)] = "p_3_m"
+    elif tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0) and ("p_" in ground_Tiles.get((x - 1, y), "") or "sta_1" in ground_Tiles.get((x - 1, y), "") or "sta_8" in ground_Tiles.get((x - 1, y), "")):
+        layer[(x, y)] = "p_1_m"
+
+
+def apply_stair_edge(layer, x, y):
+    stair_type = int(ground_Tiles[(x, y)][4])
+    if stair_type == 1 or stair_type == 8:
+        if is_actual_path(ground_Tiles, x - 1, y):
+            if tile_Heights.get((x, y), 0) > tile_Heights.get((x - 1, y), 0):
+                layer[(x, y)] = "p_1_m"
+            else:
+                layer[(x - 1, y)] = "p_3_m"
+        elif is_actual_path(ground_Tiles, x + 1, y):
+            if tile_Heights.get((x, y), 0) > tile_Heights.get((x + 1, y), 0):
+                layer[(x, y)] = "p_3_m"
+            else:
+                layer[(x + 1, y)] = "p_1_m"
+    elif stair_type == 3 or stair_type == 6:
+        if is_actual_path(ground_Tiles, x, y - 1):
+            if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y - 1), 0):
+                layer[(x, y)] = "p_4_m"
+            else:
+                layer[(x, y - 1)] = "p_2_m"
+        elif is_actual_path(ground_Tiles, x, y + 1):
+            if tile_Heights.get((x, y), 0) > tile_Heights.get((x, y + 1), 0):
+                layer[(x, y)] = "p_2_m"
+            else:
+                layer[(x, y + 1)] = "p_4_m"
 
 
 def generate_beach(layer):
@@ -721,8 +768,8 @@ def calculate_hill_texture(height_list, x, y):
 
     elif hills_around[3] == 0 and hills_around[6] == -1 and hills_around[7] == 0: return 9
     elif hills_around[5] == 0 and hills_around[7] == 0 and hills_around[8] == -1: return 10
-    elif hills_around[0] == -1 and hills_around[1] == 0 and hills_around[3] == 0: return 4
-    elif hills_around[1] == 0 and hills_around[2] == -1 and hills_around[5] == 0: return 4
+    elif hills_around[0] == -1 and hills_around[1] == 0 and hills_around[3] == 0 and hills_around[7] == 0: return 4
+    elif hills_around[1] == 0 and hills_around[2] == -1 and hills_around[5] == 0 and hills_around[7] == 0: return 4
 
     elif hills_around[1] == -1 and hills_around[3] == -1 and hills_around[5] == -1 and hills_around[7] == -1: return 15
     elif hills_around[1] == -1 and hills_around[3] == 0 and hills_around[5] == -1 and hills_around[7] == -1: return 15
@@ -758,7 +805,7 @@ def apply_hill_sprites(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             hill_texture = str(calculate_hill_texture(tile_Heights, x, y))
-            if not hill_texture == "-1" and ((x, y) not in layer.keys() or "pd_" in layer.get((x, y), "")):
+            if not hill_texture == "-1" and ((x, y) not in layer.keys() or "p_4" in layer.get((x, y), "")):
                 layer[(x, y)] = "m_" + hill_texture
 
 
