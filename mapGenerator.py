@@ -1,4 +1,4 @@
-import datetime, pygame, os, random, math, sys
+import datetime, pygame, os, random, math, sys, ctypes
 from noise import snoise2
 from time import sleep
 from worldMap import image_grayscale_to_dict
@@ -6,9 +6,13 @@ import time
 
 SHINY_PROBABILITY = 0.02
 NB_SNE = 4
+NB_UMBRELLA = 1
+NB_SEAT = 2
+rain_probability = 10
+raining = random.random() < rain_probability / 100
 excludedSne = [1, 3, 4]
 
-seed = random.randint(0, sys.maxsize)
+seed = 3586222535928690668 #random.randint(0, sys.maxsize)
 zaad = seed
 random.seed(zaad)
 
@@ -306,8 +310,6 @@ def move_stair_tile_to(layer, x, y, new_x, new_y, replace_tile, stair):
     if "sta_" in layer.get((x, y), ""):
         layer[(new_x, new_y)] = stair
         layer[(x, y)] = replace_tile
-        # tile_Heights[(x, y)] = min(tile_Heights.get((x, y), 0), tile_Heights.get((new_x, new_y), 0))
-        # tile_Heights[(new_x, new_y)] = max(tile_Heights.get((x, y), 0), tile_Heights.get((new_x, new_y), 0))
 
 
 def fix_adjacent_hill(x, y, stair_type, stair_subtype):
@@ -453,6 +455,32 @@ def generate_beach(layer):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if check_for_water_around(layer, x, y, 4) and (x, y) not in layer.keys() and tile_Heights.get((x, y), 0) == 1: layer[(x, y)] = "p_4"
+
+
+def decorate_beach(layer, decoration_rate):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if not find_decoration_around(layer, x, y - 2, 2, 3) and not check_availability_water(ground_Tiles, x, y - 2, 2, 3) and "p_4" in ground_Tiles.get((x, y - 2), "") and flat_surface(x, y - 2, 2, 3) and not check_availability_zone(house_Tiles, x, y - 2, 2, 3) and random.random() < decoration_rate / 100:
+                umbrella_type = str(random.randint(1, NB_UMBRELLA))
+                for tile in range(6):
+                    layer[(x + tile % 2, y + tile // 2 - 2)] = "umb_" + umbrella_type + "_" + str(tile)
+            if not find_decoration_around(layer, x, y - 1, 1, 2) and (x, y) not in layer.keys() and random.random() < decoration_rate / 200:
+                if "p_4" in ground_Tiles.get((x, y), "") and "p_4" in ground_Tiles.get((x, y - 1), ""):
+                    if random.randint(0, 1) == 0 and not raining: npc_Layer[(x, y - 1)] = "npc_" + str(shore_Npc[random.randint(1, len(shore_Npc) - 1)]) + "_1"
+                    layer[(x, y - 1)] = "sts_2_0"
+                    layer[(x, y)] = "sts_2_1"
+                elif "pd_" in ground_Tiles.get((x, y - 1), "") and "pd_" in ground_Tiles.get((x, y), "") and not raining:
+                    npc_Layer[(x, y - 1)] = "npc_" + str(shore_Npc[random.randint(1, len(shore_Npc) - 1)]) + "_1"
+                    layer[(x, y - 1)] = "sts_1_0"
+                    layer[(x, y)] = "sts_1_1"
+
+
+def find_decoration_around(layer, x, y, x_size, y_size):
+    for x_check in range(x_size):
+        for y_check in range(y_size):
+            if (x + x_check, y + y_check) in layer.keys():
+                return True
+    return False
 
 
 def check_for_water_around(layer, x, y, beach_width):
@@ -634,7 +662,7 @@ def spawn_snorlax(layer):
         for y in range(0, map_Size_Y):
             if can_spawn_pokemon(0.015, "Snorlax") and (("b_" in ground_Tiles.get((x, y), "") or "pl_" in ground_Tiles.get((x, y), "")) and check_bridge_space(ground_Tiles, x, y, 2, 2)):
                 ground_Tiles["Snorlax"] = True
-                if random.random() < 0.02: shiny = 4
+                if random.random() < SHINY_PROBABILITY: shiny = 4
                 for snorlax_tile in range(4):
                     layer[(x + snorlax_tile % 2, y + math.floor(snorlax_tile / 2))] = "sn_" + str(snorlax_tile + 1 + shiny)
 
@@ -644,7 +672,7 @@ def spawn_pikachu(layer):
         for y in range(0, map_Size_Y):
             if can_spawn_pokemon(0.001, "Pikachu") and layer.get((x, y), "") == "" and "pd_" not in ground_Tiles.get((x, y), "") and "m_" not in ground_Tiles.get((x, y), ""):
                 ground_Tiles["Pikachu"] = True
-                layer[(x, y)] = "pikachu_" + str(random.randint(1, 4))
+                layer[(x, y)] = "pikachu_" + str(random.randint(1, 4)) # TODO: shiny pikachu
 
 
 def spawn_exceguttor(layer):
@@ -672,7 +700,7 @@ def spawn_lanterns(layer):
                 layer[(x, y - 2)] = "l_7"
 
 
-def spawn_fountain(layer):
+def spawn_fountain(layer): # TODO
     house_x = random.randint(1, map_Size_X - 5)
     house_y = random.randint(1, map_Size_Y - 5)
     while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5, 5) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5, 5) or not flat_surface(house_x - 2, house_y - 2, 5 + 2, 5 + 2):
@@ -686,7 +714,7 @@ def spawn_fountain(layer):
     houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + 4), "Right_Connect": (house_x + 4, house_y + 4)}
 
 
-def spawn_npc(layer, total_npcs, population, path_only):
+def spawn_npc(layer, total_npcs, population, path_only): # TODO directions
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             direction = random.randint(1, 4)
@@ -701,15 +729,16 @@ def spawn_npc(layer, total_npcs, population, path_only):
                                 layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
                         """
                 elif random.randint(0, 4) == 0:
-                    if "pd_" in ground_Tiles.get((x, y), ""):
-                        npc_number = water_Npc[random.randint(1, len(water_Npc) - 1)]
-                    elif "b_" in ground_Tiles.get((x, y), ""):
-                        npc_number = bridge_Npc[random.randint(1, len(bridge_Npc) - 1)]
-                    elif "p_4" in ground_Tiles.get((x, y), ""):
-                        npc_number = shore_Npc[random.randint(1, len(shore_Npc) - 1)]
-                    elif (x, y) not in ground_Tiles.keys():
+                    if not raining:
+                        if "pd_" in ground_Tiles.get((x, y), ""):
+                            npc_number = water_Npc[random.randint(1, len(water_Npc) - 1)]
+                        elif "b_" in ground_Tiles.get((x, y), ""):
+                            npc_number = bridge_Npc[random.randint(1, len(bridge_Npc) - 1)]
+                        elif "p_4" in ground_Tiles.get((x, y), ""):
+                            npc_number = shore_Npc[random.randint(1, len(shore_Npc) - 1)]
+                    if (x, y) not in ground_Tiles.keys():
                         npc_number = outside_Npc[random.randint(1, len(outside_Npc) - 1)]
-                    elif "p_" in ground_Tiles.get((x, y), ""):
+                    elif is_actual_path(ground_Tiles, x, y):
                         while npc_number in off_Path_Npc:
                             npc_number = random.randint(1, total_npcs)
                     else:
@@ -809,19 +838,18 @@ def apply_hill_sprites(layer):
                 layer[(x, y)] = "m_" + hill_texture
 
 
-def generate_rain(layer, rain_rate, rain_chance):
-    if random.randint(0, 100) < rain_chance:
-        for x in range(0, map_Size_X):
-            for y in range(0, map_Size_Y):
-                if random.randint(0, 100) < rain_rate:
-                    layer[(x, y)] = "r_" + str(random.randint(1, 2))
-                elif (x, y) not in layer.keys():
-                    layer[(x, y)] = "r_0"
-        for x in range(0, map_Size_X):
-            for y in range(0, map_Size_Y):
-                if random.randint(0, 100) < rain_rate:
-                    if not taken(house_Tiles, x, y) and not taken(decoration_Tiles, x, y) and not taken(npc_Layer, x, y) and "m_" not in ground_Tiles.get((x, y), "") and "pd_" not in ground_Tiles.get((x, y), "") and "l_" not in ground_Tiles.get((x, y), "") and "st" not in ground_Tiles.get((x, y), "") and "sne_" not in ground_Tiles.get((x, y), ""):
-                        layer[(x, y)] = "r_" + str(random.randint(3, 5))
+def generate_rain(layer, rain_rate):
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if random.randint(0, 100) < rain_rate:
+                layer[(x, y)] = "r_" + str(random.randint(1, 2))
+            elif (x, y) not in layer.keys():
+                layer[(x, y)] = "r_0"
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if random.randint(0, 100) < rain_rate:
+                if not taken(house_Tiles, x, y) and not taken(decoration_Tiles, x, y) and not taken(npc_Layer, x, y) and "m_" not in ground_Tiles.get((x, y), "") and "pd_" not in ground_Tiles.get((x, y), "") and "l_" not in ground_Tiles.get((x, y), "") and "st" not in ground_Tiles.get((x, y), "") and "sne_" not in ground_Tiles.get((x, y), ""):
+                    layer[(x, y)] = "r_" + str(random.randint(3, 5))
 
 
 def render(layer):
@@ -846,25 +874,18 @@ def add_watermark():
 
 
 tile_Size = 16
-map_Size_X = 80 #get_int(10, 100, "Amount of tiles in x-direction")
+map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
 map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
 mne_rate = 30 #get_int(0, 100, "Medium size nature elements spawn rate")
 
-user_Path_Amount = 2 #get_int(0, 4, "Amount of paths to generate")
-user_Path_Length = 25
-#if user_Path_Amount != 0: user_Path_Length = get_int(1, 24, "Maximum length of a path")
 x_offset = random.randint(0, 1000000)
 y_offset = random.randint(0, 1000000)
 x_Wallpapers = 1
 y_Wallpapers = 1
 friendshipgoals = x_Wallpapers * y_Wallpapers
-"""
-ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False}
-while not ground_Tiles["Lapras"] or not ground_Tiles["Gyarados"] or not ground_Tiles["Diglet"] or not ground_Tiles["Snorlax"]:
-"""
 
 for background in range(friendshipgoals):
     x_offset_friendship = x_offset + map_Size_X * (background % x_Wallpapers)
@@ -883,10 +904,10 @@ for background in range(friendshipgoals):
     bridge_Npc = [31, 32, 36, 37, 38]
     outside_Npc = [14, 15, 26, 27, 39, 49]
     height_Tiles = {}
-    mountainize(tile_Heights, 5, x_offset_friendship, y_offset_friendship)
+    mountainize(tile_Heights, 4, x_offset_friendship, y_offset_friendship)
     create_rivers(ground_Tiles)
 
-    #spawn_fountain(house_Tiles)
+    spawn_fountain(house_Tiles)
 
     spawn_house(house_Tiles, 1, 4, 4, 1)
 
@@ -917,7 +938,8 @@ for background in range(friendshipgoals):
     spawn_npc(npc_Layer, 55, 30, False)
     fill_up_grass(ground_Tiles, sne_rate, x_offset_friendship, y_offset_friendship)
     apply_hill_sprites(ground_Tiles)
-    generate_rain(rain, 20, 10)
+    decorate_beach(decoration_Tiles, 2.3)
+    if raining: generate_rain(rain, 20)
 
     screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 
@@ -929,25 +951,29 @@ for background in range(friendshipgoals):
     render(decoration_Tiles)
     render(house_Tiles)
     render(npc_Layer)
-
     render(rain)
 
+    #add_watermark()
+
+    cwd = os.getcwd()
     if friendshipgoals > 1:
         if background < 10:
             background_Number = "0" + str(background)
         else:
             background_Number = background
-        pygame.image.save(screen, os.path.join("saved images", str(background_Number)+".png"))
+        pygame.image.save(screen, os.path.join(cwd, "saved images", str(background_Number) + ".png"))
         print("saved")
 
 if friendshipgoals == 1:
-    save = input("Save this image? (y/n/seed): ")
+    save = input("Save this image? (y/n/w/seed): ")
     while save == "seed" or save == "zaad":
         print(seed)
         save = input("Save this image? (y/n/seed): ")
+
     t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
-    if save == "y":
+    if save == "y" or save == "w":
         pygame.image.save(screen, os.path.join("saved images", t+".png"))
+        if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t+".png"), 0)
         print("HOERA")
 
 #sideways diagonal stairs (in src folder) are from pokemon gaia version (sta_2, sta_4, sta_5, sta_7)

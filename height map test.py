@@ -1,6 +1,7 @@
 import time, datetime, pygame, os, random, math
 from noise import pnoise2, snoise2
 from math import floor
+from worldMap import image_grayscale_to_dict
 
 
 def random_grass(decoration_rate, x, y, off_x, off_y):
@@ -45,13 +46,13 @@ def generate_hills(layer):
 
 
 def mountainize(layer, max_height):
-    octaves = 5
-    freq = 500
+    octaves = 1
+    freq = 150
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            tile_height = abs(floor((snoise2(round((x + off_x) / freq, 2), round((y + off_y) / freq, 2), octaves)) * max_height))
+            tile_height = abs(floor((snoise2((x + off_x) / freq, (y + off_y) / freq, octaves)) * max_height))
             layer[(x, y)] = tile_height
 
 
@@ -109,23 +110,23 @@ def render(layer):
 
 ground_Tiles = {}
 height_Tiles = {}
-tile_Heights = {}
+tile_Heights = image_grayscale_to_dict("world_height_map_downscaled2.jpg")
 tile_Size = 16
-map_Size_X = 50
-map_Size_Y = 50
+map_Size_X = 540
+map_Size_Y = 270
 screen_Size_X = tile_Size * map_Size_X
 screen_Size_Y = tile_Size * map_Size_Y
 
-mountainize(tile_Heights, 10)
+#mountainize(tile_Heights, 10)
 generate_height_map(height_Tiles, tile_Heights)
 #generate_height_map(ground_Tiles, tile_Heights)
-generate_hills(ground_Tiles)
-fill_up_grass(ground_Tiles, 0)
+#generate_hills(ground_Tiles)
+#fill_up_grass(ground_Tiles, 0)
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 render(height_Tiles)
-time.sleep(4)
-render(ground_Tiles)
+#time.sleep(4)
+#render(ground_Tiles)
 
 save = input("Save this image? (y/n): ")
 t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")

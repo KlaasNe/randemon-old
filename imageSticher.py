@@ -1,9 +1,9 @@
 import os, pygame, datetime
 
-x_Images = 5
-y_Images = 5
-x_Size_Image = 80 * 16
-y_Size_Image = 80 * 16
+x_Images = 3
+y_Images = 2
+x_Size_Image = 68 * 16
+y_Size_Image = 120 * 16
 
 screen = pygame.display.set_mode((x_Images * x_Size_Image, y_Images * y_Size_Image))
 
