@@ -8,11 +8,12 @@ SHINY_PROBABILITY = 0.02
 NB_SNE = 4
 NB_UMBRELLA = 1
 NB_SEAT = 2
+NB_NPC = 55
 rain_probability = 10
 raining = random.random() < rain_probability / 100
 excludedSne = [1, 3, 4]
 
-seed = 3586222535928690668 #random.randint(0, sys.maxsize)
+seed = random.randint(0, sys.maxsize)
 zaad = seed
 random.seed(zaad)
 
@@ -460,7 +461,7 @@ def generate_beach(layer):
 def decorate_beach(layer, decoration_rate):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if not find_decoration_around(layer, x, y - 2, 2, 3) and not check_availability_water(ground_Tiles, x, y - 2, 2, 3) and "p_4" in ground_Tiles.get((x, y - 2), "") and flat_surface(x, y - 2, 2, 3) and not check_availability_zone(house_Tiles, x, y - 2, 2, 3) and random.random() < decoration_rate / 100:
+            if not find_decoration_around(layer, x, y - 2, 2, 3) and "p_4" in ground_Tiles.get((x, y - 2), "") and flat_surface(x, y - 2, 2, 3) and check_availability_zone(house_Tiles, x, y - 2, 2, 3) and random.random() < decoration_rate / 100:
                 umbrella_type = str(random.randint(1, NB_UMBRELLA))
                 for tile in range(6):
                     layer[(x + tile % 2, y + tile // 2 - 2)] = "umb_" + umbrella_type + "_" + str(tile)
@@ -714,20 +715,18 @@ def spawn_fountain(layer): # TODO
     houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + 4), "Right_Connect": (house_x + 4, house_y + 4)}
 
 
-def spawn_npc(layer, total_npcs, population, path_only): # TODO directions
+def spawn_npc(layer, population, path_only):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             direction = random.randint(1, 4)
             if (x, y) not in house_Tiles.keys() and "m_" not in ground_Tiles.get((x, y), "") and random.random() < 0.001 * population:
-                npc_number = random.randint(1, total_npcs)
+                npc_number = random.randint(1, NB_NPC)
                 if path_only:
-                    if "p_" in ground_Tiles.get((x, y), "") and "p_4_" not in ground_Tiles.get((x, y), ""): #or "b_" in ground_Tiles.get((x, y), ""):x
-                        if npc_number not in off_Path_Npc: layer[(x, y)] = "npc_" + str(npc_number) + "_1"# + str(direction)
-                        """
+                    if "p_" in ground_Tiles.get((x, y), "") and "p_4_" not in ground_Tiles.get((x, y), "") or "b_" in ground_Tiles.get((x, y), ""):
+                        if npc_number not in off_Path_Npc: layer[(x, y)] = "npc_" + str(npc_number) + "_" + str(direction)
                         if random.random() < 0.5 and direction == 2:
                             if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys() and ("p_" in ground_Tiles.get((x + 1, y), "") or "b_" in ground_Tiles.get((x, y), "")):
-                                layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
-                        """
+                                layer[(x + 1, y)] = "npc_" + str(random.randint(1, NB_NPC)) + "_4"
                 elif random.randint(0, 4) == 0:
                     if not raining:
                         if "pd_" in ground_Tiles.get((x, y), ""):
@@ -740,15 +739,14 @@ def spawn_npc(layer, total_npcs, population, path_only): # TODO directions
                         npc_number = outside_Npc[random.randint(1, len(outside_Npc) - 1)]
                     elif is_actual_path(ground_Tiles, x, y):
                         while npc_number in off_Path_Npc:
-                            npc_number = random.randint(1, total_npcs)
+                            npc_number = random.randint(1, NB_NPC)
                     else:
                         break
-                    layer[(x, y)] = "npc_" + str(npc_number) + "_1" #+ str(direction)
-                    """
+                    if npc_number == 50: direction = 1
+                    layer[(x, y)] = "npc_" + str(npc_number) + "_" + str(direction)
                     if random.random() < 0.5 and direction == 2:
                         if (x + 1, y) not in layer.keys() and (x + 1, y) not in house_Tiles.keys():
-                            layer[(x + 1, y)] = "npc_" + str(random.randint(1, total_npcs)) + "_4"
-                    """
+                            layer[(x + 1, y)] = "npc_" + str(random.randint(1, NB_NPC)) + "_4"
 
 
 def check_bridge_space(layer, x, y, x_size, y_size):
@@ -935,7 +933,7 @@ for background in range(friendshipgoals):
     spawn_exceguttor(house_Tiles)
     spawn_lanterns(ground_Tiles)
     spawn_mne(ground_Tiles, mne_rate, x_offset_friendship, y_offset_friendship)
-    spawn_npc(npc_Layer, 55, 30, False)
+    spawn_npc(npc_Layer, 30, False)
     fill_up_grass(ground_Tiles, sne_rate, x_offset_friendship, y_offset_friendship)
     apply_hill_sprites(ground_Tiles)
     decorate_beach(decoration_Tiles, 2.3)
