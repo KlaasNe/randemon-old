@@ -4,6 +4,7 @@ from time import sleep
 from worldMap import image_grayscale_to_dict
 import time
 
+TILE_SIZE = 16
 SHINY_PROBABILITY = 0.02
 NB_SNE = 4
 NB_UMBRELLA = 1
@@ -461,11 +462,11 @@ def generate_beach(layer):
 def decorate_beach(layer, decoration_rate):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if not find_decoration_around(layer, x, y - 2, 2, 3) and "p_4" in ground_Tiles.get((x, y - 2), "") and flat_surface(x, y - 2, 2, 3) and check_availability_zone(house_Tiles, x, y - 2, 2, 3) and random.random() < decoration_rate / 100:
+            if not find_decoration_around(layer, x, y - 2, 2, 3) and "p_4" in ground_Tiles.get((x, y - 2), "") and flat_surface(x, y - 2, 2, 3) and check_availability_zone(house_Tiles, x, y - 2, 2, 3) and random.random() < decoration_rate / 300:
                 umbrella_type = str(random.randint(1, NB_UMBRELLA))
                 for tile in range(6):
                     layer[(x + tile % 2, y + tile // 2 - 2)] = "umb_" + umbrella_type + "_" + str(tile)
-            if not find_decoration_around(layer, x, y - 1, 1, 2) and (x, y) not in layer.keys() and random.random() < decoration_rate / 200:
+            if not find_decoration_around(layer, x, y - 1, 1, 2) and (x, y) not in layer.keys() and random.random() < decoration_rate / 300:
                 if "p_4" in ground_Tiles.get((x, y), "") and "p_4" in ground_Tiles.get((x, y - 1), ""):
                     if random.randint(0, 1) == 0 and not raining: npc_Layer[(x, y - 1)] = "npc_" + str(shore_Npc[random.randint(1, len(shore_Npc) - 1)]) + "_1"
                     layer[(x, y - 1)] = "sts_2_0"
@@ -605,7 +606,8 @@ def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
 def flat_surface(x, y, x_size, y_size):
     reference_height = tile_Heights.get((x, y), -1)
     for tile in range(1, x_size * y_size + 1):
-        if tile_Heights.get((x + (tile % x_size), y + (tile // x_size)), -1) != reference_height: return False
+        if tile_Heights.get((x + (tile % x_size), y + (tile // x_size)), -1) != reference_height:
+            return False
     return True
 
 
@@ -701,7 +703,7 @@ def spawn_lanterns(layer):
                 layer[(x, y - 2)] = "l_7"
 
 
-def spawn_fountain(layer): # TODO
+def spawn_fountain(layer):  # TODO
     house_x = random.randint(1, map_Size_X - 5)
     house_y = random.randint(1, map_Size_Y - 5)
     while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5, 5) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5, 5) or not flat_surface(house_x - 2, house_y - 2, 5 + 2, 5 + 2):
@@ -713,6 +715,19 @@ def spawn_fountain(layer): # TODO
     for front in range(25):
         ground_Tiles[(house_x - 1 + front % 5, (house_y - 1 + front // 5) + 5 - 2)] = "p_2"
     houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + 4), "Right_Connect": (house_x + 4, house_y + 4)}
+
+
+def spawn_mini_boats(layer):
+    boat_size_x = 6
+    boat_size_y = 3
+    for x in range(0, map_Size_X):
+        for y in range(0, map_Size_Y):
+            if check_availability_water(ground_Tiles, x - 1, y - 1, boat_size_x + 2, boat_size_y + 2) and check_availability_zone(decoration_Tiles, x - 2, y - 2, boat_size_x + 4, boat_size_y + 4) and random.random() < 0.05:
+                if random.randint(0, 1) == 1: direction = 1
+                else: direction = 19
+                for boat_y in range(boat_size_y):
+                    for boat_x in range(boat_size_x):
+                        layer[(x + boat_x, y + boat_y)] = "mb_" + str(boat_x + 6 * boat_y + direction)
 
 
 def spawn_npc(layer, population, path_only):
@@ -764,10 +779,10 @@ def check_availability_zone(layer, start_x, start_y, x_size, y_size):
 
 
 def check_availability_water(layer, start_x, start_y, x_size, y_size):
-    availability = True
     for tile in range(x_size * y_size + 1):
-        if not "pd_" in layer.get((start_x + tile % x_size, start_y + math.floor((tile - 1) / x_size)), ""): availability = False
-    return availability
+        if "pd_" not in layer.get((start_x + tile % x_size, start_y + math.floor((tile - 1) / x_size)), ""):
+            return False
+    return True
 
 
 def mountainize(layer, max_height, offset_x, offset_y):
@@ -858,9 +873,9 @@ def render(layer):
                 tile = str(layer[(x, y)])
                 if "npc_" in layer[(x, y)]: correction = 3
                 try:
-                    screen.blit(pygame.image.load(os.path.join("resources", tile + ".png")), (x * tile_Size, y * tile_Size - correction))
+                    screen.blit(pygame.image.load(os.path.join("resources", tile + ".png")), (x * TILE_SIZE, y * TILE_SIZE - correction))
                 except Exception as e:
-                    screen.blit(pygame.image.load(os.path.join("resources", "missing.png")), (x * tile_Size, y * tile_Size - correction))
+                    screen.blit(pygame.image.load(os.path.join("resources", "missing.png")), (x * TILE_SIZE, y * TILE_SIZE - correction))
                     print(e)
 
     pygame.display.update()
@@ -871,26 +886,48 @@ def add_watermark():
         screen.blit(pygame.image.load(os.path.join("resources", "randemon watermark" + ".png")), (amount * 48, screen_Size_Y - 16))
 
 
-tile_Size = 16
-map_Size_X = 50 #get_int(10, 100, "Amount of tiles in x-direction")
-map_Size_Y = 50 #get_int(10, 100, "Amount of tiles in y-direction")
-screen_Size_X = tile_Size * map_Size_X
-screen_Size_Y = tile_Size * map_Size_Y
-sne_rate = 40 #get_int(0, 100, "Small size nature elements spawn rate")
-mne_rate = 30 #get_int(0, 100, "Medium size nature elements spawn rate")
+preset = input("preset: ")
+if preset == "":
+    map_Size_X = get_int(1, 500, "Amount of tiles on the map horizontally")
+    map_Size_Y = get_int(1, 500, "Amount of tiles on the map vertically")
+    sne_rate = get_int(0, 100, "Land coverage of tall grass")
+    mne_rate = get_int(0, 100, "Land coverage of trees")
 
+    x_Wallpapers = get_int(1, 100, "Amount of horizontally fitting seperate images to be generated")
+    y_Wallpapers = get_int(1, 100, "Amount of vertically fitting seperate images to be generated")
+
+    max_mountain_height = get_int(0, 100, "Maximal height of a mountain top")
+
+    path_only_npc = input("Should npcs spawn on paths only? (y/n) ") == "y"
+    npc_population = get_int(0, 100, "Population")
+    house_path_type = get_int(1, 3, "What type of path should be drawn between houses")
+elif preset == "default":
+    map_Size_X = 80
+    map_Size_Y = 50
+    sne_rate = 50
+    mne_rate = 30
+    x_Wallpapers = 1
+    y_Wallpapers = 1
+    max_mountain_height = 4
+    path_only_npc = False
+    npc_population = 20
+    house_path_type = 1
+
+
+screen_Size_X = TILE_SIZE * map_Size_X
+screen_Size_Y = TILE_SIZE * map_Size_Y
 x_offset = random.randint(0, 1000000)
 y_offset = random.randint(0, 1000000)
-x_Wallpapers = 1
-y_Wallpapers = 1
 friendshipgoals = x_Wallpapers * y_Wallpapers
+
+print("Loading...")
 
 for background in range(friendshipgoals):
     x_offset_friendship = x_offset + map_Size_X * (background % x_Wallpapers)
     y_offset_friendship = y_offset + map_Size_Y * (background // x_Wallpapers)
     ground_Tiles = {"Lapras": False, "Diglet": False, "Gyarados": False, "Truck": False, "Snorlax": False, "Pikachu": False, "Exceguttor": False}
     npc_Layer = {}
-    tile_Heights = {}#image_grayscale_to_dict("world_height_map_downscaled3.jpg")
+    tile_Heights = {} #image_grayscale_to_dict("world_height_map_downscaled3.jpg")
     mne_biomes = {}
     house_Tiles = {}
     houses_Connecters = {}
@@ -902,7 +939,7 @@ for background in range(friendshipgoals):
     bridge_Npc = [31, 32, 36, 37, 38]
     outside_Npc = [14, 15, 26, 27, 39, 49]
     height_Tiles = {}
-    mountainize(tile_Heights, 4, x_offset_friendship, y_offset_friendship)
+    mountainize(tile_Heights, max_mountain_height, x_offset_friendship, y_offset_friendship)
     create_rivers(ground_Tiles)
 
     spawn_fountain(house_Tiles)
@@ -921,7 +958,7 @@ for background in range(friendshipgoals):
     spawn_house(house_Tiles, 9, 6, 4, 1)
 
     generate_beach(ground_Tiles)
-    generate_path(ground_Tiles, "1", 2)
+    generate_path(ground_Tiles, house_path_type, 2)
     apply_path_sprites(ground_Tiles)
     spawn_truck(house_Tiles)
     apply_hill_sprites(ground_Tiles)
@@ -933,9 +970,10 @@ for background in range(friendshipgoals):
     spawn_exceguttor(house_Tiles)
     spawn_lanterns(ground_Tiles)
     spawn_mne(ground_Tiles, mne_rate, x_offset_friendship, y_offset_friendship)
-    spawn_npc(npc_Layer, 30, False)
+    spawn_npc(npc_Layer, npc_population, path_only_npc)
     fill_up_grass(ground_Tiles, sne_rate, x_offset_friendship, y_offset_friendship)
     apply_hill_sprites(ground_Tiles)
+    spawn_mini_boats(decoration_Tiles)
     decorate_beach(decoration_Tiles, 2.3)
     if raining: generate_rain(rain, 20)
 
@@ -970,7 +1008,7 @@ if friendshipgoals == 1:
 
     t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
     if save == "y" or save == "w":
-        pygame.image.save(screen, os.path.join("saved images", t+".png"))
+        pygame.image.save(screen, os.path.join("saved images", t + ".png"))
         if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t+".png"), 0)
         print("HOERA")
 
