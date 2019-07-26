@@ -15,7 +15,7 @@ raining = random.random() < rain_probability / 100
 excludedSne = [1, 3, 4]
 
 seed = random.randint(0, sys.maxsize)
-zaad = seed
+zaad = 420
 random.seed(zaad)
 
 
@@ -606,7 +606,7 @@ def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
 def flat_surface(x, y, x_size, y_size):
     reference_height = tile_Heights.get((x, y), -1)
     for tile in range(1, x_size * y_size + 1):
-        if tile_Heights.get((x + (tile % x_size), y + (tile // x_size)), -1) != reference_height:
+        if tile_Heights.get((x + (tile % x_size), y + (tile // x_size)), -2) != reference_height:
             return False
     return True
 
@@ -706,7 +706,7 @@ def spawn_lanterns(layer):
 def spawn_fountain(layer):  # TODO
     house_x = random.randint(1, map_Size_X - 5)
     house_y = random.randint(1, map_Size_Y - 5)
-    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 5, 5) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 5, 5) or not flat_surface(house_x - 2, house_y - 2, 5 + 2, 5 + 2):
+    while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 7, 7) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 7, 7) or not flat_surface(house_x - 2, house_y - 2, 5 + 4, 5 + 4):
         house_x = random.randint(1, map_Size_X - 5)
         house_y = random.randint(1, map_Size_Y - 5)
 
@@ -722,7 +722,7 @@ def spawn_mini_boats(layer):
     boat_size_y = 3
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            if check_availability_water(ground_Tiles, x - 1, y - 1, boat_size_x + 2, boat_size_y + 2) and check_availability_zone(decoration_Tiles, x - 2, y - 2, boat_size_x + 4, boat_size_y + 4) and random.random() < 0.05:
+            if check_availability_water(ground_Tiles, x - 1, y - 1, boat_size_x + 2, boat_size_y + 2) and check_availability_zone(decoration_Tiles, x - 2, y - 2, boat_size_x + 4, boat_size_y + 4) and random.random() < 0.005:
                 if random.randint(0, 1) == 1: direction = 1
                 else: direction = 19
                 for boat_y in range(boat_size_y):
@@ -833,13 +833,11 @@ def calculate_hill_texture(height_list, x, y):
 def test_hills_around(height_list, x, y):
     current_tile_height = height_list[(x, y)]
     hills_around = []
-
     for around in range(0, 9):
         tile_coo = (x + around % 3 - 1, y + around // 3 - 1)
         if height_list.get(tile_coo, current_tile_height) == current_tile_height: hills_around.append(0)
         if height_list.get(tile_coo, current_tile_height) < current_tile_height: hills_around.append(-1)
         if height_list.get(tile_coo, current_tile_height) > current_tile_height: hills_around.append(1)
-
     return hills_around
 
 
@@ -910,17 +908,25 @@ elif preset == "default":
     y_Wallpapers = 1
     max_mountain_height = 4
     path_only_npc = False
-    npc_population = 20
+    npc_population = 30
     house_path_type = 1
-
+elif preset == "phone":
+    map_Size_X = 120
+    map_Size_Y = 68
+    sne_rate = 50
+    mne_rate = 40
+    x_Wallpapers = 1
+    y_Wallpapers = 1
+    max_mountain_height = 4
+    path_only_npc = False
+    npc_population = 30
+    house_path_type = 1
 
 screen_Size_X = TILE_SIZE * map_Size_X
 screen_Size_Y = TILE_SIZE * map_Size_Y
 x_offset = random.randint(0, 1000000)
 y_offset = random.randint(0, 1000000)
 friendshipgoals = x_Wallpapers * y_Wallpapers
-
-print("Loading...")
 
 for background in range(friendshipgoals):
     x_offset_friendship = x_offset + map_Size_X * (background % x_Wallpapers)
@@ -939,12 +945,14 @@ for background in range(friendshipgoals):
     bridge_Npc = [31, 32, 36, 37, 38]
     outside_Npc = [14, 15, 26, 27, 39, 49]
     height_Tiles = {}
+    print("*Creating hills*")
     mountainize(tile_Heights, max_mountain_height, x_offset_friendship, y_offset_friendship)
+    print("*Filling rivers*")
     create_rivers(ground_Tiles)
+    print("*building a village*")
+    spawn_house(house_Tiles, 1, 4, 4, 1)
 
     spawn_fountain(house_Tiles)
-
-    spawn_house(house_Tiles, 1, 4, 4, 1)
 
     spawn_pokecenter(house_Tiles)
     spawn_pokemarket(house_Tiles)
@@ -957,32 +965,43 @@ for background in range(friendshipgoals):
     spawn_house(house_Tiles, 8, 4, 5, 1)
     spawn_house(house_Tiles, 9, 6, 4, 1)
 
+    print("*Creating shores*")
     generate_beach(ground_Tiles)
+    print("*Dijkstra*")
     generate_path(ground_Tiles, house_path_type, 2)
+    print("*Adding some details*")
     apply_path_sprites(ground_Tiles)
     spawn_truck(house_Tiles)
     apply_hill_sprites(ground_Tiles)
     apply_water_sprites(ground_Tiles)
+    print("*Spawning pokémon*")
     spawn_lapras(ground_Tiles)
     spawn_gyarados(ground_Tiles)
     spawn_snorlax(house_Tiles)
     spawn_pikachu(house_Tiles)
     spawn_exceguttor(house_Tiles)
+    print("*Decorating*")
     spawn_lanterns(ground_Tiles)
     spawn_mne(ground_Tiles, mne_rate, x_offset_friendship, y_offset_friendship)
+    print("*Adding humans*")
     spawn_npc(npc_Layer, npc_population, path_only_npc)
+    print("*Filling empty spaces")
     fill_up_grass(ground_Tiles, sne_rate, x_offset_friendship, y_offset_friendship)
+    print("*Decorating*")
     apply_hill_sprites(ground_Tiles)
     spawn_mini_boats(decoration_Tiles)
     decorate_beach(decoration_Tiles, 2.3)
-    if raining: generate_rain(rain, 20)
+    if raining:
+        print("*Pouring rain*")
+        generate_rain(rain, 20)
 
     screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 
-    generate_height_map(height_Tiles, tile_Heights)
-    render(height_Tiles)
-    time.sleep(1)
+    # generate_height_map(height_Tiles, tile_Heights)
+    # render(height_Tiles)
+    # time.sleep(1)
 
+    print("*Rendering*")
     render(ground_Tiles)
     render(decoration_Tiles)
     render(house_Tiles)
