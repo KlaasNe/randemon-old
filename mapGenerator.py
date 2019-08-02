@@ -703,7 +703,7 @@ def spawn_lanterns(layer):
                 layer[(x, y - 2)] = "l_7"
 
 
-def spawn_fountain(layer):  # TODO
+def spawn_fountain(layer):
     house_x = random.randint(1, map_Size_X - 5)
     house_y = random.randint(1, map_Size_Y - 5)
     while not check_availability_zone(ground_Tiles, house_x - 1, house_y - 1, 7, 7) or not check_availability_zone(house_Tiles, house_x - 1, house_y - 1, 7, 7) or not flat_surface(house_x - 2, house_y - 2, 5 + 4, 5 + 4):
