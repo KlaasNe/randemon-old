@@ -5,17 +5,17 @@ from worldMap import image_grayscale_to_dict
 import time
 
 TILE_SIZE = 16
-SHINY_PROBABILITY = 0.02
 NB_SNE = 4
 NB_UMBRELLA = 1
 NB_SEAT = 2
 NB_NPC = 55
+shiny_probability = 0.02
 rain_probability = 10
 raining = random.random() < rain_probability / 100
 excludedSne = [1, 3, 4]
 
 seed = random.randint(0, sys.maxsize)
-zaad = 420
+zaad = seed
 random.seed(zaad)
 
 
@@ -43,7 +43,7 @@ def random_grass(decoration_rate, x, y, offset_x, offset_y):
         return "g_" + str(grass_type)
     elif can_spawn_pokemon(0.001, "Diglet"):
         ground_Tiles["Diglet"] = True
-        return "diglet_2" if random.random() < SHINY_PROBABILITY else "diglet_1"
+        return "diglet_2" if random.random() < shiny_probability else "diglet_1"
     else:
         return choose_sne_type(excludedSne)
 
@@ -104,6 +104,89 @@ def generate_path(layer, path_type, path_width):
         draw_vertical_path(layer, start_x_vertical, start_y_vertical, y_difference, path_type, path_width)
         draw_horizontal_path(layer, start_x_horizontal, start_y_horizontal, x_difference, path_type, path_width)
 
+    fix(layer)
+
+
+def generate_dijkstra_path(layer, path_type):
+
+    def initialize_dijkstra():
+        for y in range(map_Size_Y):
+            weight_array = []
+            for x in range(map_Size_X):
+                weight_array.append(determine_weight(x, y))
+            current_weight.append(map_Size_X * [sys.maxsize])
+            weight.append(weight_array)
+            visited.append(map_Size_X * [False])
+            previous_tile.append(map_Size_X * [(0, 0)])
+
+    def handle_current_tile():
+        current_x = current_tile[0]
+        current_y = current_tile[1]
+        visited[current_y][current_x] = True
+        for tile_around in range(4):
+            around_x = current_x - 1 + ((2 * tile_around) + 1) % 3
+            around_y = current_y - 1 + ((2 * tile_around) + 1) // 3
+            if not out_of_bounds(around_x, around_y):
+                new_weight = current_weight[current_y][current_x] + weight[around_y][around_x]
+                if not visited[around_y][around_x] and current_weight[around_y][around_x] > new_weight:
+                    current_weight[around_y][around_x] = new_weight
+                    previous_tile[around_y][around_x] = current_tile
+                    handle_tiles[(around_x, around_y)] = new_weight
+        handle_tiles.pop(current_tile)
+
+    def find_min_tile():
+        min_weight = sys.maxsize
+        for tile in handle_tiles:
+            if handle_tiles[tile] < min_weight:
+                min_weight = handle_tiles[tile]
+                min_tile = tile
+        return min_tile
+
+    for front_door in range(len(houses_Front_Doors) - 1):
+        current_tile = houses_Front_Doors[front_door]
+        target_tile = houses_Front_Doors[front_door + 1]
+        weight = []
+        current_weight = []
+        visited = []
+        previous_tile = []
+        handle_tiles = {}
+        initialize_dijkstra()
+
+        visited[current_tile[1]][current_tile[0]] = True
+        current_weight[current_tile[1]][current_tile[0]] = 0
+        previous_tile[current_tile[1]][current_tile[0]] = (0, 0)
+        handle_tiles[(current_tile[0], current_tile[1])] = 0
+        handle_current_tile()
+        while not current_tile == target_tile:
+            current_tile = find_min_tile()
+            handle_current_tile()
+
+        path = []
+        while not previous_tile[current_tile[1]][current_tile[0]] == (0, 0):
+            path.append(current_tile)
+            layer[current_tile] = path_type
+            current_tile = previous_tile[current_tile[1]][current_tile[0]]
+            print(current_tile)
+
+    fix(ground_Tiles)
+
+
+def determine_weight(x, y):
+    PATH_WEIGHT = 0
+    GRASS_WEIGHT = 1
+    HILL_WEIGHT = 3
+    WATER_WEIGHT = 5
+    if "h_" in house_Tiles.get((x, y), "") and ("h_" in house_Tiles.get((x, y + 1), "") or "h_" in house_Tiles.get((x, y - 1), "")): return 999999
+    if "pm_" in house_Tiles.get((x, y), "") and ("pm_" in house_Tiles.get((x, y + 1), "") or "pm_" in house_Tiles.get((x, y - 1), "")): return 999999
+    if "pc_" in house_Tiles.get((x, y), "") and ("pc_" in house_Tiles.get((x, y + 1), "") or "pc_" in house_Tiles.get((x, y - 1), "")): return 999999
+    if is_actual_path(ground_Tiles, x, y) or "b_" in ground_Tiles.get((x, y), "") or "mrk" in ground_Tiles.get((x, y), ""): return PATH_WEIGHT
+    if ground_Tiles.get((x, y), "") == "" or "p_4" in ground_Tiles.get((x, y), ""): return GRASS_WEIGHT
+    if "m_" in ground_Tiles.get((x, y), ""): return HILL_WEIGHT
+    if "pd_" in ground_Tiles.get((x, y), ""): return WATER_WEIGHT
+    return 999999
+
+
+def fix(layer):
     remove_half_stairs(layer)
     move_faulty_stairs(layer)
     finish_stairs(layer)
@@ -543,7 +626,7 @@ def spawn_lapras(layer):
         for y in range(0, map_Size_Y):
             if can_spawn_pokemon(0.001, "Lapras") and check_availability_water(layer, x - 1, y - 1, 3, 4):
                 layer["Lapras"] = True
-                if random.random() < SHINY_PROBABILITY:
+                if random.random() < shiny_probability:
                     # direction should be either 5 or 7
                     direction = 5 + 2 * random.randint(0, 1)
                 else:
@@ -558,7 +641,7 @@ def spawn_gyarados(layer):
         for y in range(0, map_Size_Y):
             shiny = 0
             if can_spawn_pokemon(0.001, "Gyarados") and check_availability_water(layer, x - 1, y - 1, 4, 4):
-                if random.random() < SHINY_PROBABILITY: shiny = 4
+                if random.random() < shiny_probability: shiny = 4
                 layer["Gyarados"] = True
                 layer[(x + 1, y)] = "pd_g_" + str(2 + shiny)
                 layer[(x, y + 1)] = "pd_g_" + str(3 + shiny)
@@ -598,6 +681,7 @@ def spawn_house(layer, house_type, house_size_x, house_size_y, amount):
         for front in range(4 * house_size_x):
             ground_Tiles[(house_x + front % house_size_x, house_y + math.floor(front / house_size_x) + house_size_y - 2)] = "p_3"
         houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + house_size_y), "Right_Connect": (house_x + house_size_x, house_y + house_size_y)}
+        houses_Front_Doors.append((int(house_x + house_size_x / 2), int(house_y + house_size_y)))
         if random.randint(0, 1) == 1 and not taken(layer, house_x - 1, house_y + house_size_y - 2):
             layer[(house_x - 1, house_y + house_size_y - 1)] = "mbx_0"
             layer[(house_x - 1, house_y + house_size_y - 2)] = "mbx_1"
@@ -631,6 +715,7 @@ def spawn_pokecenter(layer):
     for front in range(4 * pokecenter_size_x):
         ground_Tiles[(house_x + front % 5, house_y + math.floor(front / 5) + 5 - 2)] = "p_2"
     houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + pokecenter_size_y), "Right_Connect": (house_x + pokecenter_size_x, house_y + pokecenter_size_y)}
+    houses_Front_Doors.append((int(house_x + pokecenter_size_x / 2), int(house_y + pokecenter_size_y)))
 
 
 def spawn_pokemarket(layer):
@@ -646,6 +731,7 @@ def spawn_pokemarket(layer):
     for front in range(pokemarket_size_x * pokemarket_size_y):
         ground_Tiles[(house_x + front % pokemarket_size_x, house_y + math.floor(front / pokemarket_size_x) + pokemarket_size_x - 2)] = "p_2"
     houses_Connecters[len(houses_Connecters)] = {"Left_Connect": (house_x - 2, house_y + pokemarket_size_y), "Right_Connect": (house_x + pokemarket_size_x, house_y + pokemarket_size_y)}
+    houses_Front_Doors.append((int(house_x + pokemarket_size_x / 2), int(house_y + pokemarket_size_y)))
 
 
 def spawn_truck(layer):
@@ -665,7 +751,7 @@ def spawn_snorlax(layer):
         for y in range(0, map_Size_Y):
             if can_spawn_pokemon(0.015, "Snorlax") and (("b_" in ground_Tiles.get((x, y), "") or "pl_" in ground_Tiles.get((x, y), "")) and check_bridge_space(ground_Tiles, x, y, 2, 2)):
                 ground_Tiles["Snorlax"] = True
-                if random.random() < SHINY_PROBABILITY: shiny = 4
+                if random.random() < shiny_probability: shiny = 4
                 for snorlax_tile in range(4):
                     layer[(x + snorlax_tile % 2, y + math.floor(snorlax_tile / 2))] = "sn_" + str(snorlax_tile + 1 + shiny)
 
@@ -937,6 +1023,7 @@ for background in range(friendshipgoals):
     mne_biomes = {}
     house_Tiles = {}
     houses_Connecters = {}
+    houses_Front_Doors = []
     decoration_Tiles = {}
     rain = {}
     off_Path_Npc = [14, 15, 26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 49]
@@ -968,7 +1055,8 @@ for background in range(friendshipgoals):
     print("*Creating shores*")
     generate_beach(ground_Tiles)
     print("*Dijkstra*")
-    generate_path(ground_Tiles, house_path_type, 2)
+    #generate_path(ground_Tiles, house_path_type, 2)
+    generate_dijkstra_path(ground_Tiles, "mrk")
     print("*Adding some details*")
     apply_path_sprites(ground_Tiles)
     spawn_truck(house_Tiles)
