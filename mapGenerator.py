@@ -104,7 +104,7 @@ def generate_path(layer, path_type, path_width):
         draw_vertical_path(layer, start_x_vertical, start_y_vertical, y_difference, path_type, path_width)
         draw_horizontal_path(layer, start_x_horizontal, start_y_horizontal, x_difference, path_type, path_width)
 
-    fix(layer)
+    fixit(layer)
 
 
 def generate_dijkstra_path(layer, path_type):
@@ -118,6 +118,22 @@ def generate_dijkstra_path(layer, path_type):
             weight.append(weight_array)
             visited.append(map_Size_X * [False])
             previous_tile.append(map_Size_X * [(0, 0)])
+
+    def determine_weight(x, y):
+        PATH_WEIGHT = 1
+        GRASS_WEIGHT = 3
+        HILL_WEIGHT = 5
+        WATER_WEIGHT = 10
+
+        if "h_" in house_Tiles.get((x - 1, y), "") or "pm_" in house_Tiles.get((x - 1, y),  "") or "pc_" in house_Tiles.get((x - 1, y), ""): return 999999
+        if "h_" in house_Tiles.get((x, y), "") and ("h_" in house_Tiles.get((x, y + 1), "") or "h_" in house_Tiles.get((x, y - 1), "")): return 999999
+        if "pm_" in house_Tiles.get((x, y), "") and ("pm_" in house_Tiles.get((x, y + 1), "") or "pm_" in house_Tiles.get((x, y - 1), "")): return 999999
+        if "pc_" in house_Tiles.get((x, y), "") and ("pc_" in house_Tiles.get((x, y + 1), "") or "pc_" in house_Tiles.get((x, y - 1), "")): return 999999
+        if is_actual_path(ground_Tiles, x, y) or "b_" in ground_Tiles.get((x, y), "") or "mrk" in ground_Tiles.get((x, y), ""): return PATH_WEIGHT
+        if ground_Tiles.get((x, y), "") == "" or "p_4" in ground_Tiles.get((x, y), ""): return GRASS_WEIGHT
+        if "m_" in ground_Tiles.get((x, y), ""): return HILL_WEIGHT
+        if "pd_" in ground_Tiles.get((x, y), "") or "pd_" in ground_Tiles.get((x - 1, y), ""): return WATER_WEIGHT
+        return 999999
 
     def handle_current_tile():
         current_x = current_tile[0]
@@ -164,29 +180,14 @@ def generate_dijkstra_path(layer, path_type):
         path = []
         while not previous_tile[current_tile[1]][current_tile[0]] == (0, 0):
             path.append(current_tile)
-            layer[current_tile] = path_type
+            if not is_actual_path(layer, current_tile[0], current_tile[1]): layer[current_tile] = house_path_type
             current_tile = previous_tile[current_tile[1]][current_tile[0]]
-            print(current_tile)
 
-    fix(ground_Tiles)
-
-
-def determine_weight(x, y):
-    PATH_WEIGHT = 0
-    GRASS_WEIGHT = 1
-    HILL_WEIGHT = 3
-    WATER_WEIGHT = 5
-    if "h_" in house_Tiles.get((x, y), "") and ("h_" in house_Tiles.get((x, y + 1), "") or "h_" in house_Tiles.get((x, y - 1), "")): return 999999
-    if "pm_" in house_Tiles.get((x, y), "") and ("pm_" in house_Tiles.get((x, y + 1), "") or "pm_" in house_Tiles.get((x, y - 1), "")): return 999999
-    if "pc_" in house_Tiles.get((x, y), "") and ("pc_" in house_Tiles.get((x, y + 1), "") or "pc_" in house_Tiles.get((x, y - 1), "")): return 999999
-    if is_actual_path(ground_Tiles, x, y) or "b_" in ground_Tiles.get((x, y), "") or "mrk" in ground_Tiles.get((x, y), ""): return PATH_WEIGHT
-    if ground_Tiles.get((x, y), "") == "" or "p_4" in ground_Tiles.get((x, y), ""): return GRASS_WEIGHT
-    if "m_" in ground_Tiles.get((x, y), ""): return HILL_WEIGHT
-    if "pd_" in ground_Tiles.get((x, y), ""): return WATER_WEIGHT
-    return 999999
+    fixit(ground_Tiles)
 
 
-def fix(layer):
+def fixit(layer):
+    make_path_double(layer)
     remove_half_stairs(layer)
     move_faulty_stairs(layer)
     finish_stairs(layer)
@@ -194,6 +195,24 @@ def fix(layer):
     apply_platform_sprites(layer)
     apply_hill_sprites(layer)
     finishing_touches_bridges(layer)
+
+
+def make_path_double(layer):
+    path_extention = []
+    for y in range(map_Size_Y):
+        for x in range(map_Size_X):
+            if house_path_type in layer.get((x, y), ""):
+                path_extention.append((x, y - 1))
+                if (x, y) not in house_Tiles.keys():
+                    path_extention.append((x - 1, y))
+                    path_extention.append((x - 1, y - 1))
+
+    for path in path_extention:
+        x = path[0]
+        y = path[1]
+        if tile_Heights.get((x, y), 0) < 1:
+            layer[(x, y)] = "b_"
+        elif not is_actual_path(layer, x, y): layer[(x, y)] = house_path_type
 
 
 def draw_vertical_path(layer, start_x_vertical, start_y_vertical, y_difference, path_type, path_width):
@@ -250,7 +269,11 @@ def draw_horizontal_path(layer, start_x_horizontal, start_y_horizontal, x_differ
 
 
 def is_actual_path(layer, x, y):
-    return "p_" in layer.get((x, y), "") and "p_4" not in layer.get((x, y), "")
+    try:
+        return "p_" in layer.get((x, y), "") and "p_4" not in layer.get((x, y), "")
+    except Exception as e:
+        print(e)
+        print(layer.get((x, y), ""))
 
 
 def try_horizontal_stairs(x, y, path_height):
@@ -470,7 +493,7 @@ def calculate_path_sprite(layer, x, y):
     for around in range(0, 9):
         path_around = layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
         if path_around == 0: path_around = house_Tiles.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
-        if "p_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around) or "sta_" in str(path_around) or "m_4_p" in str(path_around) or "pd_" in str(path_around) or out_of_bounds(x + (around % 3) - 1, y + math.floor(around / 3) - 1):
+        if "p_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around) or "sta_" in str(path_around) or "m_4_p" in str(path_around) or "pd_" in str(path_around) or out_of_bounds(x + (around % 3) - 1, y + math.floor(around / 3) - 1) or "mrk" in str(path_around):
             tiles_around.append(1)
         else:
             tiles_around.append(0)
@@ -984,7 +1007,7 @@ if preset == "":
 
     path_only_npc = input("Should npcs spawn on paths only? (y/n) ") == "y"
     npc_population = get_int(0, 100, "Population")
-    house_path_type = get_int(1, 3, "What type of path should be drawn between houses")
+    house_path_type = "p_" + str(get_int(1, 3, "What type of path should be drawn between houses"))
 elif preset == "default":
     map_Size_X = 80
     map_Size_Y = 50
@@ -995,8 +1018,8 @@ elif preset == "default":
     max_mountain_height = 4
     path_only_npc = False
     npc_population = 30
-    house_path_type = 1
-elif preset == "phone":
+    house_path_type = "p_1"
+elif preset == "paper":
     map_Size_X = 120
     map_Size_Y = 68
     sne_rate = 50
@@ -1006,7 +1029,7 @@ elif preset == "phone":
     max_mountain_height = 4
     path_only_npc = False
     npc_population = 30
-    house_path_type = 1
+    house_path_type = "p_1"
 
 screen_Size_X = TILE_SIZE * map_Size_X
 screen_Size_Y = TILE_SIZE * map_Size_Y
@@ -1056,7 +1079,7 @@ for background in range(friendshipgoals):
     generate_beach(ground_Tiles)
     print("*Dijkstra*")
     #generate_path(ground_Tiles, house_path_type, 2)
-    generate_dijkstra_path(ground_Tiles, "mrk")
+    generate_dijkstra_path(ground_Tiles, house_path_type)
     print("*Adding some details*")
     apply_path_sprites(ground_Tiles)
     spawn_truck(house_Tiles)
