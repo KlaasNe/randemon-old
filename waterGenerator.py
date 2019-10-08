@@ -1,19 +1,18 @@
 import math
 
 
-def create_rivers(layer, map_size_x, map_size_y, tile_heights):
+def create_rivers(pmap):
 
     def apply_water_sprites(layer):
 
         def calculate_water_sprite(x, y):
-            from mapGenerator2 import out_of_bounds
 
             tiles_around = []
             for around in range(0, 9):
                 path_around = (layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), "0"))
                 if "p_" not in str(path_around) and (
                         "pd_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(
-                        path_around) or out_of_bounds(x + (around % 3) - 1, y + math.floor(around / 3) - 1)):
+                        path_around) or pmap.out_of_bounds(x + (around % 3) - 1, y + math.floor(around / 3) - 1)):
                     tiles_around.append(1)
                 else:
                     tiles_around.append(0)
@@ -54,26 +53,26 @@ def create_rivers(layer, map_size_x, map_size_y, tile_heights):
                 water_sprite = calculate_water_sprite(x, y)
                 layer[(x, y)] = str(layer[(x, y)]) + str(water_sprite)
 
-    for y in range(0, map_size_y):
-        for x in range(0, map_size_x):
-            tile_height = tile_heights[(x, y)]
+    for y in range(0, pmap.height):
+        for x in range(0, pmap.width):
+            tile_height = pmap.tile_heights[(x, y)]
             if tile_height == 0:
-                layer[(x, y)] = "pd_"
+                pmap.ground_layer[(x, y)] = "pd_"
 
-    apply_water_sprites(layer)
+    apply_water_sprites(pmap.ground_layer)
 
 
-def create_beach(layer, map_size_x, map_size_y, tile_heights):
+def create_beach(pmap):
 
-    def check_for_water_around(layer, x, y, beach_width):
+    def check_for_water_around(x, y, beach_width):
         for around in range(0, (beach_width + 2) ** 2):
             check_x = x + around % (beach_width + 2) - beach_width + 1
             check_y = y + around // (beach_width + 2) - beach_width + 1
-            water_around = layer.get((check_x, check_y), "")
+            water_around = pmap.ground_layer.get((check_x, check_y), "")
             if "pd_" in str(water_around):  # or "p_4" in str(water_around):
                 return True
         return False
 
-    for y in range(0, map_size_y):
-        for x in range(0, map_size_x):
-            if check_for_water_around(layer, x, y, 4) and (x, y) not in layer.keys() and tile_heights.get((x, y), 0) == 1: layer[(x, y)] = "p_4"
+    for y in range(0, pmap.height):
+        for x in range(0, pmap.width):
+            if check_for_water_around(x, y, 4) and (x, y) not in pmap.ground_layer.keys() and pmap.tile_heights.get((x, y), 0) == 1: pmap.ground_layer[(x, y)] = "p_4"

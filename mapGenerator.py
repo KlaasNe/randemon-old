@@ -158,6 +158,8 @@ def generate_dijkstra_path(layer, path_type):
                 min_tile = tile
         return min_tile
 
+
+
     for front_door in range(len(houses_Front_Doors) - 1):
         current_tile = houses_Front_Doors[front_door]
         target_tile = houses_Front_Doors[front_door + 1]
