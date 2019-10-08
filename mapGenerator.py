@@ -455,12 +455,18 @@ def apply_path_sprites(layer):
 
 
 def finish_bridges(layer):
-    for x in range(0, map_Size_X):
-        for y in range(0, map_Size_Y):
-            if layer.get((x, y), "") == "b_1" and "p_" in layer.get((x, y + 1), ""): layer[(x, y + 1)] = "b_2"
-            if layer.get((x, y), "") == "b_2" and "p_" in layer.get((x, y - 1), ""): layer[(x, y - 1)] = "b_1"
-            if layer.get((x, y), "") == "b_3" and "p_" in layer.get((x + 1, y), ""): layer[(x + 1, y)] = "b_4"
-            if layer.get((x, y), "") == "b_4" and "p_" in layer.get((x - 1, y), ""): layer[(x - 1, y)] = "b_3"
+    for y in range(0, map_Size_Y):
+        for x in range(0, map_Size_X):
+            if (is_actual_path(layer, x - 1, y) or "b_1" in layer.get((x - 1, y), "")) and "pd_" in layer.get((x, y - 1), "") and layer.get((x, y), "") == "b_":
+                layer[(x, y)] = "b_2"
+                layer[(x, y + 1)] = "b_1"
+            if (is_actual_path(layer, x, y + 1) or "b_3" in layer.get((x, y - 1), "")) and "pd_" in layer.get((x - 1, y), "") and layer.get((x, y), "") == "b_":
+                layer[(x, y)] = "b_3"
+                layer[(x + 1, y)] = "b_4"
+            # if layer.get((x, y), "") == "b_1" and "p_" in layer.get((x, y + 1), ""): layer[(x, y + 1)] = "b_2"
+            # if layer.get((x, y), "") == "b_2" and "p_" in layer.get((x, y - 1), ""): layer[(x, y - 1)] = "b_1"
+            # if layer.get((x, y), "") == "b_3" and "p_" in layer.get((x + 1, y), ""): layer[(x + 1, y)] = "b_4"
+            # if layer.get((x, y), "") == "b_4" and "p_" in layer.get((x - 1, y), ""): layer[(x - 1, y)] = "b_3"
 
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
