@@ -84,11 +84,8 @@ def generate_dijkstra_path(pmap, house_path_type):
 
     def initialize_dijkstra():
         for y in range(pmap.height):
-            weight_array = []
-            for x in range(pmap.width):
-                weight_array.append(determine_weight(x, y))
             current_weight.append(pmap.width * [sys.maxsize])
-            weight.append(weight_array)
+            weight.append(weight_array[y])
             visited.append(pmap.width * [False])
             previous_tile.append(pmap.width * [(0, 0)])
 
@@ -130,6 +127,14 @@ def generate_dijkstra_path(pmap, house_path_type):
                 min_weight = handle_tiles[tile]
                 min_tile = tile
         return min_tile
+
+
+    weight_array = {}
+    for y in range(pmap.height):
+        weight_array_row = []
+        for x in range(pmap.width):
+            weight_array_row.append(determine_weight(x, y))
+        weight_array[y] = weight_array_row
 
     for front_door in range(len(pmap.front_doors) - 1):
         current_tile = pmap.front_doors[front_door]
