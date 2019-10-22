@@ -75,4 +75,4 @@ def create_beach(pmap):
 
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
-            if check_for_water_around(x, y, 4) and (x, y) not in pmap.ground_layer.keys() and pmap.tile_heights.get((x, y), 0) == 1: pmap.ground_layer[(x, y)] = "p_4"
+            if (x, y) not in pmap.ground_layer.keys() and pmap.tile_heights.get((x, y), 0) == 1 and check_for_water_around(x, y, 4): pmap.ground_layer[(x, y)] = "p_4"

@@ -28,6 +28,7 @@ class Map:
         self.ground_layer = dict()
         self.buildings = dict()
         self.rain = dict()
+        self.decoration_layer = dict()
 
         random.seed(seed)
 
@@ -39,14 +40,14 @@ class Map:
         return x < 0 or y < 0 or x >= self.width or y >= self.height
 
     def create_rain(self):
-        for y in range(0, map_Size_Y):
-            for x in range(0, map_Size_X):
+        for y in range(0, map_size_y):
+            for x in range(0, map_size_x):
                 if random.randint(0, 100) < self.rain_rate:
                     self.rain[(x, y)] = "r_" + str(random.randint(1, 2))
                 elif (x, y) not in self.rain.keys():
                     self.rain[(x, y)] = "r_0"
-        for y in range(0, map_Size_Y):
-            for x in range(0, map_Size_X):
+        for y in range(0, map_size_y):
+            for x in range(0, map_size_x):
                 if random.randint(0, 100) < self.rain_rate:
                     if "sne_" not in self.ground_layer.get((x, y), ""):
                         self.rain[(x, y)] = "r_" + str(random.randint(3, 5))
@@ -87,8 +88,8 @@ class Map:
         def get_tile_file(tile):
             return pygame.image.load(os.path.join("resources", tile + ".png"))
 
-        for y in range(0, map_Size_Y):
-            for x in range(0, map_Size_X):
+        for y in range(0, map_size_y):
+            for x in range(0, map_size_x):
                 if (x, y) in layer.keys():
                     current_tile = str(layer[(x, y)])
                     if "npc_" in layer[(x, y)]:
@@ -102,30 +103,44 @@ class Map:
         pygame.display.update()
 
 
-random_map = Map(50, 50, 4, 50, 20, 20, 3092433321373271543)
+map_size_x = 200  # The horizontal amount of tiles the map consists of
+map_size_y = 200  # The vertical amount of tiles the map consists of
+random_map = Map(map_size_x, map_size_y, 4, 50, 20, 20, random.randint(0, sys.maxsize))
 
-map_Size_X = 50  # The horizontal amount of tiles the map consists of
-map_Size_Y = 50  # The vertical amount of tiles the map consists of
-screen_Size_X = Map.TILE_SIZE * map_Size_X
-screen_Size_Y = Map.TILE_SIZE * map_Size_Y
+screen_Size_X = Map.TILE_SIZE * map_size_x
+screen_Size_Y = Map.TILE_SIZE * map_size_y
 x_offset = random.randint(0, 1000000)
 y_offset = random.randint(0, 1000000)
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 
+print("*creating landscape*")
 create_hills(random_map)
 create_rivers(random_map)
 create_beach(random_map)
+print("*builing houses*")
 for house_type in range(1, 10):
-    spawn_house(random_map, house_type)
+    for x in range(5):
+        spawn_house(random_map, house_type, "p_3")
+print("*dijkstra*")
 generate_dijkstra_path(random_map, "p_1")
 apply_path_sprites(random_map)
 
+print("*rendering*")
 random_map.render(random_map.ground_layer)
 random_map.render(random_map.buildings)
+random_map.render(random_map.decoration_layer)
 # render(buildings, False)
 # create_rain(rain, 0)
 # render(rain, False)
 print("Seed: " + str(random_map.seed))
-sleep(60)
+
+save = input("Save this image? (y/n/w): ")
+
+t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
+if save == "y" or save == "w":
+    pygame.image.save(screen, os.path.join("saved images", t + ".png"))
+    cwd = os.getcwd()
+    if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
+
 quit()

@@ -82,6 +82,11 @@ def is_actual_path(pmap, x, y):
 def generate_dijkstra_path(pmap, house_path_type):
     import sys
 
+    PATH_WEIGHT = 1
+    GRASS_WEIGHT = 3
+    HILL_WEIGHT = 20
+    WATER_WEIGHT = 40
+
     def initialize_dijkstra():
         for y in range(pmap.height):
             current_weight.append(pmap.width * [sys.maxsize])
@@ -90,19 +95,14 @@ def generate_dijkstra_path(pmap, house_path_type):
             previous_tile.append(pmap.width * [(0, 0)])
 
     def determine_weight(x, y):
-        PATH_WEIGHT = 1
-        GRASS_WEIGHT = 3
-        HILL_WEIGHT = 5
-        WATER_WEIGHT = 10
-
         if "h_" in pmap.buildings.get((x - 1, y), "") or "pm_" in pmap.buildings.get((x - 1, y),  "") or "pc_" in pmap.buildings.get((x - 1, y), ""): return 999999
         if "h_" in pmap.buildings.get((x, y), "") and ("h_" in pmap.buildings.get((x, y + 1), "") or "h_" in pmap.buildings.get((x, y - 1), "")) or "h_" in pmap.buildings.get((x, y - 1), ""): return 999999
         if "pm_" in pmap.buildings.get((x, y), "") and ("pm_" in pmap.buildings.get((x, y + 1), "") or "pm_" in pmap.buildings.get((x, y - 1), "")): return 999999
         if "pc_" in pmap.buildings.get((x, y), "") and ("pc_" in pmap.buildings.get((x, y + 1), "") or "pc_" in pmap.buildings.get((x, y - 1), "")): return 999999
+        if "m_" in pmap.ground_layer.get((x, y), "") or "m_" in pmap.ground_layer.get((x - 1, y), "") or "m_" in pmap.ground_layer.get((x, y - 1), "") or "m_" in pmap.ground_layer.get((x - 1, y - 1), ""): return HILL_WEIGHT
+        if "pd_" in pmap.ground_layer.get((x, y), "") or "pd_" in pmap.ground_layer.get((x - 1, y), "") or "pd_" in pmap.ground_layer.get((x, y - 1), "") or "pd_" in pmap.ground_layer.get((x - 1, y - 1), ""): return WATER_WEIGHT
         if is_actual_path(pmap, x, y) or "b_" in pmap.ground_layer.get((x, y), "") or "mrk" in pmap.ground_layer.get((x, y), ""): return PATH_WEIGHT
         if pmap.ground_layer.get((x, y), "") == "" or "p_4" in pmap.ground_layer.get((x, y), ""): return GRASS_WEIGHT
-        if "m_" in pmap.ground_layer.get((x, y), ""): return HILL_WEIGHT
-        if "pd_" in pmap.ground_layer.get((x, y), "") or "pd_" in pmap.ground_layer.get((x - 1, y), ""): return WATER_WEIGHT
         return 999999
 
     def handle_current_tile():
@@ -126,7 +126,10 @@ def generate_dijkstra_path(pmap, house_path_type):
             if handle_tiles[tile] < min_weight:
                 min_weight = handle_tiles[tile]
                 min_tile = tile
-        return min_tile
+        try:
+            return min_tile
+        except Exception as e:
+            print(e)
 
 
     weight_array = {}
@@ -138,6 +141,7 @@ def generate_dijkstra_path(pmap, house_path_type):
 
     for front_door in range(len(pmap.front_doors) - 1):
         current_tile = pmap.front_doors[front_door]
+        if not current_tile: print("godverdomme kutzooi")
         target_tile = pmap.front_doors[front_door + 1]
         weight = []
         current_weight = []
@@ -158,27 +162,26 @@ def generate_dijkstra_path(pmap, house_path_type):
         path = []
         while not previous_tile[current_tile[1]][current_tile[0]] == (0, 0):
             path.append(current_tile)
-            if "p_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), ""): pmap.ground_layer[current_tile] = house_path_type
-            current_tile = previous_tile[current_tile[1]][current_tile[0]]
+            if "p_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), ""):
+                weight_array[current_tile[1]][current_tile[0]] = PATH_WEIGHT
+                if "pd_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), "") and "b_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), ""):
+                    pmap.ground_layer[current_tile] = house_path_type
 
-    make_path_double(pmap, "p_1")
-    create_bridges(pmap)
+            current_tile = previous_tile[current_tile[1]][current_tile[0]]
+        make_path_double(pmap, path, house_path_type)
+        create_bridges(pmap)
+
     # fixit(ground_Tiles)
 
 
-def make_path_double(pmap, house_path_type):
+def make_path_double(pmap, path, house_path_type):
     path_extention = []
-    for y in range(pmap.height):
-        for x in range(pmap.width):
-            if house_path_type in pmap.ground_layer.get((x, y), ""):
-                if (x, y) not in pmap.buildings.keys() or "mbx_" in pmap.buildings.get((x, y), ""):
-                    path_extention.append((x, y - 1))
-                    path_extention.append((x - 1, y))
-                    path_extention.append((x - 1, y - 1))
+    for (x, y) in path:
+        if "p_" not in pmap.ground_layer.get((x, y - 1), ""): path_extention.append((x, y - 1))
+        if "p_" not in pmap.ground_layer.get((x - 1, y), ""): path_extention.append((x - 1, y))
+        if "p_" not in pmap.ground_layer.get((x - 1, y - 1), ""): path_extention.append((x - 1, y - 1))
 
-    for path in path_extention:
-        x = path[0]
-        y = path[1]
+    for (x, y) in path_extention:
         if pmap.tile_heights.get((x, y), 0) < 1:
             pmap.ground_layer[(x, y)] = "b_"
         elif "p_" not in pmap.ground_layer.get((x, y), ""): pmap.ground_layer[(x, y)] = house_path_type
@@ -199,3 +202,13 @@ def create_bridges(pmap):
             if "pd_" in pmap.ground_layer.get((x + 1, y), ""):
                 pmap.ground_layer[(x, y)] = "b_4"
                 pmap.ground_layer[(x - 1, y)] = "b_3"
+
+        if "b_" in pmap.ground_layer.get((x, y - 1), "") and "pd_" in pmap.ground_layer.get((x, y), ""):
+            pmap.decoration_layer[(x, y)] = "bu_0"
+
+    for (x, y) in pmap.ground_layer.keys():
+        if pmap.ground_layer.get((x, y), "") == "b_":
+            if "b_" in pmap.ground_layer.get((x - 1, y), ""):
+                pmap.ground_layer[(x, y)] = pmap.ground_layer[(x - 1, y)]
+            if "b_" in pmap.ground_layer.get((x, y - 1), ""):
+                pmap.ground_layer[(x, y)] = pmap.ground_layer[(x, y - 1)]
