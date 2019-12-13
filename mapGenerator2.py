@@ -1,11 +1,12 @@
 import datetime, pygame, os, random, math, sys, ctypes
 from noise import snoise2
-from time import sleep
-from worldMap import image_grayscale_to_dict
+# from time import sleep
+# from worldMap import image_grayscale_to_dict
 from heightMapGenerator import create_hills
 from waterGenerator import create_rivers, create_beach
 from buildingGenerator import spawn_house
 from pathGenerator import apply_path_sprites, generate_dijkstra_path
+from plantGenerator import create_trees
 
 
 class Map:
@@ -103,8 +104,8 @@ class Map:
         pygame.display.update()
 
 
-map_size_x = 200  # The horizontal amount of tiles the map consists of
-map_size_y = 200  # The vertical amount of tiles the map consists of
+map_size_x = math.ceil(50)  # The horizontal amount of tiles the map consists of
+map_size_y = math.ceil(50)  # The vertical amount of tiles the map consists of
 random_map = Map(map_size_x, map_size_y, 4, 50, 20, 20, random.randint(0, sys.maxsize))
 
 screen_Size_X = Map.TILE_SIZE * map_size_x
@@ -120,12 +121,13 @@ create_rivers(random_map)
 create_beach(random_map)
 print("*builing houses*")
 for house_type in range(1, 10):
-    for x in range(5):
+    for x in range(1):
         spawn_house(random_map, house_type, "p_3")
 print("*dijkstra*")
 generate_dijkstra_path(random_map, "p_1")
 apply_path_sprites(random_map)
-
+print("*growing trees*")
+create_trees(random_map, 30, x_offset, y_offset)
 print("*rendering*")
 random_map.render(random_map.ground_layer)
 random_map.render(random_map.buildings)

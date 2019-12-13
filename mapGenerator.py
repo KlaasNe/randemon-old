@@ -1,5 +1,5 @@
 import datetime, pygame, os, random, math, sys, ctypes
-from noise import snoise2
+from noise import snoise4
 from time import sleep
 from worldMap import image_grayscale_to_dict
 import time
@@ -36,7 +36,7 @@ def fill_up_grass(layer, decoration_rate, offset_x, offset_y):
 def random_grass(decoration_rate, x, y, offset_x, offset_y):
     octaves = 1
     freq = 7
-    sne_probability = snoise2((x + offset_x) / freq, (y + offset_y) / freq, octaves) + 0.5
+    sne_probability = snoise4((x + offset_x) / freq, (y + offset_y) / freq, octaves) + 0.5
 
     if sne_probability > (decoration_rate / 100):
         grass_type = random.randint(0, 3)
@@ -688,7 +688,7 @@ def spawn_mne(layer, spawn_rate, offset_x, offset_y):
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
             if not (x, y) in layer.keys() and not (x, y - 1) in layer.keys() and not (x, y - 2) in layer.keys() and not (x, y) in house_Tiles.keys() and not (x, y - 1) in house_Tiles.keys() and not (x, y - 2) in house_Tiles.keys() and (x, y - 1) not in npc_Layer.keys() and (x, y - 2) not in npc_Layer.keys():
-                if snoise2((x + off_x) / freq, (y + off_y) / freq, octaves) * 2 > 0 and random.random() < spawn_rate / 100:
+                if snoise4((x + off_x) / freq, (y + off_y) / freq, octaves) * 2 > 0 and random.random() < spawn_rate / 100:
                     layer[(x, y)] = "st_0"
                     layer[(x, y - 1)] = "st_1"
                     layer[(x, y - 2)] = "st_2"
@@ -910,7 +910,7 @@ def mountainize(layer, max_height, offset_x, offset_y):
     off_y = offset_y
     for x in range(0, map_Size_X):
         for y in range(0, map_Size_Y):
-            tile_height = abs(floor((snoise2(round((x + off_x) / freq, 2), round((y + off_y) / freq, 2), octaves)) * max_height))
+            tile_height = abs(floor((snoise4(round((x + off_x) / freq, 2), round((y + off_y) / freq, 2), octaves)) * max_height))
             layer[(x, y)] = tile_height
 
 

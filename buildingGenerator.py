@@ -5,7 +5,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
 
     def unavailable_building_spot(x, y, horizontal_spacing, vertical_spacing):
         reference_height = pmap.tile_heights.get((x, y), 0)
-        for check_y in range(y - vertical_spacing, y + house_size_y + vertical_spacing):
+        for check_y in range(y - 2, y + house_size_y + vertical_spacing):
             for check_x in range(x - vertical_spacing, x + house_size_x + horizontal_spacing):
                 if pmap.tile_heights.get((check_x, check_y), -1) != reference_height or "h_" in pmap.buildings.get((check_x, check_y), "") or "pd_" in pmap.ground_layer.get((check_x, check_y), ""):
                     return True
@@ -50,7 +50,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
     house_size_x = house_type_data[0][house_type]
     house_size_y = house_type_data[1][house_type]
 
-    build_spot = search_available_building_spot(40, 999)
+    build_spot = search_available_building_spot(40, 1999)
     if build_spot:
         house_x = build_spot[0]
         house_y = build_spot[1]
