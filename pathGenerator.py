@@ -83,9 +83,9 @@ def generate_dijkstra_path(pmap, house_path_type):
     import sys
 
     PATH_WEIGHT = 1
-    GRASS_WEIGHT = 4
+    GRASS_WEIGHT = 8
     HILL_WEIGHT = 64
-    WATER_WEIGHT = 16
+    WATER_WEIGHT = 32
 
     def initialize_dijkstra():
         for y in range(pmap.height):
@@ -96,7 +96,7 @@ def generate_dijkstra_path(pmap, house_path_type):
 
     def determine_weight(x, y):
         if "h_" in pmap.buildings.get((x - 1, y), "") or "pm_" in pmap.buildings.get((x - 1, y),  "") or "pc_" in pmap.buildings.get((x - 1, y), ""): return 999999
-        if "h_" in pmap.buildings.get((x, y), ""): return 999999
+        if "h_" in pmap.buildings.get((x, y), "") or "h_" in pmap.buildings.get((x, y - 1), "") or "h_" in pmap.buildings.get((x - 1, y - 1), ""): return 999999
         if "pm_" in pmap.buildings.get((x, y), ""): return 999999
         if "pc_" in pmap.buildings.get((x, y), ""): return 999999
         if "m_" in pmap.ground_layer.get((x, y), "") or "m_" in pmap.ground_layer.get((x - 1, y), "") or "m_" in pmap.ground_layer.get((x, y - 1), "") or "m_" in pmap.ground_layer.get((x - 1, y - 1), ""): return HILL_WEIGHT
@@ -133,7 +133,8 @@ def generate_dijkstra_path(pmap, house_path_type):
 
     def find_closest_house(x, y):
         closest_distance = 999999
-        for house in pmap.front_doors:
+        closest_house = (x, y)
+        for house in already_connected:
             if house != (x, y):
                 if abs(house[0] - x) + abs(house[1] - y) < closest_distance:
                     closest_distance = abs(house[0] - x) + abs(house[1] - y)
@@ -147,10 +148,13 @@ def generate_dijkstra_path(pmap, house_path_type):
             weight_array_row.append(determine_weight(x, y))
         weight_array[y] = weight_array_row
 
+    already_connected = set()
     for front_door in range(len(pmap.front_doors)):
         current_tile = pmap.front_doors[front_door]
+        already_connected.add(current_tile)
         if not current_tile: print("godverdomme kutzooi")
         target_tile = find_closest_house(current_tile[0], current_tile[1])
+        already_connected.add(target_tile)
         weight = []
         current_weight = []
         visited = []

@@ -104,8 +104,8 @@ class Map:
         pygame.display.update()
 
 
-map_size_x = math.ceil(50)  # The horizontal amount of tiles the map consists of
-map_size_y = math.ceil(50)  # The vertical amount of tiles the map consists of
+map_size_x = 120  # The horizontal amount of tiles the map consists of
+map_size_y = 68  # The vertical amount of tiles the map consists of
 random_map = Map(map_size_x, map_size_y, 4, 50, 20, 20, random.randint(0, sys.maxsize))
 #random.randint(0, sys.maxsize)
 screen_Size_X = Map.TILE_SIZE * map_size_x
