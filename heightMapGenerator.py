@@ -13,8 +13,6 @@ def create_hills(pmap):
         for x in range(0, pmap.width):
             pmap.tile_heights[(x, y)] = abs(floor((snoise2((x + off_x) / freq, (y + off_y) / freq, octaves)) * pmap.max_hill_height))
 
-    create_hill_edges(pmap)
-
 
 def create_hill_edges(pmap):
 
@@ -55,7 +53,8 @@ def create_hill_edges(pmap):
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             hill_edge_texture = str(define_hill_edge_texture(x, y))
-            if not hill_edge_texture == "-1": pmap.ground_layer[(x, y)] = "m_" + hill_edge_texture
+            if not hill_edge_texture == "-1" and "sta_" not in pmap.ground_layer.get((x, y), ""):# and not (x, y) in pmap.ground_layer.keys():
+                pmap.ground_layer[(x, y)] = "m_" + hill_edge_texture
 
 
 def generate_height_map(pmap):

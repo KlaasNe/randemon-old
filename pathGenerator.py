@@ -83,9 +83,9 @@ def generate_dijkstra_path(pmap, house_path_type):
     import sys
 
     PATH_WEIGHT = 1
-    GRASS_WEIGHT = 3
-    HILL_WEIGHT = 20
-    WATER_WEIGHT = 40
+    GRASS_WEIGHT = 4
+    HILL_WEIGHT = 64
+    WATER_WEIGHT = 16
 
     def initialize_dijkstra():
         for y in range(pmap.height):
@@ -96,12 +96,12 @@ def generate_dijkstra_path(pmap, house_path_type):
 
     def determine_weight(x, y):
         if "h_" in pmap.buildings.get((x - 1, y), "") or "pm_" in pmap.buildings.get((x - 1, y),  "") or "pc_" in pmap.buildings.get((x - 1, y), ""): return 999999
-        if "h_" in pmap.buildings.get((x, y), "") and ("h_" in pmap.buildings.get((x, y + 1), "") or "h_" in pmap.buildings.get((x, y - 1), "")) or "h_" in pmap.buildings.get((x, y - 1), ""): return 999999
-        if "pm_" in pmap.buildings.get((x, y), "") and ("pm_" in pmap.buildings.get((x, y + 1), "") or "pm_" in pmap.buildings.get((x, y - 1), "")): return 999999
-        if "pc_" in pmap.buildings.get((x, y), "") and ("pc_" in pmap.buildings.get((x, y + 1), "") or "pc_" in pmap.buildings.get((x, y - 1), "")): return 999999
+        if "h_" in pmap.buildings.get((x, y), ""): return 999999
+        if "pm_" in pmap.buildings.get((x, y), ""): return 999999
+        if "pc_" in pmap.buildings.get((x, y), ""): return 999999
         if "m_" in pmap.ground_layer.get((x, y), "") or "m_" in pmap.ground_layer.get((x - 1, y), "") or "m_" in pmap.ground_layer.get((x, y - 1), "") or "m_" in pmap.ground_layer.get((x - 1, y - 1), ""): return HILL_WEIGHT
         if "pd_" in pmap.ground_layer.get((x, y), "") or "pd_" in pmap.ground_layer.get((x - 1, y), "") or "pd_" in pmap.ground_layer.get((x, y - 1), "") or "pd_" in pmap.ground_layer.get((x - 1, y - 1), ""): return WATER_WEIGHT
-        if is_actual_path(pmap, x, y) or "b_" in pmap.ground_layer.get((x, y), "") or "mrk" in pmap.ground_layer.get((x, y), ""): return PATH_WEIGHT
+        if is_actual_path(pmap, x, y) or "b_" in pmap.ground_layer.get((x, y), "") or "mrk" in pmap.ground_layer.get((x, y), "") or "sta_" in pmap.ground_layer.get((x, y), ""): return PATH_WEIGHT
         if pmap.ground_layer.get((x, y), "") == "" or "p_4" in pmap.ground_layer.get((x, y), ""): return GRASS_WEIGHT
         return 999999
 
@@ -131,6 +131,14 @@ def generate_dijkstra_path(pmap, house_path_type):
         except Exception as e:
             print(e)
 
+    def find_closest_house(x, y):
+        closest_distance = 999999
+        for house in pmap.front_doors:
+            if house != (x, y):
+                if abs(house[0] - x) + abs(house[1] - y) < closest_distance:
+                    closest_distance = abs(house[0] - x) + abs(house[1] - y)
+                    closest_house = house
+        return closest_house
 
     weight_array = {}
     for y in range(pmap.height):
@@ -139,10 +147,10 @@ def generate_dijkstra_path(pmap, house_path_type):
             weight_array_row.append(determine_weight(x, y))
         weight_array[y] = weight_array_row
 
-    for front_door in range(len(pmap.front_doors) - 1):
+    for front_door in range(len(pmap.front_doors)):
         current_tile = pmap.front_doors[front_door]
         if not current_tile: print("godverdomme kutzooi")
-        target_tile = pmap.front_doors[front_door + 1]
+        target_tile = find_closest_house(current_tile[0], current_tile[1])
         weight = []
         current_weight = []
         visited = []
@@ -170,6 +178,7 @@ def generate_dijkstra_path(pmap, house_path_type):
             current_tile = previous_tile[current_tile[1]][current_tile[0]]
         make_path_double(pmap, path, house_path_type)
         create_bridges(pmap)
+    create_stairs(pmap, house_path_type)
 
     # fixit(ground_Tiles)
 
@@ -184,7 +193,8 @@ def make_path_double(pmap, path, house_path_type):
     for (x, y) in path_extention:
         if pmap.tile_heights.get((x, y), 0) < 1:
             pmap.ground_layer[(x, y)] = "b_"
-        elif "p_" not in pmap.ground_layer.get((x, y), ""): pmap.ground_layer[(x, y)] = house_path_type
+        elif "p_" not in pmap.ground_layer.get((x, y), ""):
+            pmap.ground_layer[(x, y)] = house_path_type
 
 
 def create_bridges(pmap):
@@ -212,3 +222,71 @@ def create_bridges(pmap):
                 pmap.ground_layer[(x, y)] = pmap.ground_layer[(x - 1, y)]
             if "b_" in pmap.ground_layer.get((x, y - 1), ""):
                 pmap.ground_layer[(x, y)] = pmap.ground_layer[(x, y - 1)]
+
+
+def create_stairs(pmap, house_path_type):
+
+    def path_above(x, y):
+        return is_actual_path(pmap, x, y - 1)
+
+    def path_under(x, y):
+        return is_actual_path(pmap, x, y + 1)
+
+    def path_left(x, y):
+        return is_actual_path(pmap, x - 1, y)
+
+    def path_right(x, y):
+        return is_actual_path(pmap, x + 1, y)
+
+    def smooth_path_height(path_type):
+        for y in range(pmap.height):
+            for x in range(pmap.width):
+                current_height = 0
+                if path_type in pmap.ground_layer.get((x, y), ""):
+                    if path_under(x, y) and not path_above(x, y):
+                        for smooth_y in range(y, y + 1):
+                            current_height = max(current_height, pmap.tile_heights[x, smooth_y])
+                        for smooth_y in range(y - 1, y + 2 + 1):
+                            pmap.tile_heights[(x, smooth_y)] = current_height
+                        current_height = 0
+
+                    if path_above(x, y) and not path_under(x, y):
+                        for smooth_y in range(y - 1, y):
+                            current_height = max(current_height, pmap.tile_heights[x, smooth_y])
+                        for smooth_y in range(y - 2, y + 1 + 1):
+                            pmap.tile_heights[(x, smooth_y)] = current_height
+                        current_height = 0
+
+                    if path_right(x, y) and not path_left(x, y):
+                        for smooth_x in range(x, x + 1):
+                            current_height = max(current_height, pmap.tile_heights[smooth_x, y])
+                        for smooth_x in range(x - 1, x + 2 + 1):
+                            pmap.tile_heights[(smooth_x, y)] = current_height
+                        current_height = 0
+
+                    if path_left(x, y) and not path_right(x, y):
+                        for smooth_x in range(x - 1, x):
+                            current_height = max(current_height, pmap.tile_heights[smooth_x, y])
+                        for smooth_x in range(x - 2, x + 1 + 1):
+                            pmap.tile_heights[(smooth_x, y)] = current_height
+
+    smooth_path_height(house_path_type)
+
+    for path_y in range(pmap.height):
+        for path_x in range(pmap.width):
+            if "p_" in pmap.ground_layer.get((path_x, path_y), ""):
+                if path_above(path_x, path_y) and path_under(path_x, path_y):
+                    if pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x, path_y - 1), 0):
+                        pmap.ground_layer[(path_x, path_y)] = "sta_8_0"
+                        pmap.ground_layer[(path_x + 1, path_y)] = "sta_8_1"
+                    elif pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x, path_y + 1), 0):
+                        pmap.ground_layer[(path_x, path_y)] = "sta_1_0"
+                        pmap.ground_layer[(path_x + 1, path_y)] = "sta_1_1"
+                elif path_left(path_x, path_y) and path_right(path_x, path_y):
+                    if pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x - 1, path_y), 0):
+                        pmap.ground_layer[(path_x, path_y)] = "sta_3_1"
+                        pmap.ground_layer[(path_x, path_y + 1)] = "sta_3_0"
+                    elif pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x + 1, path_y), 0):
+                        pmap.ground_layer[(path_x, path_y)] = "sta_6_1"
+                        pmap.ground_layer[(path_x, path_y + 1)] = "sta_6_0"
+
