@@ -5,7 +5,7 @@ from noise import snoise2
 
 def create_hills(pmap):
     octaves = 1
-    freq = 100
+    freq = 200
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
 
@@ -53,7 +53,7 @@ def create_hill_edges(pmap):
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             hill_edge_texture = str(define_hill_edge_texture(x, y))
-            if not hill_edge_texture == "-1" and "sta_" not in pmap.ground_layer.get((x, y), ""):# and not (x, y) in pmap.ground_layer.keys():
+            if not hill_edge_texture == "-1" and "sta_" not in pmap.ground_layer.get((x, y), "") and not (x, y) in pmap.ground_layer.keys():
                 pmap.ground_layer[(x, y)] = "m_" + hill_edge_texture
 
 

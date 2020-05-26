@@ -1,21 +1,24 @@
-import datetime, pygame, os, random, math, sys, ctypes
+import datetime, pygame, os, random, sys, ctypes
 from noise import snoise2
 # from time import sleep
 # from worldMap import image_grayscale_to_dict
 from heightMapGenerator import create_hills, create_hill_edges
 from waterGenerator import create_rivers, create_beach
-from buildingGenerator import spawn_house
-from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_stairs
+from buildingGenerator import spawn_house, add_random_ends
+from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
 from plantGenerator import create_trees
+from pokemonGenerator import spawn_pokemon
+from npcGenerator import spawn_npc
+from decorationGenerator import spawn_truck
 
 
 class Map:
 
     TILE_SIZE = 16  # Length of 1 tile in pixels
     NB_SNE = 4  # The amount of different existing small nature elements
-    EXCLUDED_SNE = [1, 3, 4]  # Small nature elements to keep from te map
+    EXCLUDED_SNE = [1, 3, 4]  # Small nature elements to keep out of the map
 
-    def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate, seed):
+    def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate, seed=random.randint(0, sys.maxsize)):
         self.seed = seed
         self.width = width
         self.height = height
@@ -24,12 +27,14 @@ class Map:
         self.tree_coverage = tree_coverage
         self.rain_rate = rain_rate
 
+        self.raining = False
         self.front_doors = []
         self.tile_heights = dict()
         self.ground_layer = dict()
         self.buildings = dict()
         self.rain = dict()
         self.decoration_layer = dict()
+        self.npc_layer = dict()
 
         random.seed(seed)
 
@@ -54,9 +59,7 @@ class Map:
                         self.rain[(x, y)] = "r_" + str(random.randint(3, 5))
 
     def render(self, layer):
-
         def random_grass(offset_x, offset_y):
-
             def choose_sne_type(excluded_sne):
                 sne_type = random.randint(0, self.NB_SNE)
                 while sne_type in excluded_sne:
@@ -73,7 +76,7 @@ class Map:
             freq = 7
             sne_probability = snoise2((x + offset_x) / freq, (y + offset_y) / freq, octaves) + 0.5
 
-            if sne_probability > (self.tall_grass_coverage / 100):
+            if sne_probability > (self.tall_grass_coverage / 100) or "l_1" in self.decoration_layer.get((x, y), "") or "l_5" in self.decoration_layer.get((x, y), ""):
                 grass_type = random.randint(0, 3)
                 return "g_" + str(grass_type)
             else:
@@ -94,7 +97,7 @@ class Map:
                 if (x, y) in layer.keys():
                     current_tile = str(layer[(x, y)])
                     if "npc_" in layer[(x, y)]:
-                        correction = 3  # npc's are slightly larger than a tile
+                        correction = 6  # npc's are slightly larger than a tile
                     else:
                         correction = 0
                     try_blit_tile(current_tile)
@@ -104,9 +107,11 @@ class Map:
         pygame.display.update()
 
 
-map_size_x = 120  # The horizontal amount of tiles the map consists of
-map_size_y = 68  # The vertical amount of tiles the map consists of
-random_map = Map(map_size_x, map_size_y, 4, 50, 20, 20, random.randint(0, sys.maxsize))
+map_size_x = 50  # The horizontal amount of tiles the map consists of
+map_size_y = 50  # The vertical amount of tiles the map consists of
+all_pokemon = False
+# while not all_pokemon:
+random_map = Map(map_size_x, map_size_y, 4, 40, 20, 20)
 #random.randint(0, sys.maxsize)
 screen_Size_X = Map.TILE_SIZE * map_size_x
 screen_Size_Y = Map.TILE_SIZE * map_size_y
@@ -117,22 +122,37 @@ screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 
 print("*creating landscape*")
 create_hills(random_map)
+add_random_ends(random_map, "p_1")
 create_rivers(random_map)
 create_beach(random_map)
 print("*builing houses*")
+spawn_house(random_map, "pc", "p_1")
+spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
-        spawn_house(random_map, house_type, "p_3")
+        spawn_house(random_map, house_type, "p_1")
+# for house in range(5):
+#     spawn_house(random_map, random.randint(1, 9), "p_1")
+random.shuffle(random_map.front_doors)
 print("*dijkstra*")
 generate_dijkstra_path(random_map, "p_1")
 apply_path_sprites(random_map)
 
 create_hill_edges(random_map)
+create_lanterns(random_map)
 print("*growing trees*")
 create_trees(random_map, 30, x_offset, y_offset)
+print("*spawning pokemon*")
+all_pokemon = spawn_pokemon(random_map)
+print("*spawning npc*")
+spawn_npc(random_map, 1)
+print("*spawning decorations")
+spawn_truck(random_map, 0.05)
+
 print("*rendering*")
 random_map.render(random_map.ground_layer)
 random_map.render(random_map.buildings)
+random_map.render(random_map.npc_layer)
 random_map.render(random_map.decoration_layer)
 # render(buildings, False)
 # create_rain(rain, 0)
