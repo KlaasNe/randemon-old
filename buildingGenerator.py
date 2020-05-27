@@ -101,7 +101,7 @@ def add_random_ends(pmap, path_type):
         elif end_side == 3:
             y = random.randint(0 + pmap.height // 4, 0 + 3 * (pmap.height // 4))
             end_sides.append(3)
-        pmap.front_doors.append((x, y))
+        pmap.end_points.append((x, y))
         pmap.ground_layer[(x, y)] = path_type if pmap.tile_heights.get((x, y), 0) > 0 else "b_"
 
         max_height = 0

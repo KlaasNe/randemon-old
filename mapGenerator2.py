@@ -9,7 +9,7 @@ from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lan
 from plantGenerator import create_trees
 from pokemonGenerator import spawn_pokemon
 from npcGenerator import spawn_npc
-from decorationGenerator import spawn_truck
+from decorationGenerator import spawn_truck, spawn_rocks
 
 
 class Map:
@@ -29,6 +29,7 @@ class Map:
 
         self.raining = False
         self.front_doors = []
+        self.end_points = []
         self.tile_heights = dict()
         self.ground_layer = dict()
         self.buildings = dict()
@@ -107,8 +108,8 @@ class Map:
         pygame.display.update()
 
 
-map_size_x = 50  # The horizontal amount of tiles the map consists of
-map_size_y = 50  # The vertical amount of tiles the map consists of
+map_size_x = 120  # The horizontal amount of tiles the map consists of
+map_size_y = 68  # The vertical amount of tiles the map consists of
 all_pokemon = False
 # while not all_pokemon:
 random_map = Map(map_size_x, map_size_y, 4, 40, 20, 20)
@@ -131,9 +132,10 @@ spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
         spawn_house(random_map, house_type, "p_1")
-# for house in range(5):
-#     spawn_house(random_map, random.randint(1, 9), "p_1")
-random.shuffle(random_map.front_doors)
+for house in range(5):
+    spawn_house(random_map, random.randint(1, 9), "p_1")
+# random.shuffle(random_map.front_doors)
+random_map.front_doors += random_map.end_points
 print("*dijkstra*")
 generate_dijkstra_path(random_map, "p_1")
 apply_path_sprites(random_map)
@@ -148,6 +150,7 @@ print("*spawning npc*")
 spawn_npc(random_map, 1)
 print("*spawning decorations")
 spawn_truck(random_map, 0.05)
+spawn_rocks(random_map, 0.01)
 
 print("*rendering*")
 random_map.render(random_map.ground_layer)

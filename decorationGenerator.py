@@ -41,3 +41,12 @@ def check_for_decoration(pmap, x, y, x_size, y_size):
             if pmap.out_of_bounds(check_x, check_y) or (check_x, check_y) in pmap.ground_layer.keys():
                 return False
     return True
+
+
+def spawn_rocks(pmap, rocky_percentage):
+    for y in range(pmap.height):
+        for x in range(pmap.width):
+            if random.random() < rocky_percentage:
+                if "pd_" in pmap.ground_layer.get((x, y), "") and (x, y) not in pmap.decoration_layer.keys() and (x, y) not in pmap.npc_layer.keys():
+                    if "pd_" not in pmap.ground_layer.get((x + 10, y), "") or "pd_" not in pmap.ground_layer.get((x - 10, y), "") or "pd_" not in pmap.ground_layer.get((x, y + 10), "") or "pd_" not in pmap.ground_layer.get((x, y - 10), ""):
+                        pmap.decoration_layer[(x, y)] = "sr_0"
