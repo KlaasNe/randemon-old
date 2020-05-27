@@ -108,8 +108,8 @@ class Map:
         pygame.display.update()
 
 
-map_size_x = 120  # The horizontal amount of tiles the map consists of
-map_size_y = 68  # The vertical amount of tiles the map consists of
+map_size_x = 50  # The horizontal amount of tiles the map consists of
+map_size_y = 50  # The vertical amount of tiles the map consists of
 all_pokemon = False
 # while not all_pokemon:
 random_map = Map(map_size_x, map_size_y, 4, 40, 20, 20)
@@ -132,8 +132,8 @@ spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
         spawn_house(random_map, house_type, "p_1")
-for house in range(5):
-    spawn_house(random_map, random.randint(1, 9), "p_1")
+# for house in range(5):
+#     spawn_house(random_map, random.randint(1, 9), "p_1")
 # random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points
 print("*dijkstra*")

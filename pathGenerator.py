@@ -287,6 +287,16 @@ def create_stairs(pmap, house_path_type, weight_array):
                             pmap.tile_heights[(smooth_x, y)] = max(current_height, pmap.tile_heights.get((smooth_x, y), current_height))
                         update_weight(pmap, weight_array, x - 2, y, x + 2, y)
 
+                    current_height = pmap.tile_heights.get((x, y), 0)
+                    if path_above(x, y) and path_left(x, y) and not path_under(x, y) and not path_right(x, y):
+                        pmap.tile_heights[(x + 1, y + 1)] = current_height
+                    if path_above(x, y) and path_right(x, y) and not path_under(x, y) and not path_left(x, y):
+                        pmap.tile_heights[(x - 1, y + 1)] = current_height
+                    if path_under(x, y) and path_left(x, y) and not path_above(x, y) and not path_right(x, y):
+                        pmap.tile_heights[(x + 1, y - 1)] = current_height
+                    if path_under(x, y) and path_right(x, y) and not path_above(x, y) and not path_left(x, y):
+                        pmap.tile_heights[(x - 1, y - 1)] = current_height
+
     smooth_path_height(house_path_type)
 
     for path_y in range(pmap.height):
