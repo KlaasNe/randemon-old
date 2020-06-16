@@ -4,13 +4,14 @@ import random
 def spawn_house(pmap, house_type, house_front_path_type):
     def unavailable_building_spot(x, y, h_spacing, v_spacing):
         reference_height = pmap.tile_heights.get((x, y), 0)
-        for check_y in range(y - 2, y + house_size_y + v_spacing + 1):
+        for check_y in range(y - 2, y + house_size_y + v_spacing):
             for check_x in range(x - h_spacing, x + house_size_x + h_spacing + 1):
                 if pmap.tile_heights.get((check_x, check_y), -1) != reference_height or "pd_" in pmap.ground_layer.get((check_x, check_y), "") or (check_x, check_y) in pmap.buildings.keys():
                     if "h_" in pmap.buildings.get((check_x, check_y), "") or "pc_" in pmap.buildings.get((check_x, check_y), "") or "pm" in pmap.buildings.get((check_x, check_y), ""):
                         return check_x, check_y
                     else:
                         return True
+
         return False
 
     def search_available_building_spot(cluster_radius, max_attempts):
@@ -27,7 +28,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
                 lower_right_of_house = find_lower_right_of_house(unavailable_spot[0], unavailable_spot[1], house_size_y)
                 house_x_attempt, house_y_attempt = lower_right_of_house
                 unavailable_spot = unavailable_building_spot(house_x_attempt, house_y_attempt, 0, 2)
-        return (house_x_attempt, house_y_attempt) if attempts <= max_attempts and not unavailable_spot and is_inside_cluster(pmap, house_x_attempt, house_y_attempt, 30, 3) else False
+        return (house_x_attempt, house_y_attempt) if attempts <= max_attempts and not unavailable_spot and is_inside_cluster(pmap, house_x_attempt, house_y_attempt, cluster_radius, 3) else False
 
     def find_lower_right_of_house(x, y, size_y):
         while "h_" in pmap.buildings.get((x - 1, y), "") or "pc_" in pmap.buildings.get((x - 1, y), "") or "pm_" in pmap.buildings.get((x - 1, y), "") or "h_" in pmap.buildings.get((x, y - 1), "") or "pc_" in pmap.buildings.get((x, y - 1), "") or "pm_" in pmap.buildings.get((x, y - 1), ""):
@@ -110,10 +111,10 @@ def add_random_ends(pmap, path_type):
         pmap.ground_layer[(x, y)] = path_type if pmap.tile_heights.get((x, y), 0) > 0 and (x, y) not in pmap.ground_layer.keys() else "b_"
 
         max_height = 0
-        for y_around in range(y - 2, y + 4):
-            for x_around in range(x - 2, x + 4):
+        for y_around in range(y - 2, y + 3):
+            for x_around in range(x - 3, x + 3):
                 max_height = max(max_height, pmap.tile_heights.get((x_around, y_around), 0))
         if max_height > 1:
-            for y_around in range(y - 2, y + 4):
-                for x_around in range(x - 2, x + 4):
+            for y_around in range(y - 2, y + 3):
+                for x_around in range(x - 3, x + 3):
                     if not pmap.out_of_bounds(x_around, y_around) and "pd_" not in pmap.ground_layer.get((x_around, y_around), ""): pmap.tile_heights[(x_around, y_around)] = max_height

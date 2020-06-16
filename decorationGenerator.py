@@ -35,6 +35,7 @@ def check_for_ground(pmap, x, y, x_size, y_size):
                 return False
     return True
 
+
 def check_for_decoration(pmap, x, y, x_size, y_size):
     for check_y in range(y, y + y_size + 1):
         for check_x in range(x, x + x_size + 1):
@@ -49,4 +50,5 @@ def spawn_rocks(pmap, rocky_percentage):
             if random.random() < rocky_percentage:
                 if "pd_" in pmap.ground_layer.get((x, y), "") and (x, y) not in pmap.decoration_layer.keys() and (x, y) not in pmap.npc_layer.keys():
                     if "pd_" not in pmap.ground_layer.get((x + 10, y), "") or "pd_" not in pmap.ground_layer.get((x - 10, y), "") or "pd_" not in pmap.ground_layer.get((x, y + 10), "") or "pd_" not in pmap.ground_layer.get((x, y - 10), ""):
-                        pmap.decoration_layer[(x, y)] = "sr_0"
+                        rock = random.randint(0, 1)
+                        pmap.decoration_layer[(x, y)] = "sr_" + str(rock)

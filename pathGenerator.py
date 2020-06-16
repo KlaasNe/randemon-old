@@ -186,7 +186,8 @@ def determine_weight(pmap, x, y):
     if "sta_1_1" == pmap.ground_layer.get((x, y), "") or "sta_8_1" == pmap.ground_layer.get((x, y), ""): return PATH_WEIGHT
     if "sta_6" in pmap.ground_layer.get((x, y - 1), "") or "sta_6" in pmap.ground_layer.get((x, y + 1), "") or "sta_3" in pmap.ground_layer.get((x, y - 1), "") or "sta_3" in pmap.ground_layer.get((x, y + 1), ""): return 999999
     if "sta_8" in pmap.ground_layer.get((x - 1, y), "") or "sta_8" in pmap.ground_layer.get((x + 1, y), "") or "sta_1" in pmap.ground_layer.get((x - 1, y), "") or "sta_1" in pmap.ground_layer.get((x + 1, y), ""): return 999999
-    if "m_" in pmap.ground_layer.get((x, y), "") or "m_" in pmap.ground_layer.get((x - 1, y), "") or "m_" in pmap.ground_layer.get((x, y - 1), "") or "m_" in pmap.ground_layer.get((x - 1, y - 1), ""): return HILL_WEIGHT
+    if "m_" in pmap.ground_layer.get((x, y), ""): return HILL_WEIGHT
+    if "m_" in pmap.ground_layer.get((x - 1, y), "") or "m_" in pmap.ground_layer.get((x, y - 1), "") or "m_" in pmap.ground_layer.get((x - 1, y - 1), ""): return round(HILL_WEIGHT / 2)
     if "pd_" in pmap.ground_layer.get((x, y), "") or "pd_" in pmap.ground_layer.get((x - 1, y), "") or "pd_" in pmap.ground_layer.get((x, y - 1), "") or "pd_" in pmap.ground_layer.get((x - 1, y - 1), ""): return WATER_WEIGHT
     if is_actual_path(pmap, x, y) or "b_" in pmap.ground_layer.get((x, y), "") or "mrk" in pmap.ground_layer.get((x, y), ""): return PATH_WEIGHT
     if pmap.ground_layer.get((x, y), "") == "" or "p_4" in pmap.ground_layer.get((x, y), ""): return GRASS_WEIGHT
@@ -258,75 +259,67 @@ def create_stairs(pmap, house_path_type, weight_array):
                 if path_type in pmap.ground_layer.get((x, y), ""):
                     if path_under(x, y) and not path_above(x, y):
                         for smooth_y in range(y, y + 2):
-                            current_height = max(current_height, pmap.tile_heights[x, smooth_y])
-                        for smooth_y in range(y - 1, y + 2 + 1):
+                            current_height = max(current_height, pmap.tile_heights.get((x, smooth_y), current_height))
+                        for smooth_y in range(y - 1, y + 3):
                             pmap.tile_heights[(x, smooth_y)] = max(current_height, pmap.tile_heights.get((x, smooth_y), current_height))
                         current_height = 0
                         update_weight(pmap, weight_array, x, y - 1, x, y + 3)
 
                     if path_above(x, y) and not path_under(x, y):
                         for smooth_y in range(y - 1, y + 1):
-                            current_height = max(current_height, pmap.tile_heights[x, smooth_y])
-                        for smooth_y in range(y - 2, y + 1 + 1):
+                            current_height = max(current_height, pmap.tile_heights.get((x, smooth_y), current_height))
+                        for smooth_y in range(y - 2, y + 2):
                             pmap.tile_heights[(x, smooth_y)] = max(current_height, pmap.tile_heights.get((x, smooth_y), current_height))
                         current_height = 0
                         update_weight(pmap, weight_array, x, y - 2, x, y + 2)
 
                     if path_right(x, y) and not path_left(x, y):
                         for smooth_x in range(x, x + 2):
-                            current_height = max(current_height, pmap.tile_heights[smooth_x, y])
-                        for smooth_x in range(x - 1, x + 2 + 1):
+                            current_height = max(current_height, pmap.tile_heights.get((smooth_x, y), current_height))
+                        for smooth_x in range(x - 1, x + 3):
                             pmap.tile_heights[(smooth_x, y)] = max(current_height, pmap.tile_heights.get((smooth_x, y), current_height))
                         current_height = 0
                         update_weight(pmap, weight_array, x - 1, y, x + 3, y)
 
                     if path_left(x, y) and not path_right(x, y):
                         for smooth_x in range(x - 1, x + 1):
-                            current_height = max(current_height, pmap.tile_heights[smooth_x, y])
-                        for smooth_x in range(x - 2, x + 1 + 1):
+                            current_height = max(current_height, pmap.tile_heights.get((smooth_x, y), current_height))
+                        for smooth_x in range(x - 2, x + 2):
                             pmap.tile_heights[(smooth_x, y)] = max(current_height, pmap.tile_heights.get((smooth_x, y), current_height))
                         update_weight(pmap, weight_array, x - 2, y, x + 2, y)
 
                     current_height = pmap.tile_heights.get((x, y), 0)
                     if path_above(x, y) and path_left(x, y) and not path_under(x, y) and not path_right(x, y):
-                        pmap.tile_heights[(x + 1, y + 1)] = current_height
+                        pmap.tile_heights[(x + 1, y + 1)] = max(current_height, pmap.tile_heights.get((x + 1, y + 1), 0))
                     if path_above(x, y) and path_right(x, y) and not path_under(x, y) and not path_left(x, y):
-                        pmap.tile_heights[(x - 1, y + 1)] = current_height
+                        pmap.tile_heights[(x - 1, y + 1)] = max(current_height, pmap.tile_heights.get((x - 1, y + 1), 0))
                     if path_under(x, y) and path_left(x, y) and not path_above(x, y) and not path_right(x, y):
-                        pmap.tile_heights[(x + 1, y - 1)] = current_height
+                        pmap.tile_heights[(x + 1, y - 1)] = max(current_height, pmap.tile_heights.get((x + 1, y - 1), 0))
                     if path_under(x, y) and path_right(x, y) and not path_above(x, y) and not path_left(x, y):
-                        pmap.tile_heights[(x - 1, y - 1)] = current_height
+                        pmap.tile_heights[(x - 1, y - 1)] = max(current_height, pmap.tile_heights.get((x - 1, y - 1), 0))
 
     smooth_path_height(house_path_type)
 
     for path_y in range(pmap.height):
         for path_x in range(pmap.width):
             if "p_" in pmap.ground_layer.get((path_x, path_y), ""):
-                if path_above(path_x, path_y) and path_under(path_x, path_y):
+                if path_above(path_x, path_y) and path_under(path_x, path_y) and (path_left(path_x, path_y) or path_right(path_x, path_y)):
                     if pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x, path_y - 1), 0):
                         pmap.ground_layer[(path_x, path_y)] = "sta_8_0"
                         pmap.ground_layer[(path_x + 1, path_y)] = "sta_8_1"
-                        weight_array[path_y][path_x] = 0
-                        weight_array[path_y][path_x + 1] = 0
 
                     elif pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x, path_y + 1), 0):
                         pmap.ground_layer[(path_x, path_y)] = "sta_1_0"
                         pmap.ground_layer[(path_x + 1, path_y)] = "sta_1_1"
-                        weight_array[path_y][path_x] = 0
-                        weight_array[path_y][path_x + 1] = -0
 
-                elif path_left(path_x, path_y) and path_right(path_x, path_y):
+                elif path_left(path_x, path_y) and path_right(path_x, path_y) and path_under(path_x, path_y):
                     if pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x - 1, path_y), 0):
                         pmap.ground_layer[(path_x, path_y)] = "sta_3_1"
                         pmap.ground_layer[(path_x, path_y + 1)] = "sta_3_0"
-                        weight_array[path_y][path_x] = 0
-                        weight_array[path_y + 1][path_x] = 0
 
                     elif pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x + 1, path_y), 0):
                         pmap.ground_layer[(path_x, path_y)] = "sta_6_1"
                         pmap.ground_layer[(path_x, path_y + 1)] = "sta_6_0"
-                        weight_array[path_y][path_x] = 0
-                        weight_array[path_y + 1][path_x] = 0
 
 
 def create_lanterns(pmap):

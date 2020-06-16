@@ -5,16 +5,16 @@ from noise import snoise2
 
 def create_hills(pmap):
     octaves = 1
-    freq = 200
+    freq = 100
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
 
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
-            pmap.tile_heights[(x, y)] = abs(floor((snoise2((x + off_x) / freq, (y + off_y) / freq, octaves)) * pmap.max_hill_height))
+            pmap.tile_heights[(x, y)] = abs(floor((snoise2((x // 2 + off_x) / freq, (y // 2 + off_y) / freq, octaves)) * pmap.max_hill_height))
 
 
-def create_hill_edges(pmap):
+def create_hill_edges(pmap, update=False):
 
     def define_hill_edge_texture(x, y):
 
@@ -23,9 +23,9 @@ def create_hill_edges(pmap):
             hills_around_tile = []
             for around in range(0, 9):
                 tile_coordinate = (x + around % 3 - 1, y + around // 3 - 1)
-                if pmap.tile_heights.get(tile_coordinate, current_tile_height) == current_tile_height: hills_around_tile.append(0)
-                if pmap.tile_heights.get(tile_coordinate, current_tile_height) < current_tile_height: hills_around_tile.append(-1)
                 if pmap.tile_heights.get(tile_coordinate, current_tile_height) > current_tile_height: hills_around_tile.append(1)
+                elif pmap.tile_heights.get(tile_coordinate, current_tile_height) < current_tile_height: hills_around_tile.append(-1)
+                elif pmap.tile_heights.get(tile_coordinate, current_tile_height) == current_tile_height: hills_around_tile.append(0)
             return hills_around_tile
 
         hills_around = get_hills_around_tile()
@@ -53,14 +53,18 @@ def create_hill_edges(pmap):
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             hill_edge_texture = str(define_hill_edge_texture(x, y))
-            if not hill_edge_texture == "-1" and "sta_" not in pmap.ground_layer.get((x, y), "") and not (x, y) in pmap.ground_layer.keys():
-                pmap.ground_layer[(x, y)] = "m_" + hill_edge_texture
+            if not hill_edge_texture == "-1" and "sta_" not in pmap.ground_layer.get((x, y), ""):
+                if update:
+                    pmap.ground_layer[(x, y)] = "m_" + hill_edge_texture
+                elif (x, y) not in pmap.ground_layer.keys():
+                    pmap.ground_layer[(x, y)] = "m_" + hill_edge_texture
+            elif hill_edge_texture == "-1" and "m_" in pmap.ground_layer.get((x, y), ""):
+                pmap.ground_layer.pop((x, y))
 
 
 def generate_height_map(pmap):
-    tile_heights = dict()
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
-            pmap.height_map[(x, y)] = "height_" + str(tile_heights[(x, y)])
+            pmap.height_map[(x, y)] = "height_" + str(pmap.tile_heights[(x, y)])
 
 # tile_Heights = [] image_grayscale_to_dict("world_height_map_downscaled2.jpg")

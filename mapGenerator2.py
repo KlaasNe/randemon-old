@@ -1,8 +1,7 @@
 import datetime, pygame, os, random, sys, ctypes
 from noise import snoise2
-# from time import sleep
 # from worldMap import image_grayscale_to_dict
-from heightMapGenerator import create_hills, create_hill_edges
+from heightMapGenerator import create_hills, create_hill_edges, generate_height_map
 from waterGenerator import create_rivers, create_beach
 from buildingGenerator import spawn_house, add_random_ends
 from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
@@ -36,6 +35,7 @@ class Map:
         self.rain = dict()
         self.decoration_layer = dict()
         self.npc_layer = dict()
+        self.height_map = dict()
 
         random.seed(seed)
 
@@ -60,7 +60,7 @@ class Map:
                         self.rain[(x, y)] = "r_" + str(random.randint(3, 5))
 
     def render(self, layer):
-        def random_grass(offset_x, offset_y):
+        def random_grass():
             def choose_sne_type(excluded_sne):
                 sne_type = random.randint(0, self.NB_SNE)
                 while sne_type in excluded_sne:
@@ -75,7 +75,7 @@ class Map:
 
             octaves = 1
             freq = 7
-            sne_probability = snoise2((x + offset_x) / freq, (y + offset_y) / freq, octaves) + 0.5
+            sne_probability = snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves) + 0.5
 
             if sne_probability > (self.tall_grass_coverage / 100) or "l_1" in self.decoration_layer.get((x, y), "") or "l_5" in self.decoration_layer.get((x, y), ""):
                 grass_type = random.randint(0, 3)
@@ -83,7 +83,7 @@ class Map:
             else:
                 return choose_sne_type(self.EXCLUDED_SNE)
 
-        def try_blit_tile(tile):
+        def try_blit_tile(tile, x, y, correction=0):
             try:
                 screen.blit(get_tile_file(tile), (x * self.TILE_SIZE, y * self.TILE_SIZE - correction))
             except Exception as e:
@@ -93,17 +93,18 @@ class Map:
         def get_tile_file(tile):
             return pygame.image.load(os.path.join("resources", tile + ".png"))
 
-        for y in range(0, map_size_y):
-            for x in range(0, map_size_x):
-                if (x, y) in layer.keys():
-                    current_tile = str(layer[(x, y)])
-                    if "npc_" in layer[(x, y)]:
-                        correction = 6  # npc's are slightly larger than a tile
+        if layer is self.ground_layer:
+            for y in range(0, map_size_y):
+                for x in range(0, map_size_x):
+                    if (x, y) in self.ground_layer.keys():
+                        try_blit_tile(self.ground_layer[(x, y)], x, y)
                     else:
-                        correction = 0
-                    try_blit_tile(current_tile)
-                elif layer == self.ground_layer:
-                    screen.blit(get_tile_file(random_grass(x_offset, y_offset)), (x * self.TILE_SIZE, y * self.TILE_SIZE))
+                        try_blit_tile(random_grass(), x, y)
+        else:
+            for layer_tile in layer.keys():
+                current_tile = layer[layer_tile]
+                correction = 6 if "npc_" in current_tile else 0  # npc's are slightly larger than a tile
+                try_blit_tile(current_tile, layer_tile[0], layer_tile[1], correction)
 
         pygame.display.update()
 
@@ -123,24 +124,25 @@ screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 
 print("*creating landscape*")
 create_hills(random_map)
-add_random_ends(random_map, "p_1")
 create_rivers(random_map)
 create_beach(random_map)
+add_random_ends(random_map, "p_1")
+create_hill_edges(random_map)
 print("*builing houses*")
 spawn_house(random_map, "pc", "p_1")
 spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
         spawn_house(random_map, house_type, "p_1")
-# for house in range(5):
+# for house in range(6):
 #     spawn_house(random_map, random.randint(1, 9), "p_1")
-# random.shuffle(random_map.front_doors)
+random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points
 print("*dijkstra*")
 generate_dijkstra_path(random_map, "p_1")
 apply_path_sprites(random_map)
 
-create_hill_edges(random_map)
+create_hill_edges(random_map, True)
 create_lanterns(random_map)
 print("*growing trees*")
 create_trees(random_map, 30, x_offset, y_offset)
@@ -157,9 +159,9 @@ random_map.render(random_map.ground_layer)
 random_map.render(random_map.buildings)
 random_map.render(random_map.npc_layer)
 random_map.render(random_map.decoration_layer)
-# render(buildings, False)
 # create_rain(rain, 0)
-# render(rain, False)
+# generate_height_map(random_map)
+# random_map.render(random_map.height_map)
 print("Seed: " + str(random_map.seed))
 
 save = input("Save this image? (y/n/w): ")
