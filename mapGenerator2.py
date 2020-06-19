@@ -134,7 +134,7 @@ spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
         spawn_house(random_map, house_type, "p_1")
-# for house in range(6):
+# for house in range(100):
 #     spawn_house(random_map, random.randint(1, 9), "p_1")
 random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points

@@ -16,8 +16,13 @@ def create_rivers(pmap):
                     tiles_around.append(1)
                 else:
                     tiles_around.append(0)
-            if tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1:
-                return 0
+
+            if tiles_around[0] == 0 and tiles_around[1:9] == 8 * [1]:
+                return "16"
+            elif tiles_around[2] == 0 and tiles_around[0:2] + tiles_around[3:9] == 8 * [1]:
+                return "17"
+            elif tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1:
+                return "0"
             elif tiles_around[1] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1:
                 return "1"
             elif tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1:
@@ -51,7 +56,9 @@ def create_rivers(pmap):
         for (x, y) in layer:
             if "pd_" in layer.get((x, y), "") or "b_" in layer.get((x, y), ""):
                 water_sprite = calculate_water_sprite(x, y)
-                layer[(x, y)] = str(layer[(x, y)]) + str(water_sprite)
+                if 0 < int(water_sprite) <= 8 or int(water_sprite) == 16 or int(water_sprite) == 17:
+                    water_sprite += "_d"
+                layer[(x, y)] = "pd_" + str(water_sprite)
 
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):

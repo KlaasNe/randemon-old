@@ -61,7 +61,8 @@ def spawn_house(pmap, house_type, house_front_path_type):
         pmap.front_doors.append((round(house_x + house_size_x / 2), house_y + house_size_y + 1))
         for front_y in range(4):
             for front_x in range(house_size_x):
-                pmap.ground_layer[(house_x + front_x, house_y + house_size_y + front_y - 2)] = house_front_path_type
+                if (house_x + front_x, house_y + house_size_y + front_y - 2) not in pmap.ground_layer.keys():
+                    pmap.ground_layer[(house_x + front_x, house_y + house_size_y + front_y - 2)] = house_front_path_type
         # houses_Front_Doors.append((int(house_x + house_size_x / 2), int(house_y + house_size_y)))
         if random.randint(0, 1) == 1 and not pmap.has_tile_at_position(pmap.ground_layer, house_x - 1, house_y + house_size_y - 2):
             pmap.buildings[(house_x - 1, house_y + house_size_y - 1)] = "mbx_0"
