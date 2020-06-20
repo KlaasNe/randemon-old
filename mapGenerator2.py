@@ -169,6 +169,8 @@ save = input("Save this image? (y/n/w): ")
 
 t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
 if save == "y" or save == "w":
+    if not os.path.isdir("saved images"):
+        os.mkdir("saved images")
     pygame.image.save(screen, os.path.join("saved images", t + ".png"))
     cwd = os.getcwd()
     if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
