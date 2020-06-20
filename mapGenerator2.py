@@ -109,6 +109,7 @@ class Map:
         pygame.display.update()
 
 
+# full hd -> 120,68; my phone -> 68,147
 map_size_x = 50  # The horizontal amount of tiles the map consists of
 map_size_y = 50  # The vertical amount of tiles the map consists of
 all_pokemon = False

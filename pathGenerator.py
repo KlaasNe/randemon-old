@@ -155,21 +155,22 @@ def generate_dijkstra_path(pmap, house_path_type):
         previous_tile[current_tile[1]][current_tile[0]] = (0, 0)
         handle_tiles[(current_tile[0], current_tile[1])] = 0
         handle_current_tile()
-        while not current_tile == target_tile:
+        while not current_tile == target_tile and current_weight[current_tile[1]][current_tile[0]] < 1999999:
             current_tile = find_min_tile()
             handle_current_tile()
 
-        path = []
-        while not previous_tile[current_tile[1]][current_tile[0]] == (0, 0):
-            path.append(current_tile)
-            if "p_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), ""):
-                weight_array[current_tile[1]][current_tile[0]] = PATH_WEIGHT
-                if "pd_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), "") and "b_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), ""):
-                    pmap.ground_layer[current_tile] = house_path_type
-            current_tile = previous_tile[current_tile[1]][current_tile[0]]
+        if current_weight[current_tile[1]][current_tile[0]] < 1999999:
+            path = []
+            while not previous_tile[current_tile[1]][current_tile[0]] == (0, 0):
+                path.append(current_tile)
+                if "p_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), ""):
+                    weight_array[current_tile[1]][current_tile[0]] = PATH_WEIGHT
+                    if "pd_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), "") and "b_" not in pmap.ground_layer.get((current_tile[0], current_tile[1]), ""):
+                        pmap.ground_layer[current_tile] = house_path_type
+                current_tile = previous_tile[current_tile[1]][current_tile[0]]
 
-        path.append(current_tile)
-        make_path_double(pmap, path, house_path_type)
+            path.append(current_tile)
+            make_path_double(pmap, path, house_path_type)
 
     create_stairs(pmap, house_path_type, weight_array)
     create_bridges(pmap)
@@ -177,15 +178,19 @@ def generate_dijkstra_path(pmap, house_path_type):
     # fixit(ground_Tiles)
 
 
-def determine_weight(pmap, x, y):
+def determine_weight(pmap, x, y, avoid_hill_corners=True):
     if "h_" in pmap.buildings.get((x - 1, y), "") or "pm_" in pmap.buildings.get((x - 1, y),  "") or "pc_" in pmap.buildings.get((x - 1, y), ""): return 999999
     if "h_" in pmap.buildings.get((x, y), "") or "h_" in pmap.buildings.get((x, y - 1), "") or "h_" in pmap.buildings.get((x - 1, y - 1), ""): return 999999
     if "pm_" in pmap.buildings.get((x, y), "") or "pm_" in pmap.buildings.get((x, y - 1), "") or "pm_" in pmap.buildings.get((x - 1, y - 1), ""): return 999999
     if "pc_" in pmap.buildings.get((x, y), "") or "pc_" in pmap.buildings.get((x, y - 1), "") or "pc_" in pmap.buildings.get((x - 1, y - 1), ""): return 999999
+    if "fe_" in pmap.ground_layer.get((x, y), "") or "fe_" in pmap.ground_layer.get((x - 1, y), "") or "fe_" in pmap.ground_layer.get((x, y - 1), ""): return 999999
     if "sta_3_0" == pmap.ground_layer.get((x, y), "") or "sta_6_0" == pmap.ground_layer.get((x, y), ""): return PATH_WEIGHT
     if "sta_1_1" == pmap.ground_layer.get((x, y), "") or "sta_8_1" == pmap.ground_layer.get((x, y), ""): return PATH_WEIGHT
     if "sta_6" in pmap.ground_layer.get((x, y - 1), "") or "sta_6" in pmap.ground_layer.get((x, y + 1), "") or "sta_3" in pmap.ground_layer.get((x, y - 1), "") or "sta_3" in pmap.ground_layer.get((x, y + 1), ""): return 999999
     if "sta_8" in pmap.ground_layer.get((x - 1, y), "") or "sta_8" in pmap.ground_layer.get((x + 1, y), "") or "sta_1" in pmap.ground_layer.get((x - 1, y), "") or "sta_1" in pmap.ground_layer.get((x + 1, y), ""): return 999999
+    if avoid_hill_corners:
+        if "m_5" in pmap.ground_layer.get((x, y), "") or "m_6" in pmap.ground_layer.get((x, y), "") or "m_7" in pmap.ground_layer.get((x, y), "") or "m_8" in pmap.ground_layer.get((x, y), ""):
+            return 999999
     if "m_" in pmap.ground_layer.get((x, y), ""): return HILL_WEIGHT
     if "m_" in pmap.ground_layer.get((x - 1, y), "") or "m_" in pmap.ground_layer.get((x, y - 1), "") or "m_" in pmap.ground_layer.get((x - 1, y - 1), ""): return round(HILL_WEIGHT / 2)
     if "pd_" in pmap.ground_layer.get((x, y), "") or "pd_" in pmap.ground_layer.get((x - 1, y), "") or "pd_" in pmap.ground_layer.get((x, y - 1), "") or "pd_" in pmap.ground_layer.get((x - 1, y - 1), ""): return WATER_WEIGHT

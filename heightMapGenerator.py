@@ -5,13 +5,13 @@ from noise import snoise2
 
 def create_hills(pmap):
     octaves = 1
-    freq = 100
+    freq = 80
     off_x = random.random() * 1000000
     off_y = random.random() * 1000000
 
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
-            pmap.tile_heights[(x, y)] = abs(floor((snoise2((x // 2 + off_x) / freq, (y // 2 + off_y) / freq, octaves)) * pmap.max_hill_height))
+            pmap.tile_heights[(x, y)] = abs(floor((snoise2((x // 3 + off_x) / freq, (y // 3 + off_y) / freq, octaves)) * pmap.max_hill_height))
 
 
 def create_hill_edges(pmap, update=False):
