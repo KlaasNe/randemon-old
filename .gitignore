@@ -1,4 +1,4 @@
-venv/*
-*.pyc
-*.png
-.idea/*
+
+.idea/
+
+__pycache__/
