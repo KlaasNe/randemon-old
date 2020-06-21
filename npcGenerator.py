@@ -28,7 +28,7 @@ def set_npc(pmap, npc, x, y):
     direction = 1 if npc == 50 else random.randint(1, 4)
     pmap.npc_layer[(x, y)] = "npc_" + str(npc) + "_" + str(direction)
     if direction == 2 and is_actual_path(pmap, x, y):
-        if (x + 1, y) not in pmap.npc_layer.keys() and (x + 1, y) not in pmap.buildings.keys() and "m_" not in pmap.ground_layer.get((x + 1, y), "") and "st_" not in pmap.ground_layer.get((x + 1, y), ""):
+        if (x + 1, y) not in pmap.npc_layer.keys() and (x + 1, y) not in pmap.buildings.keys() and "m_" not in pmap.ground_layer.get((x + 1, y), "") and "st_" not in pmap.ground_layer.get((x + 1, y), "") and "fe_" not in pmap.ground_layer.get((x, y), ""):
             snpc = get_path_npc()
             while snpc == 50:
                 snpc = get_path_npc()

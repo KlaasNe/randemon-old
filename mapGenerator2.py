@@ -1,14 +1,45 @@
-import datetime, pygame, os, random, sys, ctypes
-from noise import snoise2
+import datetime, pygame, os, random, sys, ctypes, time
 # from worldMap import image_grayscale_to_dict
 from heightMapGenerator import create_hills, create_hill_edges, generate_height_map
 from waterGenerator import create_rivers, create_beach
 from buildingGenerator import spawn_house, add_random_ends
 from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
-from plantGenerator import create_trees
+from plantGenerator import create_trees, grow_grass, create_rain
 from pokemonGenerator import spawn_pokemon
 from npcGenerator import spawn_npc
 from decorationGenerator import spawn_truck, spawn_rocks
+
+
+def render(layer):
+    for tile_x, tile_y in layer.keys():
+        current_tile = layer[(tile_x, tile_y)]
+        correction = 6 if "npc_" in current_tile else 0  # npc's are slightly larger than a tile
+        try_blit_tile(current_tile, tile_x, tile_y, correction)
+    pygame.display.update()
+
+
+def try_blit_tile(tile, blx, bly, correction=0):
+    try:
+        if tile in Map.default_buffer_tiles:
+            if "g_" in tile or "sne_" in tile or "st_" in tile:
+                screen.blit(Map.grass_tile_buffer[tile], (blx * Map.TILE_SIZE, bly * Map.TILE_SIZE - correction))
+            elif "pd_" in tile:
+                screen.blit(Map.water_tile_buffer[tile], (blx * Map.TILE_SIZE, bly * Map.TILE_SIZE - correction))
+            elif "p_" in tile:
+                screen.blit(Map.path_tile_buffer[tile], (blx * Map.TILE_SIZE, bly * Map.TILE_SIZE - correction))
+            elif "r_" in tile:
+                screen.blit(Map.rain_tile_buffer[tile], (blx * Map.TILE_SIZE, bly * Map.TILE_SIZE - correction))
+            else:
+                print("missing buffer tile " + tile)
+        else:
+            screen.blit(get_tile_file(tile), (blx * Map.TILE_SIZE, bly * Map.TILE_SIZE - correction))
+    except Exception as e:
+        screen.blit(get_tile_file("missing"), (blx * Map.TILE_SIZE, bly * Map.TILE_SIZE - correction))
+        print(e)
+
+
+def get_tile_file(tile):
+    return pygame.image.load(os.path.join("resources", tile + ".png"))
 
 
 class Map:
@@ -16,6 +47,13 @@ class Map:
     TILE_SIZE = 16  # Length of 1 tile in pixels
     NB_SNE = 4  # The amount of different existing small nature elements
     EXCLUDED_SNE = [1, 3, 4]  # Small nature elements to keep out of the map
+
+    # Tiles which are often used (faster rendering)
+    default_buffer_tiles = ["g_0", "g_1", "g_2", "g_3", "sne_0", "sne_2", "pd_0", "st_0", "st_1", "st_2", "st_2_d", "r_0", "r_1", "r_2", "r_3", "r_4", "r_5", "p_4_0", "p_4_1", "p_4_2", "p_4_3", "p_4_4"]
+    grass_tile_buffer = {}
+    water_tile_buffer = {}
+    path_tile_buffer = {}
+    rain_tile_buffer = {}
 
     def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate, seed=random.randint(0, sys.maxsize)):
         self.seed = seed
@@ -36,8 +74,21 @@ class Map:
         self.decoration_layer = dict()
         self.npc_layer = dict()
         self.height_map = dict()
+        self.grass_layer = dict()
 
         random.seed(seed)
+
+    @staticmethod
+    def setup_default_tile_buffer(tiles):
+        for tile in tiles:
+            if "g_" in tile or "sne_" in tile or "st_" in tile:
+                Map.grass_tile_buffer[tile] = get_tile_file(tile)
+            elif "pd_" in tile:
+                Map.water_tile_buffer[tile] = get_tile_file(tile)
+            elif "p_" in tile:
+                Map.path_tile_buffer[tile] = get_tile_file(tile)
+            elif "r_" in tile:
+                Map.rain_tile_buffer[tile] = get_tile_file(tile)
 
     @staticmethod
     def has_tile_at_position(layer, x, y):
@@ -46,76 +97,14 @@ class Map:
     def out_of_bounds(self, x, y):
         return x < 0 or y < 0 or x >= self.width or y >= self.height
 
-    def create_rain(self):
-        for y in range(0, map_size_y):
-            for x in range(0, map_size_x):
-                if random.randint(0, 100) < self.rain_rate:
-                    self.rain[(x, y)] = "r_" + str(random.randint(1, 2))
-                elif (x, y) not in self.rain.keys():
-                    self.rain[(x, y)] = "r_0"
-        for y in range(0, map_size_y):
-            for x in range(0, map_size_x):
-                if random.randint(0, 100) < self.rain_rate:
-                    if "sne_" not in self.ground_layer.get((x, y), ""):
-                        self.rain[(x, y)] = "r_" + str(random.randint(3, 5))
 
-    def render(self, layer):
-        def random_grass():
-            def choose_sne_type(excluded_sne):
-                sne_type = random.randint(0, self.NB_SNE)
-                while sne_type in excluded_sne:
-                    sne_type = random.randint(0, self.NB_SNE)
-
-                # Turn 80 percent of the flowers into tall grass
-                if sne_type == 2 and random.random() < 0.8: sne_type = 0
-                # Turn 0.5 percent of the tall grass into tall grass with a hidden item
-                if sne_type == 0 and random.random() < 0.005: sne_type = "0_p"
-
-                return "sne_" + str(sne_type)
-
-            octaves = 1
-            freq = 7
-            sne_probability = snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves) + 0.5
-
-            if sne_probability > (self.tall_grass_coverage / 100) or "l_1" in self.decoration_layer.get((x, y), "") or "l_5" in self.decoration_layer.get((x, y), ""):
-                grass_type = random.randint(0, 3)
-                return "g_" + str(grass_type)
-            else:
-                return choose_sne_type(self.EXCLUDED_SNE)
-
-        def try_blit_tile(tile, x, y, correction=0):
-            try:
-                screen.blit(get_tile_file(tile), (x * self.TILE_SIZE, y * self.TILE_SIZE - correction))
-            except Exception as e:
-                screen.blit(get_tile_file("missing"), (x * self.TILE_SIZE, y * self.TILE_SIZE - correction))
-                print(e)
-
-        def get_tile_file(tile):
-            return pygame.image.load(os.path.join("resources", tile + ".png"))
-
-        if layer is self.ground_layer:
-            for y in range(0, map_size_y):
-                for x in range(0, map_size_x):
-                    if (x, y) in self.ground_layer.keys():
-                        try_blit_tile(self.ground_layer[(x, y)], x, y)
-                    else:
-                        try_blit_tile(random_grass(), x, y)
-        else:
-            for layer_tile in layer.keys():
-                current_tile = layer[layer_tile]
-                correction = 6 if "npc_" in current_tile else 0  # npc's are slightly larger than a tile
-                try_blit_tile(current_tile, layer_tile[0], layer_tile[1], correction)
-
-        pygame.display.update()
-
+Map.setup_default_tile_buffer(Map.default_buffer_tiles)
 
 # full hd -> 120,68; my phone -> 68,147
 map_size_x = 50  # The horizontal amount of tiles the map consists of
 map_size_y = 50  # The vertical amount of tiles the map consists of
 all_pokemon = False
-# while not all_pokemon:
-random_map = Map(map_size_x, map_size_y, 4, 40, 20, 20)
-#random.randint(0, sys.maxsize)
+random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20)
 screen_Size_X = Map.TILE_SIZE * map_size_x
 screen_Size_Y = Map.TILE_SIZE * map_size_y
 x_offset = random.randint(0, 1000000)
@@ -123,6 +112,7 @@ y_offset = random.randint(0, 1000000)
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 
+to_time = time.time()
 print("*creating landscape*")
 create_hills(random_map)
 create_rivers(random_map)
@@ -154,19 +144,24 @@ spawn_npc(random_map, 1)
 print("*spawning decorations")
 spawn_truck(random_map, 0.05)
 spawn_rocks(random_map, 0.01)
+print("*growing grass*")
+grow_grass(random_map, random_map.tall_grass_coverage, x_offset, y_offset)
+print("*checking the weather forecast*")
+create_rain(random_map, 10)
 
 print("*rendering*")
-random_map.render(random_map.ground_layer)
-random_map.render(random_map.buildings)
-random_map.render(random_map.npc_layer)
-random_map.render(random_map.decoration_layer)
-# create_rain(rain, 0)
+render(random_map.grass_layer)
+render(random_map.ground_layer)
+render(random_map.buildings)
+render(random_map.npc_layer)
+render(random_map.decoration_layer)
+render(random_map.rain)
 # generate_height_map(random_map)
 # random_map.render(random_map.height_map)
+print("time = " + str(time.time() - to_time) + "seconds")
+
 print("Seed: " + str(random_map.seed))
-
 save = input("Save this image? (y/n/w): ")
-
 t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
 if save == "y" or save == "w":
     if not os.path.isdir("saved images"):
