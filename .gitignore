@@ -1,4 +1,4 @@
-venv/*
+venv/
+saved images/
 *.pyc
-*.png
-.idea/*
+.idea/
