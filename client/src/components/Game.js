@@ -1,13 +1,17 @@
 import React from 'react'
-const PIXI = require('pixi.js')
+import * as PIXI from 'pixi.js'
+import io from 'socket.io-client'
+
 
 class Game extends React.Component {
   constructor(props) {
     super(props);
     this.game = React.createRef()
     this.pixi_cnt = null
-    this.app = new PIXI.Application({ backgroundColor: 0xaaaaaa });
+    this.app = new PIXI.Application({backgroundColor: 0xaaaaaa})
+    window.app = this.app
     this.scale = 2
+    this.players = new Map()
   }
   updatePixiCnt = (element) => {
     // the element is the DOM object that we will use as container to add pixi stage(canvas)
@@ -18,6 +22,128 @@ class Game extends React.Component {
     }
 
     this.init()
+  }
+
+  initSocket = () => {
+    this.socket = io()
+
+    let socket = this.socket
+
+    socket.on('connect', () => {
+      console.log('socket id', socket.id)
+    })
+    socket.on('playerPositions', players => {
+      for(let player of players) {
+        if(player.id === socket.id) {
+          /*this.world.x = -player.x
+          this.world.y = -player.y
+          this.setAnimation(this.player, player.dir)*/
+        } else {
+          let sprite = this.players.get(player.id)
+          sprite.x = player.x + this.app.view.width/2
+          sprite.y = player.y + this.app.view.height/2
+          this.setAnimation(sprite, player.dir)
+        }
+
+      }
+    })
+
+    socket.on('initPlayers', players => {
+      this.createPlayers(players)
+    })
+
+    socket.on('removePlayer', id => {
+      this.removePlayer(id)
+    })
+
+    socket.on('addPlayer', player => {
+      this.addPlayer(player)
+    })
+  }
+  setAnimation = (sprite, dir) => {
+    if(!sprite.playing) {
+      switch (dir) {
+        case 's':
+          sprite.textures = this.playerSheet.standDown
+          break
+        case 'u':
+          sprite.textures = this.playerSheet.walkUp
+          break
+        case 'd':
+          sprite.textures = this.playerSheet.walkDown
+          break
+        case 'r':
+          sprite.textures = this.playerSheet.walkRight
+          break
+        case 'l':
+          sprite.textures = this.playerSheet.walkLeft
+          break
+        default:
+          break
+      }
+      sprite.play()
+    }
+  }
+  createPlayers = (players) => {
+    players.forEach(function (player) {
+      this.addPlayer(player)
+    }.bind(this))
+  }
+  addPlayer = player => {
+    let sprite = this.createPlayerSprite(player)
+    console.log('adding player', player)
+    //this.app.stage.addChild(sprite)
+    this.world.addChild(sprite)
+    this.players.set(player.id, sprite)
+  }
+  removePlayer = id => {
+    let sprite = this.players.get(id)
+    console.log('removing player', id)
+    //this.app.stage.removeChild(sprite)
+    this.world.removeChild(sprite)
+    this.players.delete(id)
+  }
+  createPlayerSprite = (data) => {
+    let player = new PIXI.AnimatedSprite(this.playerSheet.standDown)
+    player.anchor.set(0.5)
+    player.animationSpeed = .5
+    player.loop = false
+    /*Object.defineProperties(player, {
+      x: {
+        get: function() {
+          return this.calcRelativeX(player.absX)
+        }.bind(this)
+      },
+      y: {
+        get: function() {
+          return this.calcRelativeY(player.absY)
+        }.bind(this)
+      },
+      absX: {
+        value: data.x,
+        writable: true
+      },
+      absY: {
+        value: data.y,
+        writable: true
+      }
+    })*/
+    player.setParent(this.world)
+    player.x = data.x + this.app.view.width/2
+    player.y = data.y + this.app.view.height/2
+    let scale = 0.6
+    player.width *= scale * this.scale
+    player.height *= scale * this.scale
+    return player
+  }
+  calcRelativePos = (x,y) => {
+    return {x:this.calcRelativeX(x), y:this.calcRelativeY(y)}
+  }
+  calcRelativeX = x => {
+    return x + this.world.x + this.app.view.width/2
+  }
+  calcRelativeY = y => {
+    return y + this.world.y + this.app.view.height/2
   }
   background = (bgSize, inputSprite, type, forceSize) => {
     let sprite = inputSprite;
@@ -63,10 +189,12 @@ class Game extends React.Component {
     this.app.stage.addChild(container)
   }
   loadBackground2 = () => {
-    this.world = new PIXI.Sprite.from(this.app.loader.resources['world'].url)
-    this.world.width *= this.scale
-    this.world.height *= this.scale
+    this.world = new PIXI.Container()
+    this.image = new PIXI.Sprite.from(this.app.loader.resources['world'].url)
+    this.image.width *= this.scale
+    this.image.height *= this.scale
     this.app.stage.addChild(this.world)
+    this.world.addChild(this.image)
   }
   doneLoading = e => {
     this.loadBackground2()
@@ -79,6 +207,7 @@ class Game extends React.Component {
       left: false,
       right: false
     }
+    this.dir = dir
 
     document.onkeydown = function(evt) {
       switch(evt.key) {
@@ -118,6 +247,7 @@ class Game extends React.Component {
         }
 
         this.world.y -= speed
+        this.socket.emit('updatePosition',{x: -this.world.x, y: -this.world.y, dir: 'd'})
       }
       if(dir.up) {
         if(!this.player.playing) {
@@ -125,6 +255,7 @@ class Game extends React.Component {
           this.player.play()
         }
         this.world.y += speed
+        this.socket.emit('updatePosition',{x: -this.world.x, y: -this.world.y, dir: 'u'})
       }
       if(dir.right) {
         if(!this.player.playing) {
@@ -132,6 +263,7 @@ class Game extends React.Component {
           this.player.play()
         }
         this.world.x -= speed
+        this.socket.emit('updatePosition',{x: -this.world.x, y: -this.world.y, dir: 'r'})
       }
       if(dir.left) {
         if(!this.player.playing) {
@@ -139,21 +271,31 @@ class Game extends React.Component {
           this.player.play()
         }
         this.world.x += speed
+        this.socket.emit('updatePosition',{x: -this.world.x, y: -this.world.y, dir: 'l'})
       }
     })
+
+    this.initSocket()
   }
   createPlayer = () => {
     this.player = new PIXI.AnimatedSprite(this.playerSheet.standDown)
     this.player.anchor.set(0.5)
     this.player.animationSpeed = .5
     this.player.loop = false
-    this.player.x = this.app.view.height/2
-    this.player.y = this.app.view.width/2
+    this.player.x = this.app.view.width/2
+    this.player.y = this.app.view.height/2
     this.app.stage.addChild(this.player)
     let scale = 0.6
     this.player.width *= scale * this.scale
     this.player.height *= scale * this.scale
     this.player.play()
+    this.player.onComplete = () => {
+      if((!this.dir.left && !this.dir.right && !this.dir.up && !this.dir.down) || true) {
+        this.player.textures = this.playerSheet.standDown
+        this.socket.emit('updatePosition', {x: -this.world.x, y: -this.world.y, dir: 's'})
+      }
+
+    }
   }
   createPlayerSheet = () => {
     let sheet = new PIXI.BaseTexture.from(this.app.loader.resources['agent'].url)
