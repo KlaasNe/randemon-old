@@ -1,0 +1,20 @@
+{
+  "name": "randemon",
+  "version": "1.0.0",
+  "description": "Landscape generator using the tileset of pokemon fire red",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dirvann/randemon.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dirvann/randemon/issues"
+  },
+  "homepage": "https://github.com/Dirvann/randemon#readme"
+}
