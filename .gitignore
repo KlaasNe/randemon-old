@@ -2,3 +2,7 @@ venv/
 saved images/
 *.pyc
 .idea/
+
+.idea/
+
+__pycache__/
