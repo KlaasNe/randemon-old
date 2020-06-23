@@ -46,7 +46,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
         house_size_x = house_type_data[0][house_type]
         house_size_y = house_type_data[1][house_type]
 
-    build_spot = search_available_building_spot(40, 1999)
+    build_spot = search_available_building_spot(40, 99)
     if build_spot:
         house_x = build_spot[0]
         house_y = build_spot[1]

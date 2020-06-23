@@ -1,13 +1,20 @@
-import datetime, pygame, os, random, sys, ctypes, time
-# from worldMap import image_grayscale_to_dict
-from heightMapGenerator import create_hills, create_hill_edges, generate_height_map
-from waterGenerator import create_rivers, create_beach
+import ctypes
+import datetime
+import os
+import pygame
+import random
+import sys
+import time
+
 from buildingGenerator import spawn_house, add_random_ends
+from decorationGenerator import spawn_truck, spawn_rocks
+# from worldMap import image_grayscale_to_dict
+from heightMapGenerator import create_hills, create_hill_edges
+from npcGenerator import spawn_npc
 from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
 from plantGenerator import create_trees, grow_grass, create_rain
 from pokemonGenerator import spawn_pokemon
-from npcGenerator import spawn_npc
-from decorationGenerator import spawn_truck, spawn_rocks
+from waterGenerator import create_rivers, create_beach
 
 
 def render(layer):
@@ -43,19 +50,20 @@ def get_tile_file(tile):
 
 
 class Map:
-
     TILE_SIZE = 16  # Length of 1 tile in pixels
     NB_SNE = 4  # The amount of different existing small nature elements
     EXCLUDED_SNE = [1, 3, 4]  # Small nature elements to keep out of the map
 
     # Tiles which are often used (faster rendering)
-    default_buffer_tiles = ["g_0", "g_1", "g_2", "g_3", "sne_0", "sne_2", "pd_0", "st_0", "st_1", "st_2", "st_2_d", "r_0", "r_1", "r_2", "r_3", "r_4", "r_5", "p_4_0", "p_4_1", "p_4_2", "p_4_3", "p_4_4"]
+    default_buffer_tiles = ["g_0", "g_1", "g_2", "g_3", "sne_0", "sne_2", "pd_0", "st_0", "st_1", "st_2", "st_2_d",
+                            "r_0", "r_1", "r_2", "r_3", "r_4", "r_5", "p_4_0", "p_4_1", "p_4_2", "p_4_3", "p_4_4"]
     grass_tile_buffer = {}
     water_tile_buffer = {}
     path_tile_buffer = {}
     rain_tile_buffer = {}
 
-    def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate, seed=random.randint(0, sys.maxsize)):
+    def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate,
+                 seed=random.randint(0, sys.maxsize)):
         self.seed = seed
         self.width = width
         self.height = height
@@ -125,7 +133,7 @@ spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
         spawn_house(random_map, house_type, "p_1")
-# for house in range(100):
+# for house in range(5):
 #     spawn_house(random_map, random.randint(1, 9), "p_1")
 random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points
