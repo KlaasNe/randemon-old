@@ -100,14 +100,18 @@ class Map:
 
 
 # get command line options
-opts, args = getopt.getopt(sys.argv, "w:h:", [])
 width_opt = None
 height_opt = None
-for opt,arg in opts:
-    if opt == "-w":
-        width_opt = arg
-    if opt == "-h":
-        height_opt = arg
+try:
+    opts, args = getopt.getopt(sys.argv[1:], '', ['width=', 'height='])
+    for opt,arg in opts:
+        if opt == "--width":
+            width_opt = int(arg)
+        if opt == "--height":
+            height_opt = int(arg)
+except getopt.GetoptError as err:
+    print(err)
+
 
 Map.setup_default_tile_buffer(Map.default_buffer_tiles)
 
