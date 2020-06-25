@@ -1,4 +1,4 @@
-import datetime, pygame, os, random, sys, ctypes, time
+import datetime, pygame, os, random, sys, ctypes, time, getopt
 # from worldMap import image_grayscale_to_dict
 from heightMapGenerator import create_hills, create_hill_edges, generate_height_map
 from waterGenerator import create_rivers, create_beach
@@ -8,6 +8,7 @@ from plantGenerator import create_trees, grow_grass, create_rain
 from pokemonGenerator import spawn_pokemon
 from npcGenerator import spawn_npc
 from decorationGenerator import spawn_truck, spawn_rocks
+from threading import Thread
 
 
 def render(layer):
@@ -98,11 +99,25 @@ class Map:
         return x < 0 or y < 0 or x >= self.width or y >= self.height
 
 
+# get command line options
+width_opt = None
+height_opt = None
+try:
+    opts, args = getopt.getopt(sys.argv[1:], '', ['width=', 'height='])
+    for opt,arg in opts:
+        if opt == "--width":
+            width_opt = int(arg)
+        if opt == "--height":
+            height_opt = int(arg)
+except getopt.GetoptError as err:
+    print(err)
+
+
 Map.setup_default_tile_buffer(Map.default_buffer_tiles)
 
 # full hd -> 120,68; my phone -> 68,147
-map_size_x = 50  # The horizontal amount of tiles the map consists of
-map_size_y = 50  # The vertical amount of tiles the map consists of
+map_size_x = width_opt or 50  # The horizontal amount of tiles the map consists of
+map_size_y = height_opt or 50  # The vertical amount of tiles the map consists of
 all_pokemon = False
 random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20)
 screen_Size_X = Map.TILE_SIZE * map_size_x
@@ -161,13 +176,26 @@ render(random_map.rain)
 print("time = " + str(time.time() - to_time) + "seconds")
 
 print("Seed: " + str(random_map.seed))
-save = input("Save this image? (y/n/w): ")
-t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
-if save == "y" or save == "w":
-    if not os.path.isdir("saved images"):
-        os.mkdir("saved images")
-    pygame.image.save(screen, os.path.join("saved images", t + ".png"))
-    cwd = os.getcwd()
-    if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
+
+def prompt():
+    save = input("Save this image? (y/n/w): ")
+    t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
+    if save == "y" or save == "w":
+        if not os.path.isdir("saved images"):
+            os.mkdir("saved images")
+        pygame.image.save(screen, os.path.join("saved images", t + ".png"))
+        cwd = os.getcwd()
+        if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
+
+t = Thread(target=prompt)
+t.daemon = True
+t.start()
+
+# let pygame run in background
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
 quit()

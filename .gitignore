@@ -3,6 +3,6 @@ saved images/
 *.pyc
 .idea/
 
-.idea/
+**/node_modules/**
 
 __pycache__/
