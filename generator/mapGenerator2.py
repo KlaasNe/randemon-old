@@ -193,7 +193,7 @@ render(random_map.buildings)
 render(random_map.npc_layer)
 render(random_map.decoration_layer)
 render(random_map.rain)
-print(random_map.buildings)
+
 # generate_height_map(random_map)
 # random_map.render(random_map.height_map)
 print("time = " + str(time.time() - to_time) + "seconds")
