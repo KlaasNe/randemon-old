@@ -47,7 +47,6 @@ def spawn_pokemon(pmap):
         for y in range(0, pmap.height):
             for x in range(0, pmap.width):
                 if (x, y) not in pmap.ground_layer.keys() and (x, y) not in pmap.buildings.keys() and can_spawn_pokemon(odds):
-                    print("diglett")
                     if random() < SHINY_PROBABILITY:
                         pmap.ground_layer[(x, y)] = "diglet_2"
                     else:

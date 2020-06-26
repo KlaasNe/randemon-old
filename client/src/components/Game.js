@@ -25,7 +25,7 @@ class Game extends React.Component {
   }
 
   initSocket = () => {
-    this.socket = io()
+    this.socket = io(':3001')
 
     let socket = this.socket
 
