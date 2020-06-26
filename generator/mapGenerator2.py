@@ -186,6 +186,7 @@ def prompt():
         pygame.image.save(screen, os.path.join("saved images", t + ".png"))
         cwd = os.getcwd()
         if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
+    pygame.quit()
 
 t = Thread(target=prompt)
 t.daemon = True
@@ -194,8 +195,11 @@ t.start()
 # let pygame run in background
 running = True
 while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    try:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+    except pygame.error:
+        quit()
 
 quit()
