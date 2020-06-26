@@ -125,6 +125,9 @@ screen_Size_Y = Map.TILE_SIZE * map_size_y
 x_offset = random.randint(0, 1000000)
 y_offset = random.randint(0, 1000000)
 
+
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+pygame.display.init()
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
 
 to_time = time.time()
@@ -171,6 +174,7 @@ render(random_map.buildings)
 render(random_map.npc_layer)
 render(random_map.decoration_layer)
 render(random_map.rain)
+print(random_map.buildings)
 # generate_height_map(random_map)
 # random_map.render(random_map.height_map)
 print("time = " + str(time.time() - to_time) + "seconds")
