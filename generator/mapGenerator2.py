@@ -116,13 +116,19 @@ class Map:
 # get command line options
 width_opt = None
 height_opt = None
+headless_opt = False
+save_opt = False
 try:
-    opts, args = getopt.getopt(sys.argv[1:], '', ['width=', 'height='])
+    opts, args = getopt.getopt(sys.argv[1:], '', ['width=', 'height=', 'headless', 'save'])
     for opt,arg in opts:
         if opt == "--width":
             width_opt = int(arg)
         if opt == "--height":
             height_opt = int(arg)
+        if opt == "--headless":
+            headless_opt = True
+        if opt == "--save":
+            save_opt = True
 except getopt.GetoptError as err:
     print(err)
 
@@ -139,7 +145,9 @@ screen_Size_Y = Map.TILE_SIZE * map_size_y
 x_offset = random.randint(0, 1000000)
 y_offset = random.randint(0, 1000000)
 
-screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y))
+if headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
+
+screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y), 0,32)
 
 to_time = time.time()
 print("*creating landscape*")
@@ -185,6 +193,7 @@ render(random_map.buildings)
 render(random_map.npc_layer)
 render(random_map.decoration_layer)
 render(random_map.rain)
+print(random_map.buildings)
 # generate_height_map(random_map)
 # random_map.render(random_map.height_map)
 print("time = " + str(time.time() - to_time) + "seconds")
@@ -193,7 +202,10 @@ print("Seed: " + str(random_map.seed))
 
 
 def prompt():
-    save = input("Save this image? (y/n/w): ")
+    if not save_opt:
+        save = input("Save this image? (y/n/w): ")
+    else:
+        save = "y"
     t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
     if save == "y" or save == "w":
         if not os.path.isdir("saved images"):
