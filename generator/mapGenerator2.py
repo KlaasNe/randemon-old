@@ -1,11 +1,24 @@
+import ctypes
+import datetime
+import os
+import pygame
+import random
+import sys
+import time
+
 import datetime, pygame, os, random, sys, ctypes, time, getopt
 # from worldMap import image_grayscale_to_dict
 from heightMapGenerator import create_hills, create_hill_edges, generate_height_map
 from waterGenerator import create_rivers, create_beach
 from buildingGenerator import spawn_house, add_random_ends
+from decorationGenerator import spawn_truck, spawn_rocks
+# from worldMap import image_grayscale_to_dict
+from heightMapGenerator import create_hills, create_hill_edges
+from npcGenerator import spawn_npc
 from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
 from plantGenerator import create_trees, grow_grass, create_rain
 from pokemonGenerator import spawn_pokemon
+from waterGenerator import create_rivers, create_beach
 from npcGenerator import spawn_npc
 from decorationGenerator import spawn_truck, spawn_rocks
 from threading import Thread
@@ -44,19 +57,20 @@ def get_tile_file(tile):
 
 
 class Map:
-
     TILE_SIZE = 16  # Length of 1 tile in pixels
     NB_SNE = 4  # The amount of different existing small nature elements
     EXCLUDED_SNE = [1, 3, 4]  # Small nature elements to keep out of the map
 
     # Tiles which are often used (faster rendering)
-    default_buffer_tiles = ["g_0", "g_1", "g_2", "g_3", "sne_0", "sne_2", "pd_0", "st_0", "st_1", "st_2", "st_2_d", "r_0", "r_1", "r_2", "r_3", "r_4", "r_5", "p_4_0", "p_4_1", "p_4_2", "p_4_3", "p_4_4"]
+    default_buffer_tiles = ["g_0", "g_1", "g_2", "g_3", "sne_0", "sne_2", "pd_0", "st_0", "st_1", "st_2", "st_2_d",
+                            "r_0", "r_1", "r_2", "r_3", "r_4", "r_5", "p_4_0", "p_4_1", "p_4_2", "p_4_3", "p_4_4"]
     grass_tile_buffer = {}
     water_tile_buffer = {}
     path_tile_buffer = {}
     rain_tile_buffer = {}
 
-    def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate, seed=random.randint(0, sys.maxsize)):
+    def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate,
+                 seed=random.randint(0, sys.maxsize)):
         self.seed = seed
         self.width = width
         self.height = height
@@ -116,10 +130,10 @@ except getopt.GetoptError as err:
 Map.setup_default_tile_buffer(Map.default_buffer_tiles)
 
 # full hd -> 120,68; my phone -> 68,147
-map_size_x = width_opt or 50  # The horizontal amount of tiles the map consists of
-map_size_y = height_opt or 50  # The vertical amount of tiles the map consists of
+map_size_x = width_opt or 120  # The horizontal amount of tiles the map consists of
+map_size_y = height_opt or 68  # The vertical amount of tiles the map consists of
 all_pokemon = False
-random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20)
+random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20, 69420)
 screen_Size_X = Map.TILE_SIZE * map_size_x
 screen_Size_Y = Map.TILE_SIZE * map_size_y
 x_offset = random.randint(0, 1000000)
@@ -140,8 +154,8 @@ spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
         spawn_house(random_map, house_type, "p_1")
-# for house in range(100):
-#     spawn_house(random_map, random.randint(1, 9), "p_1")
+for house in range(2):
+    spawn_house(random_map, random.randint(1, 9), "p_1")
 random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points
 print("*dijkstra*")
@@ -177,6 +191,7 @@ print("time = " + str(time.time() - to_time) + "seconds")
 
 print("Seed: " + str(random_map.seed))
 
+
 def prompt():
     save = input("Save this image? (y/n/w): ")
     t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
@@ -187,6 +202,7 @@ def prompt():
         cwd = os.getcwd()
         if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
     pygame.quit()
+
 
 t = Thread(target=prompt)
 t.daemon = True
