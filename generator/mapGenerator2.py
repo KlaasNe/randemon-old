@@ -24,6 +24,7 @@ from decorationGenerator import spawn_truck, spawn_rocks
 from threading import Thread
 
 
+# blits tiles from dictionary
 def render(layer):
     for tile_x, tile_y in layer.keys():
         current_tile = layer[(tile_x, tile_y)]
@@ -32,6 +33,8 @@ def render(layer):
     pygame.display.update()
 
 
+# checks if the to be blitted tile is preloaded
+# when trying to blit a non-existent tile, replaces it with "missing" texture tile
 def try_blit_tile(tile, blx, bly, correction=0):
     try:
         if tile in Map.default_buffer_tiles:
@@ -52,6 +55,7 @@ def try_blit_tile(tile, blx, bly, correction=0):
         print(e)
 
 
+# fetches the .png file from the directory /resources
 def get_tile_file(tile):
     return pygame.image.load(os.path.join("resources", tile + ".png"))
 
@@ -91,6 +95,8 @@ class Map:
         self.height_map = dict()
         self.grass_layer = dict()
 
+        self.highest_path = -1
+
         random.seed(seed)
 
     @staticmethod
@@ -120,7 +126,7 @@ headless_opt = False
 save_opt = False
 try:
     opts, args = getopt.getopt(sys.argv[1:], '', ['width=', 'height=', 'headless', 'save'])
-    for opt,arg in opts:
+    for opt, arg in opts:
         if opt == "--width":
             width_opt = int(arg)
         if opt == "--height":
@@ -133,13 +139,15 @@ except getopt.GetoptError as err:
     print(err)
 
 
+# This is the main program
+
 Map.setup_default_tile_buffer(Map.default_buffer_tiles)
 
 # full hd -> 120,68; my phone -> 68,147
-map_size_x = width_opt or 120  # The horizontal amount of tiles the map consists of
-map_size_y = height_opt or 68  # The vertical amount of tiles the map consists of
+map_size_x = width_opt or 50  # The horizontal amount of tiles the map consists of
+map_size_y = height_opt or 50  # The vertical amount of tiles the map consists of
 all_pokemon = False
-random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20, 69420)
+random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20)
 screen_Size_X = Map.TILE_SIZE * map_size_x
 screen_Size_Y = Map.TILE_SIZE * map_size_y
 x_offset = random.randint(0, 1000000)
@@ -147,13 +155,13 @@ y_offset = random.randint(0, 1000000)
 
 if headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y), 0,32)
+screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y), 0, 32)
 
 to_time = time.time()
 print("*creating landscape*")
 create_hills(random_map)
 create_rivers(random_map)
-create_beach(random_map)
+create_beach(random_map, x_offset, y_offset)
 add_random_ends(random_map, "p_1")
 create_hill_edges(random_map)
 print("*builing houses*")
@@ -162,8 +170,8 @@ spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
         spawn_house(random_map, house_type, "p_1")
-for house in range(2):
-    spawn_house(random_map, random.randint(1, 9), "p_1")
+# for house in range(2):
+#     spawn_house(random_map, random.randint(1, 9), "p_1")
 random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points
 print("*dijkstra*")
@@ -212,7 +220,8 @@ def prompt():
             os.mkdir("saved images")
         pygame.image.save(screen, os.path.join("saved images", t + ".png"))
         cwd = os.getcwd()
-        if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
+        if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"),
+                                                                   0)
     pygame.quit()
 
 
