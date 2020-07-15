@@ -1,7 +1,13 @@
 import random
 from pathGenerator import is_actual_path
 
+
+# Spawns a house on the map with house_front_path_type as its front porch
+# Houses are spawned by chosing a random x and y coordinate, checking whether enough space is available for the given
+# house if not, choose a new position. There's an upper limit to try find a building spot.
 def spawn_house(pmap, house_type, house_front_path_type):
+
+    # checks if a chosen position has enough free space for the house + spacing, starting from the top left corner
     def unavailable_building_spot(x, y, h_spacing, v_spacing):
         reference_height = pmap.tile_heights.get((x, y), 0)
         for check_y in range(y - 2, y + house_size_y + v_spacing):
@@ -14,6 +20,9 @@ def spawn_house(pmap, house_type, house_front_path_type):
 
         return False
 
+    # Chooses a random x and y coordinate to try build a house
+    # If a house already exists on the chosen coordinate, searches for the lower right corner of given house and when
+    # enough space available, builds the house adjacent on the right to the house previously found
     def search_available_building_spot(cluster_radius, max_attempts):
         attempts = 1
         house_x_attempt = random.randint(1, pmap.width - house_size_x)
@@ -30,6 +39,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
                 unavailable_spot = unavailable_building_spot(house_x_attempt, house_y_attempt, 0, 2)
         return (house_x_attempt, house_y_attempt) if attempts <= max_attempts and not unavailable_spot and is_inside_cluster(pmap, house_x_attempt, house_y_attempt, cluster_radius, 3) else False
 
+    # search for the lower right corner of a house
     def find_lower_right_of_house(x, y, size_y):
         while "h_" in pmap.buildings.get((x - 1, y), "") or "pc_" in pmap.buildings.get((x - 1, y), "") or "pm_" in pmap.buildings.get((x - 1, y), "") or "h_" in pmap.buildings.get((x, y - 1), "") or "pc_" in pmap.buildings.get((x, y - 1), "") or "pm_" in pmap.buildings.get((x, y - 1), ""):
             if "h_" in pmap.buildings.get((x - 1, y), "") or "pc_" in pmap.buildings.get((x - 1, y), "") or "pm_" in pmap.buildings.get((x - 1, y), ""): y += 1
@@ -70,6 +80,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
                 create_fence(pmap, house_x + house_size_x - 1, house_y + 1, 5, True)
 
 
+# Checks whether a coordinate is at least in radius [distance] of [connections] houses
 def is_inside_cluster(pmap, x, y, radius, connections):
     from math import sqrt
 
@@ -87,6 +98,7 @@ def is_inside_cluster(pmap, x, y, radius, connections):
     return False
 
 
+# gives people a backyard surrounded by a fence
 def create_fence(pmap, x, y, max_y, tree=False):
     def can_have_fence():
         curr_size = min(size_x // 2 + 1, max_y)
@@ -126,6 +138,7 @@ def create_fence(pmap, x, y, max_y, tree=False):
                 try_build_fence(fence_x, y - size_y, fence_height, "fe_1_1")
 
 
+# Adds random points to the sides of the map to have path running to the edge of the screen
 def add_random_ends(pmap, path_type):
     end_sides = []
     nb_ends = random.randint(2, 4)

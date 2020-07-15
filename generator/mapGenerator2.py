@@ -24,6 +24,7 @@ from decorationGenerator import spawn_truck, spawn_rocks
 from threading import Thread
 
 
+# blits tiles from dictionary
 def render(layer):
     for tile_x, tile_y in layer.keys():
         current_tile = layer[(tile_x, tile_y)]
@@ -32,6 +33,8 @@ def render(layer):
     pygame.display.update()
 
 
+# checks if the to be blitted tile is preloaded
+# when trying to blit a non-existent tile, replaces it with "missing" texture tile
 def try_blit_tile(tile, blx, bly, correction=0):
     try:
         if tile in Map.default_buffer_tiles:
@@ -52,6 +55,7 @@ def try_blit_tile(tile, blx, bly, correction=0):
         print(e)
 
 
+# fetches the .png file from the directory /resources
 def get_tile_file(tile):
     return pygame.image.load(os.path.join("resources", tile + ".png"))
 
@@ -135,6 +139,8 @@ except getopt.GetoptError as err:
     print(err)
 
 
+# This is the main program
+
 Map.setup_default_tile_buffer(Map.default_buffer_tiles)
 
 # full hd -> 120,68; my phone -> 68,147
@@ -149,7 +155,7 @@ y_offset = random.randint(0, 1000000)
 
 if headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
-screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y), 0,32)
+screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y), 0, 32)
 
 to_time = time.time()
 print("*creating landscape*")
@@ -214,7 +220,8 @@ def prompt():
             os.mkdir("saved images")
         pygame.image.save(screen, os.path.join("saved images", t + ".png"))
         cwd = os.getcwd()
-        if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
+        if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"),
+                                                                   0)
     pygame.quit()
 
 
