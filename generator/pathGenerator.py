@@ -139,6 +139,8 @@ def generate_dijkstra_path(pmap, house_path_type):
     already_connected = set()
     for front_door in range(len(pmap.front_doors)):
         current_tile = pmap.front_doors[front_door]
+        if pmap.tile_heights.get(current_tile, -1) > pmap.highest_path:
+            pmap.highest_path = pmap.tile_heights[current_tile]
         already_connected.add(current_tile)
         if not current_tile: print("broken")
         target_tile = find_closest_house(current_tile[0], current_tile[1])

@@ -91,6 +91,8 @@ class Map:
         self.height_map = dict()
         self.grass_layer = dict()
 
+        self.highest_path = -1
+
         random.seed(seed)
 
     @staticmethod
@@ -120,7 +122,7 @@ headless_opt = False
 save_opt = False
 try:
     opts, args = getopt.getopt(sys.argv[1:], '', ['width=', 'height=', 'headless', 'save'])
-    for opt,arg in opts:
+    for opt, arg in opts:
         if opt == "--width":
             width_opt = int(arg)
         if opt == "--height":
@@ -136,10 +138,10 @@ except getopt.GetoptError as err:
 Map.setup_default_tile_buffer(Map.default_buffer_tiles)
 
 # full hd -> 120,68; my phone -> 68,147
-map_size_x = width_opt or 120  # The horizontal amount of tiles the map consists of
-map_size_y = height_opt or 68  # The vertical amount of tiles the map consists of
+map_size_x = width_opt or 50  # The horizontal amount of tiles the map consists of
+map_size_y = height_opt or 50  # The vertical amount of tiles the map consists of
 all_pokemon = False
-random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20, 69420)
+random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20)
 screen_Size_X = Map.TILE_SIZE * map_size_x
 screen_Size_Y = Map.TILE_SIZE * map_size_y
 x_offset = random.randint(0, 1000000)
@@ -162,8 +164,8 @@ spawn_house(random_map, "pm", "p_1")
 for house_type in range(1, 10):
     for x in range(1):
         spawn_house(random_map, house_type, "p_1")
-for house in range(2):
-    spawn_house(random_map, random.randint(1, 9), "p_1")
+# for house in range(2):
+#     spawn_house(random_map, random.randint(1, 9), "p_1")
 random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points
 print("*dijkstra*")

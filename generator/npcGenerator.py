@@ -14,14 +14,15 @@ def spawn_npc(pmap, population, path_only=False):
     coord = random_npc_coordinates(pmap, population)
     for co in coord:
         x, y = co
-        if (x, y) not in pmap.buildings.keys() and "m_" not in pmap.ground_layer.get((x, y), ""):
+        if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path and (x, y) not in pmap.buildings.keys() and "m_" not in pmap.ground_layer.get((x, y), ""):
             if path_only:
                 if is_actual_path(pmap, x, y):
                     npc = get_path_npc()
                     set_npc(pmap, npc, x, y)
             else:
                 npc = get_npc(pmap, x, y)
-                if npc is not None: set_npc(pmap, npc, x, y)
+                if npc is not None:
+                    set_npc(pmap, npc, x, y)
 
 
 def set_npc(pmap, npc, x, y):
@@ -36,14 +37,14 @@ def set_npc(pmap, npc, x, y):
 
 
 def get_npc(pmap, x, y):
-    WATER_POP = 0.2
+    WATER_LVL = 0.2
     npc_number = None
     if not pmap.raining:
-        if random.random() < WATER_POP and "pd_" in pmap.ground_layer.get((x, y), "") and is_inside_cluster(pmap, x, y, 20, 1):
+        if random.random() < WATER_LVL and "pd_" in pmap.ground_layer.get((x, y), "") and is_inside_cluster(pmap, x, y, 20, 1):
             npc_number = get_water_npc()
         elif "b_" in pmap.ground_layer.get((x, y), ""):
             npc_number = get_bridge_npc()
-        elif random.random() < WATER_POP and "p_4" in pmap.ground_layer.get((x, y), "") and is_inside_cluster(pmap, x, y, 20, 1):
+        elif random.random() < WATER_LVL and "p_4" in pmap.ground_layer.get((x, y), "") and is_inside_cluster(pmap, x, y, 20, 1):
             npc_number = get_shore_npc()
     if (x, y) not in pmap.ground_layer.keys():
         npc_number = get_outside_npc()
