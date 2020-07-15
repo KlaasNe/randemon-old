@@ -1,4 +1,6 @@
 import argparse
+import random
+import sys
 
 def make_parser():
     """Make the ArgParser object."""
@@ -10,14 +12,14 @@ def make_parser():
         '--width',
         dest='map_size_x',
         type=int,
-        default=120,
+        default=50,
         help='The horizontal amount of tiles the map consists of. full hd -> 120x68')
 
     parser.add_argument(
         '--height',
         dest='map_size_y',
         type=int,
-        default=68,
+        default=50,
         help='The vertical amount of tiles the map consists of. full hd -> 120x68')
 
     parser.add_argument(
@@ -36,7 +38,7 @@ def make_parser():
         '--seed',
         dest='seed_opt',
         type=int,
-        default=69420,
+        default=random.randint(0, sys.maxsize),
         help='The horizontal amount of tiles the map consists of. full hd -> 120x68')
 
     return parser
