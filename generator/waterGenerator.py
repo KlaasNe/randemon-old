@@ -1,4 +1,5 @@
 import math
+from noise import snoise2
 
 
 def create_rivers(pmap):
@@ -69,17 +70,20 @@ def create_rivers(pmap):
     apply_water_sprites(pmap.ground_layer)
 
 
-def create_beach(pmap):
+def create_beach(pmap, x_offset, y_offset):
 
     def check_for_water_around(x, y, beach_width):
         for around in range(0, (beach_width + 2) ** 2):
             check_x = x + around % (beach_width + 2) - beach_width + 1
             check_y = y + around // (beach_width + 2) - beach_width + 1
             water_around = pmap.ground_layer.get((check_x, check_y), "")
-            if "pd_" in str(water_around):  # or "p_4" in str(water_around):
+            if "pd_" in str(water_around):
                 return True
         return False
 
+    octaves = 2
+    freq = 150
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
-            if (x, y) not in pmap.ground_layer.keys() and pmap.tile_heights.get((x, y), 0) == 1 and check_for_water_around(x, y, 4): pmap.ground_layer[(x, y)] = "p_4"
+            beach = snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves) + 0.5 > 0.5
+            if beach and ((x, y) not in pmap.ground_layer.keys() and pmap.tile_heights.get((x, y), 0) == 1 and check_for_water_around(x, y, 4)): pmap.ground_layer[(x, y)] = "p_4"

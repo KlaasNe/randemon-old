@@ -46,7 +46,7 @@ def spawn_pokemon(pmap):
         diglett = False
         for y in range(0, pmap.height):
             for x in range(0, pmap.width):
-                if (x, y) not in pmap.ground_layer.keys() and (x, y) not in pmap.buildings.keys() and can_spawn_pokemon(odds):
+                if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path and (x, y) not in pmap.ground_layer.keys() and (x, y) not in pmap.buildings.keys() and can_spawn_pokemon(odds):
                     if random() < SHINY_PROBABILITY:
                         pmap.ground_layer[(x, y)] = "diglet_2"
                     else:
@@ -98,7 +98,7 @@ def spawn_pokemon(pmap):
         return togetic
 
     lapras = spawn_lapras(0.001)
-    gyarados = spawn_gyarados(0.001)
+    gyarados = spawn_gyarados(0.0005)
     diglett = spawn_diglett(0.001)
     snorlax = spawn_snorlax(0.035)
     exceguttor = spawn_exceguttor(0.0025)
