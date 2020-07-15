@@ -1,3 +1,5 @@
+# Spawns pokemon on the map most in the pmap.ground_layer
+# Returns true if all existing pokemon are present on the map
 def spawn_pokemon(pmap):
     SHINY_PROBABILITY = 0.001
     from random import random, randint

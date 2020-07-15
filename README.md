@@ -19,7 +19,7 @@ Run the same commands in a new window in the server folder.
 
 ## Notes
 
-I'll do documentation later.
+I'll do proper documentation later.
 
 
 I do not own any rights over the used images.

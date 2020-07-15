@@ -2,6 +2,7 @@ import math
 import random
 
 
+# Spawns a truck on top of path
 def spawn_truck(pmap, odds):
     for x in range(pmap.width):
         for y in range(pmap.height):
@@ -12,6 +13,7 @@ def spawn_truck(pmap, odds):
                     pmap.ground_layer["Truck"] = True
 
 
+# Checks wether a surface covering x to x + x_size, y to y + y_size all has the same heigt
 def flat_surface(pmap, x, y, x_size, y_size):
     reference_height = pmap.tile_heights.get((x, y), -1)
     for tile in range(1, x_size * y_size + 1):
@@ -20,6 +22,7 @@ def flat_surface(pmap, x, y, x_size, y_size):
     return True
 
 
+# Checks an area for tiles in the building_layer
 def check_for_building(pmap, x, y, x_size, y_size):
     for check_y in range(y, y + y_size + 1):
         for check_x in range(x, x + x_size + 1):
@@ -28,6 +31,7 @@ def check_for_building(pmap, x, y, x_size, y_size):
     return True
 
 
+# Checks an area for tiles in the ground_layer
 def check_for_ground(pmap, x, y, x_size, y_size):
     for check_y in range(y, y + y_size + 1):
         for check_x in range(x, x + x_size + 1):
@@ -36,6 +40,7 @@ def check_for_ground(pmap, x, y, x_size, y_size):
     return True
 
 
+# Checks an area for tiles in the decoration_layer
 def check_for_decoration(pmap, x, y, x_size, y_size):
     for check_y in range(y, y + y_size + 1):
         for check_x in range(x, x + x_size + 1):
@@ -44,6 +49,7 @@ def check_for_decoration(pmap, x, y, x_size, y_size):
     return True
 
 
+# Spawns rocks in water if no water is present in the ground layer at 10 tiles distance
 def spawn_rocks(pmap, rocky_percentage):
     for y in range(pmap.height):
         for x in range(pmap.width):

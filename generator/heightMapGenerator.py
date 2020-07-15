@@ -3,21 +3,26 @@ from math import floor
 from noise import snoise2
 
 
-def create_hills(pmap):
+# Creates a perlin noise field to be used as height map with ints as height ranging from 0 to pmap.max_hill_height
+def create_hills(pmap, x_offset, y_offset):
     octaves = 1
     freq = 80
-    off_x = random.random() * 1000000
-    off_y = random.random() * 1000000
+    off_x = x_offset
+    off_y = y_offset
 
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             pmap.tile_heights[(x, y)] = abs(floor((snoise2((x // 3 + off_x) / freq, (y // 3 + off_y) / freq, octaves)) * pmap.max_hill_height))
 
 
+# Calculates where to draw edges of hills
 def create_hill_edges(pmap, update=False):
 
+    # Determines which sprite to use at (x, y)
     def define_hill_edge_texture(x, y):
 
+        # Looks for the tile heights around (x, y) and adds their relative height to an array. 1 means the tile is
+        # situated higher than the central tile, 0 means equal height, -1 means lower
         def get_hills_around_tile():
             current_tile_height = pmap.tile_heights[(x, y)]
             hills_around_tile = []
@@ -28,6 +33,7 @@ def create_hill_edges(pmap, update=False):
                 elif pmap.tile_heights.get(tile_coordinate, current_tile_height) == current_tile_height: hills_around_tile.append(0)
             return hills_around_tile
 
+        # using the array of relative heights, this calculates the sprite for the hill texture
         hills_around = get_hills_around_tile()
         if pmap.tile_heights.get((x, y), 0) < 2: return -1
         if hills_around[3] == 0 and hills_around[6] == -1 and hills_around[7] == 0: return 9
@@ -67,9 +73,8 @@ def create_hill_edges(pmap, update=False):
                 pmap.ground_layer.pop((x, y))
 
 
-
-
-
+# Creates a visual height map which can be rendered
+# It's a feature for debugging (pls dont set max height over 15 when using this)
 def generate_height_map(pmap):
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):

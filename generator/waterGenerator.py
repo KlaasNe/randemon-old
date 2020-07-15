@@ -2,10 +2,13 @@ import math
 from noise import snoise2
 
 
+# Creates rivers for pmap
 def create_rivers(pmap):
 
+    # Chooses the right name for water tiles (pd_*)
     def apply_water_sprites(layer):
 
+        # Given which tiles around coordinates (x, y) are water and which land, choses the right sprite
         def calculate_water_sprite(x, y):
 
             tiles_around = []
@@ -70,6 +73,7 @@ def create_rivers(pmap):
     apply_water_sprites(pmap.ground_layer)
 
 
+# Creates sandy path around rivers; inside a perlin noise field
 def create_beach(pmap, x_offset, y_offset):
 
     def check_for_water_around(x, y, beach_width):

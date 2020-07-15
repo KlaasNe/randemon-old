@@ -2,6 +2,9 @@ from noise import snoise2
 import random
 
 
+# Checks if enough space is available to plant a tree
+# No trees above the highest path height
+# Adds an overlay to decoration_layer if the top of the tree overlaps with another tree
 def create_trees(pmap, spawn_rate, x_offset, y_offset):
     octaves = 2
     freq = 40
@@ -18,6 +21,8 @@ def create_trees(pmap, spawn_rate, x_offset, y_offset):
                             pmap.decoration_layer[(x, y - 2)] = "st_2_d"
 
 
+# The whole map is filled with random green tiles
+# Tall gras and flowers are spawned with a perlin noise field
 def grow_grass(pmap, tall_grass_coverage, x_offset, y_offset):
     def random_grass(gx, gy):
         octaves = 1
@@ -44,11 +49,13 @@ def grow_grass(pmap, tall_grass_coverage, x_offset, y_offset):
                 pmap.grass_layer[(x, y)] = random_grass(x, y)
 
 
-def create_rain(pmap, odds):
+# Creates an overlay for the entire map showing rain
+# The amount of rain is given with rain_rate
+def create_rain(pmap, odds,  rain_rate):
     if random.random() * 100 < odds:
         for y in range(pmap.height):
             for x in range(pmap.width):
-                if random.randint(0, 100) < pmap.rain_rate:
+                if random.randint(0, 100) < rain_rate:
                     if random.random() < 0.5 and "st" not in pmap.ground_layer.get((x, y), "") and "fe_" not in pmap.ground_layer.get((x, y), "") and "m_" not in pmap.ground_layer.get((x, y), ""):
                         pmap.rain[(x, y)] = "r_" + str(random.randint(3, 5))
                     else:
