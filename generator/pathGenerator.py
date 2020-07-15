@@ -29,29 +29,13 @@ def apply_path_sprites(pmap):
         elif tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 1] or (
                 tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1):
             return "_0"
-        elif tiles_around == [0, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 0, 1,
-                                                                             1] or tiles_around == [0, 1, 1, 0, 1, 1, 1,
-                                                                                                    1,
-                                                                                                    1] or tiles_around == [
-            1, 1, 1, 0, 1, 1, 1, 1, 1]:
+        elif tiles_around == [0, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [0, 1, 1, 0, 1, 1, 1, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 1, 1, 1]:
             return "_1"
-        elif tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0,
-                                                                             0] or tiles_around == [1, 1, 1, 1, 1, 1, 0,
-                                                                                                    0,
-                                                                                                    1] or tiles_around == [
-            1, 1, 1, 1, 1, 1, 1, 0, 1]:
+        elif tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 1] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 1]:
             return "_2"
-        elif tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1,
-                                                                             0] or tiles_around == [1, 1, 0, 1, 1, 0, 1,
-                                                                                                    1,
-                                                                                                    1] or tiles_around == [
-            1, 1, 1, 1, 1, 0, 1, 1, 1]:
+        elif tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 1] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 1]:
             return "_3"
-        elif tiles_around == [0, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 0, 1, 1, 1, 1, 1,
-                                                                             1] or tiles_around == [0, 0, 1, 1, 1, 1, 1,
-                                                                                                    1,
-                                                                                                    1] or tiles_around == [
-            1, 0, 1, 1, 1, 1, 1, 1, 1]:
+        elif tiles_around == [0, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [0, 0, 1, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 1, 1, 1, 1, 1, 1, 1]:
             return "_4"
         elif tiles_around[5] == 1 and tiles_around[7] == 1 and tiles_around[8] == 1:
             return "_5"
