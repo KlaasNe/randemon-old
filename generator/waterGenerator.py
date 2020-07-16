@@ -85,8 +85,8 @@ def create_beach(pmap, x_offset, y_offset):
                 return True
         return False
 
-    octaves = 2
-    freq = 150
+    octaves = 1
+    freq = 100
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             beach = snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves) + 0.5 > 0.5
