@@ -11,13 +11,15 @@ def apply_path_sprites(pmap):
         tiles_around = []
         for around in range(0, 9):
             path_around = pmap.ground_layer.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
-            # if path_around == 0: path_around = pmap.buildings.get((x + (around % 3) - 1, y + math.floor(around / 3) - 1), 0)
             if "p_" in str(path_around) or "b_" in str(path_around) or "pl_" in str(path_around) or "sta_" in str(
                     path_around) or "m_4_p" in str(path_around) or "pd_" in str(path_around) or pmap.out_of_bounds(
                     x + (around % 3) - 1, y + math.floor(around / 3) - 1) or "mrk" in str(path_around):
                 tiles_around.append(1)
             else:
                 tiles_around.append(0)
+            if is_actual_path(pmap, x, y) and "p_4" in str(path_around) and "h_" not in pmap.buildings.get((x, y), "") and "pc_" not in pmap.buildings.get((x, y), "") and "pm_" not in pmap.buildings.get((x, y), ""):
+                pmap.decoration_layer[(x, y)] = "tr_0"
+
         if tiles_around == [1, 1, 1, 1, 1, 1, 0, 1, 1]:
             return "_9"
         elif tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 0]:
