@@ -184,7 +184,7 @@ def determine_weight(pmap, x, y, avoid_hill_corners=True):
     if pmap.get_tile_type("ground_layer", x, y) == "hi": return HILL_WEIGHT
     if pmap.get_tile_type("ground_layer", x - 1, y) == "hi" or pmap.get_tile_type("ground_layer", x, y - 1) == "hi" or pmap.get_tile_type("ground_layer", x - 1, y - 1) == "hi": return HILL_WEIGHT
     if pmap.get_tile_type("ground_layer", x, y) == "wa" or pmap.get_tile_type("ground_layer", x - 1, y) == "wa" or pmap.get_tile_type("ground_layer", x, y - 1) == "wa" or pmap.get_tile_type("ground_layer", x - 1, y - 1) == "wa": return WATER_WEIGHT
-    if is_actual_path(pmap, x, y): return PATH_WEIGHT
+    if is_actual_path(pmap, x, y) and is_actual_path(pmap, x - 1, y) and is_actual_path(pmap, x, y - 1): return PATH_WEIGHT
     if pmap.get_tile_type("ground_layer", x, y) == "" or pmap.get_tile_type("ground_layer", x - 1, y) == "" or pmap.get_tile_type("ground_layer", x, y - 1) == "": return GRASS_WEIGHT
     return 999999
 
