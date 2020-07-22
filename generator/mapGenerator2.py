@@ -13,6 +13,7 @@ from heightMapGenerator import create_hills, create_hill_edges, generate_height_
 from waterGenerator import create_rivers, create_beach
 from buildingGenerator import spawn_house, add_random_ends
 from decorationGenerator import spawn_truck, spawn_rocks
+import inputs
 # from worldMap import image_grayscale_to_dict
 from heightMapGenerator import create_hills, create_hill_edges
 from npcGenerator import spawn_npc
@@ -135,23 +136,8 @@ class Map:
             return default
 
 # get command line options
-width_opt = None
-height_opt = None
-headless_opt = False
-save_opt = False
-try:
-    opts, args = getopt.getopt(sys.argv[1:], '', ['width=', 'height=', 'headless', 'save'])
-    for opt, arg in opts:
-        if opt == "--width":
-            width_opt = int(arg)
-        if opt == "--height":
-            height_opt = int(arg)
-        if opt == "--headless":
-            headless_opt = True
-        if opt == "--save":
-            save_opt = True
-except getopt.GetoptError as err:
-    print(err)
+parser = inputs.make_parser()
+args = parser.parse_args()
 
 
 # This is the main program
@@ -169,13 +155,13 @@ sheet_writers = {
 map_size_x = width_opt or 50  # The horizontal amount of tiles the map consists of
 map_size_y = height_opt or 50  # The vertical amount of tiles the map consists of
 all_pokemon = False
-random_map = Map(map_size_x, map_size_y, 5, 40, 20, 20)
-screen_Size_X = Map.TILE_SIZE * map_size_x
-screen_Size_Y = Map.TILE_SIZE * map_size_y
+random_map = Map(args.map_size_x, args.map_size_y, 5, 40, 20, 20, args.seed_opt)
+screen_Size_X = Map.TILE_SIZE * args.map_size_x
+screen_Size_Y = Map.TILE_SIZE * args.map_size_y
 x_offset = random.randint(0, 1000000)
 y_offset = random.randint(0, 1000000)
 
-if headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
+if args.headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y), 0, 32)
 visual = ssm.DrawSheet(screen_Size_X, screen_Size_Y)
@@ -237,7 +223,7 @@ visual.show()
 
 
 def prompt():
-    if not save_opt:
+    if not args.headless_opt:
         save = input("Save this image? (y/n/w): ")
     else:
         save = "y"
