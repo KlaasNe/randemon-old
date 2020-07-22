@@ -23,7 +23,7 @@ from waterGenerator import create_rivers, create_beach
 
 
 def render2(pmap, layer, draw_sheet):
-    for tile_x, tile_y in getattr(pmap, layer)["tiles"].keys():
+    for tile_x, tile_y in getattr(pmap, layer).keys():
         try:
             current_tile = pmap.get_tile(layer, tile_x, tile_y)
             sheet_writer = sheet_writers[current_tile[0]]
@@ -51,14 +51,14 @@ class Map:
         self.front_doors = []
         self.end_points = []
         self.tile_heights = dict()
-        self.ground_layer = {"pa": Image.open(os.path.join("resources", "path.png")), "tiles": dict()}
-        self.secondary_ground = {"de": Image.open(os.path.join("resources", "path.png")), "tiles": dict()}
-        self.buildings = {"ho": Image.open(os.path.join("resources", "houses.png")), "tiles": dict()}
+        self.ground_layer = dict()
+        self.secondary_ground = dict()
+        self.buildings = dict()
         self.rain = dict()
-        self.decoration_layer = {"tiles": dict()}
+        self.decoration_layer = dict()
         self.npc_layer = dict()
         self.height_map = dict()
-        self.grass_layer = {"na": Image.open(os.path.join("resources", "nature.png")), "tiles": dict()}
+        self.grass_layer = dict()
 
         self.highest_path = 0
 
@@ -69,7 +69,7 @@ class Map:
 
     def get_tile(self, layer, x, y, default=""):
         try:
-            return getattr(self, layer)["tiles"][(x, y)]
+            return getattr(self, layer)[(x, y)]
         except KeyError:
             return default
         except AttributeError as a:
@@ -98,8 +98,8 @@ sheet_writers = {
 }
 
 # full hd -> 120,68; my phone -> 68,147
-map_size_x = args.map_size_x or 50  # The horizontal amount of tiles the map consists of
-map_size_y = args.map_size_y or 50  # The vertical amount of tiles the map consists of
+map_size_x = args.map_size_x  # The horizontal amount of tiles the map consists of
+map_size_y = args.map_size_y  # The vertical amount of tiles the map consists of
 all_pokemon = False
 random_map = Map(args.map_size_x, args.map_size_y, 5, 40, 20, 20, args.seed_opt)
 screen_Size_X = Map.TILE_SIZE * args.map_size_x
@@ -157,7 +157,7 @@ render2(random_map, "secondary_ground", visual.drawable())
 render2(random_map, "buildings", visual.drawable())
 # render(random_map.npc_layer)
 render2(random_map, "decoration_layer", visual.drawable())
-# render(random_map.rain)
+render2(random_map, "rain", visual.drawable())
 
 # generate_height_map(random_map)
 # random_map.render(random_map.height_map)

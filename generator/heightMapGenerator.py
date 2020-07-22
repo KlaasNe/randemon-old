@@ -62,11 +62,11 @@ def create_hill_edges(pmap, hill_type=0, update=False):
 
                 if "ro" != pmap.get_tile_type("ground_layer", x, y) or pmap.get_tile("ground_layer", x, y)[1] < 2:
                     if update:
-                        pmap.ground_layer["tiles"][(x, y)] = hill_edge_texture
+                        pmap.ground_layer[(x, y)] = hill_edge_texture
                     elif (x, y) not in pmap.ground_layer.keys():
-                        pmap.ground_layer["tiles"][(x, y)] = hill_edge_texture
+                        pmap.ground_layer[(x, y)] = hill_edge_texture
             elif hill_edge_texture == -1 and "hi" == pmap.get_tile_type("ground_layer", x, y):
-                pmap.ground_layer["tiles"].pop((x, y))
+                pmap.ground_layer.pop((x, y))
 
 
 # Creates a visual height map which can be rendered

@@ -44,15 +44,15 @@ def create_rivers(pmap):
                 return ("wa", 4, 1)
             return ("wa", 0, 0)
 
-        for x, y in pmap.ground_layer["tiles"].keys():
+        for x, y in pmap.ground_layer.keys():
             if "wa" in pmap.get_tile_type("ground_layer", x, y) or "b_" in pmap.ground_layer.get((x, y), ""):
-                pmap.ground_layer["tiles"][(x, y)] = calculate_water_sprite(x, y)
+                pmap.ground_layer[(x, y)] = calculate_water_sprite(x, y)
 
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             tile_height = pmap.tile_heights[(x, y)]
             if tile_height == 0:
-                pmap.ground_layer["tiles"][(x, y)] = ("wa", 0, 0)
+                pmap.ground_layer[(x, y)] = ("wa", 0, 0)
     apply_water_sprites()
 
 
@@ -72,4 +72,4 @@ def create_beach(pmap, x_offset, y_offset):
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             beach = snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves) + 0.5 > 0.5
-            if beach and ((x, y) not in pmap.ground_layer["tiles"].keys() and pmap.tile_heights.get((x, y), 0) == 1 and check_for_water_around(x, y, 4)): pmap.ground_layer["tiles"][(x, y)] = ("pa", 0, 9)
+            if beach and ((x, y) not in pmap.ground_layer.keys() and pmap.tile_heights.get((x, y), 0) == 1 and check_for_water_around(x, y, 4)): pmap.ground_layer[(x, y)] = ("pa", 0, 9)

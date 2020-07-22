@@ -43,7 +43,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
         reference_height = pmap.tile_heights.get((x, y), 0)
         for check_y in range(y - 2, y + house_size_y + v_spacing):
             for check_x in range(x - h_spacing, x + house_size_x + h_spacing + 1):
-                if pmap.tile_heights.get((check_x, check_y), -1) != reference_height or "wa" in pmap.get_tile_type("ground_layer", check_x, check_y) or "de" in pmap.get_tile_type("secondary_ground", check_x, check_y) or (check_x, check_y) in pmap.buildings["tiles"].keys():
+                if pmap.tile_heights.get((check_x, check_y), -1) != reference_height or "wa" in pmap.get_tile_type("ground_layer", check_x, check_y) or "de" in pmap.get_tile_type("secondary_ground", check_x, check_y) or (check_x, check_y) in pmap.buildings.keys():
                     if pmap.get_tile_type("buildings", check_x, check_y):
                         return check_x, check_y
                     else:
@@ -86,16 +86,16 @@ def spawn_house(pmap, house_type, house_front_path_type):
         house_y = build_spot[1]
         for house_build_y in range(house_size_y):
             for house_build_x in range(house_size_x):
-                pmap.buildings["tiles"][(house_x + house_build_x, house_y + house_build_y)] = ("ho", curr_data[0][0] + house_build_x, curr_data[0][1] + house_build_y)
+                pmap.buildings[(house_x + house_build_x, house_y + house_build_y)] = ("ho", curr_data[0][0] + house_build_x, curr_data[0][1] + house_build_y)
         pmap.front_doors.append((round(house_x + house_size_x / 2), house_y + house_size_y + 1))
         for front_y in range(2):
             for front_x in range(house_size_x):
                 if (house_x + front_x, house_y + house_size_y + front_y) not in pmap.ground_layer.keys():
-                    pmap.ground_layer["tiles"][(house_x + front_x, house_y + house_size_y + front_y)] = house_front_path_type
+                    pmap.ground_layer[(house_x + front_x, house_y + house_size_y + front_y)] = house_front_path_type
         # if house_type != "pokecenter" and house_type != "pokemart":
         #     if random.randint(0, 1) == 1 and not pmap.has_tile_at_position(pmap.ground_layer, house_x - 1, house_y + house_size_y - 2):
-        #         pmap.buildings["tiles"][(house_x - 1, house_y + house_size_y - 1)] = "mbx_0"
-        #         pmap.buildings["tiles"][(house_x - 1, house_y + house_size_y - 2)] = "mbx_1"
+        #         pmap.buildings[(house_x - 1, house_y + house_size_y - 1)] = "mbx_0"
+        #         pmap.buildings[(house_x - 1, house_y + house_size_y - 2)] = "mbx_1"
 
             if isinstance(house_type, int) and random.randint(1, 4) == 1:
                 create_fence(pmap, house_x + house_size_x - 1, house_y + 1, 5, 1, True)
@@ -160,7 +160,7 @@ def create_fence(pmap, x, y, max_y, rel_fence_type, tree=False):
 
     def try_build_fence(fx, fy, height, fence):
         if pmap.tile_heights.get((fx, fy), -1) == height and (pmap.get_tile_type("ground_layer", fx, fy) != "hi" or pmap.get_tile("ground_layer", fx, fy)[1] == 3):
-            pmap.secondary_ground["tiles"][(fx, fy)] = fence
+            pmap.secondary_ground[(fx, fy)] = fence
 
     size_x = check_house_width()
     upd_max_y = can_have_fence()
@@ -175,7 +175,7 @@ def create_fence(pmap, x, y, max_y, rel_fence_type, tree=False):
             try_build_fence(x, fence_y, fence_height, ("de", 2, 1 + fence_type))
         for fence_x in range(x - size_x + 1, x):
             if tree and random.randint(1, 100) == 1:
-                pmap.ground_layer["tiles"][(fence_x, y - size_y)] = ("na", 1, 2)
+                pmap.ground_layer[(fence_x, y - size_y)] = ("na", 1, 2)
             else:
                 try_build_fence(fence_x, y - size_y, fence_height, ("de", 1, 0 + fence_type))
 
@@ -216,7 +216,7 @@ def add_random_ends(pmap, path_type):
 
             if max_height > 1:
                 pmap.end_points.append((x, y))
-                pmap.ground_layer["tiles"][(x, y)] = path_type
+                pmap.ground_layer[(x, y)] = path_type
                 for y_around in range(y - 2, y + 3):
                     for x_around in range(x - 3, x + 3):
                         if not pmap.out_of_bounds(x_around, y_around) and "wa" not in pmap.get_tile_type("ground_layer", x_around, y_around):

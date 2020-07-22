@@ -55,9 +55,9 @@ def apply_path_sprites(pmap):
                 if "pa" == pmap.get_tile_type("ground_layer", x, y):
                     path = calculate_path_sprite(x, y, path_type)
                     if not path == "_er":
-                        pmap.ground_layer["tiles"][(x, y)] = path
+                        pmap.ground_layer[(x, y)] = path
                     else:
-                        pmap.ground_layer["tiles"][(x, y)] = ("na", 0, 0)
+                        pmap.ground_layer[(x, y)] = ("na", 0, 0)
             except TypeError:
                 pass
             except IndexError:
@@ -158,7 +158,7 @@ def generate_dijkstra_path(pmap, house_path_type):
                 if "pa" != pmap.get_tile_type("ground_layer", current_tile[0], current_tile[1]):
                     weight_array[current_tile[1]][current_tile[0]] = PATH_WEIGHT
                     if "wa" != pmap.get_tile_type("ground_layer", current_tile[0], current_tile[1]) and pmap.get_tile("ground_layer", current_tile[0], current_tile[1]) != ("ro", 0, 0):
-                        pmap.ground_layer["tiles"][current_tile] = house_path_type
+                        pmap.ground_layer[current_tile] = house_path_type
                 current_tile = previous_tile[current_tile[1]][current_tile[0]]
 
             path.append(current_tile)
@@ -205,9 +205,9 @@ def make_path_double(pmap, path, path_type):
 
     for (x, y) in path_extention:
         if pmap.tile_heights.get((x, y), 0) < 1:
-            pmap.ground_layer["tiles"][(x, y)] = ("ro", 0, 0)
+            pmap.ground_layer[(x, y)] = ("ro", 0, 0)
         elif "pa" != pmap.get_tile_type("ground_layer", x, y):
-            pmap.ground_layer["tiles"][(x, y)] = ("pa", 0, path_type)
+            pmap.ground_layer[(x, y)] = ("pa", 0, path_type)
 
 
 def create_bridges(pmap):
@@ -215,19 +215,19 @@ def create_bridges(pmap):
         for x in range(pmap.width):
             if pmap.get_tile("ground_layer", x, y) == ("ro", 0, 0):
                 if pmap.get_tile_type("ground_layer", x, y - 1) == "wa":
-                    pmap.ground_layer["tiles"][(x, y)] = ("ro", 0, 0)
-                    pmap.ground_layer["tiles"][(x, y + 1)] = ("ro", 0, 1)
+                    pmap.ground_layer[(x, y)] = ("ro", 0, 0)
+                    pmap.ground_layer[(x, y + 1)] = ("ro", 0, 1)
                 elif pmap.get_tile_type("ground_layer", x, y + 1) == "wa":
-                    pmap.ground_layer["tiles"][(x, y - 1)] = ("ro", 0, 0)
-                    pmap.ground_layer["tiles"][(x, y)] = ("ro", 0, 1)
+                    pmap.ground_layer[(x, y - 1)] = ("ro", 0, 0)
+                    pmap.ground_layer[(x, y)] = ("ro", 0, 1)
                 elif pmap.get_tile_type("ground_layer", x - 1, y) == "wa":
-                    pmap.ground_layer["tiles"][(x, y)] = ("ro", 1, 0)
-                    pmap.ground_layer["tiles"][(x + 1, y)] = ("ro", 1, 1)
+                    pmap.ground_layer[(x, y)] = ("ro", 1, 0)
+                    pmap.ground_layer[(x + 1, y)] = ("ro", 1, 1)
                 elif pmap.get_tile_type("ground_layer", x + 1, y) == "wa":
-                    pmap.ground_layer["tiles"][(x, y)] = ("ro", 1, 1)
-                    pmap.ground_layer["tiles"][(x - 1, y)] = ("ro", 1, 0)
+                    pmap.ground_layer[(x, y)] = ("ro", 1, 1)
+                    pmap.ground_layer[(x - 1, y)] = ("ro", 1, 0)
                 else:
-                    pmap.ground_layer["tiles"][(x, y)] = "p_4"
+                    pmap.ground_layer[(x, y)] = "p_4"
 
             if ("ro", 0, 0) == pmap.get_tile("ground_layer", x, y - 1) and "wa" in pmap.get_tile_type("ground_layer", x, y):
                 pmap.decoration_layer[(x, y)] = "bu_0"
@@ -300,21 +300,21 @@ def create_stairs(pmap, house_path_type, weight_array):
             if "pa" in pmap.get_tile_type("ground_layer", path_x, path_y) and pmap.tile_heights[(path_x, path_y)] > 1:
                 if path_above(path_x, path_y) and path_under(path_x, path_y) and (path_left(path_x, path_y) or path_right(path_x, path_y)):
                     if pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x, path_y - 1), 0):
-                        pmap.ground_layer["tiles"][(path_x, path_y)] = ("ro", 3, 0)
-                        pmap.ground_layer["tiles"][(path_x + 1, path_y)] = ("ro", 3, 1)
+                        pmap.ground_layer[(path_x, path_y)] = ("ro", 3, 0)
+                        pmap.ground_layer[(path_x + 1, path_y)] = ("ro", 3, 1)
 
                     elif pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x, path_y + 1), 0):
-                        pmap.ground_layer["tiles"][(path_x, path_y)] = ("ro", 2, 0)
-                        pmap.ground_layer["tiles"][(path_x + 1, path_y)] = ("ro", 2, 1)
+                        pmap.ground_layer[(path_x, path_y)] = ("ro", 2, 0)
+                        pmap.ground_layer[(path_x + 1, path_y)] = ("ro", 2, 1)
 
                 elif path_left(path_x, path_y) and path_right(path_x, path_y) and path_under(path_x, path_y):
                     if pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x - 1, path_y), 0):
-                        pmap.ground_layer["tiles"][(path_x, path_y)] = ("ro", 4, 0)
-                        pmap.ground_layer["tiles"][(path_x, path_y + 1)] = ("ro", 4, 1)
+                        pmap.ground_layer[(path_x, path_y)] = ("ro", 4, 0)
+                        pmap.ground_layer[(path_x, path_y + 1)] = ("ro", 4, 1)
 
                     elif pmap.tile_heights.get((path_x, path_y), 0) > pmap.tile_heights.get((path_x + 1, path_y), 0):
-                        pmap.ground_layer["tiles"][(path_x, path_y)] = ("ro", 5, 0)
-                        pmap.ground_layer["tiles"][(path_x, path_y + 1)] = ("ro", 5, 1)
+                        pmap.ground_layer[(path_x, path_y)] = ("ro", 5, 0)
+                        pmap.ground_layer[(path_x, path_y + 1)] = ("ro", 5, 1)
 
 
 def create_lanterns(pmap):
@@ -323,7 +323,7 @@ def create_lanterns(pmap):
     def check_availability_zone(x1, y1, x2, y2):
         for y in range(y1, y2 + 1):
             for x in range(x1, x2 + 1):
-                if (x, y) in pmap.ground_layer["tiles"].keys() or (x, y) in pmap.buildings.keys() or (x, y) in pmap.decoration_layer.keys():
+                if (x, y) in pmap.ground_layer.keys() or (x, y) in pmap.buildings.keys() or (x, y) in pmap.decoration_layer.keys():
                     return False
         return True
 
