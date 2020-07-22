@@ -7,6 +7,7 @@ import sys
 import time
 
 import datetime, pygame, os, random, sys, ctypes, time, getopt
+import spriteSheetManager as ssm
 # from worldMap import image_grayscale_to_dict
 from heightMapGenerator import create_hills, create_hill_edges, generate_height_map
 from waterGenerator import create_rivers, create_beach
@@ -22,6 +23,7 @@ from waterGenerator import create_rivers, create_beach
 from npcGenerator import spawn_npc
 from decorationGenerator import spawn_truck, spawn_rocks
 from threading import Thread
+from PIL import Image
 
 
 # blits tiles from dictionary
@@ -31,6 +33,17 @@ def render(layer):
         correction = 6 if "npc_" in current_tile else 0  # npc's are slightly larger than a tile
         try_blit_tile(current_tile, tile_x, tile_y, correction)
     pygame.display.update()
+
+
+def render2(pmap, layer, draw_sheet):
+    for tile_x, tile_y in getattr(pmap, layer)["tiles"].keys():
+        try:
+            current_tile = pmap.get_tile(layer, tile_x, tile_y)
+            sheet_writer = sheet_writers[current_tile[0]]
+            correction = 6 if "npc_" in current_tile else 0  # npc's are slightly larger than a tile
+            sheet_writer.draw_tile(current_tile[1], current_tile[2], draw_sheet, tile_x * 16, tile_y * 16)
+        except Exception:
+            pass
 
 
 # checks if the to be blitted tile is preloaded
@@ -87,29 +100,18 @@ class Map:
         self.front_doors = []
         self.end_points = []
         self.tile_heights = dict()
-        self.ground_layer = dict()
-        self.buildings = dict()
+        self.ground_layer = {"pa": Image.open(os.path.join("resources", "path.png")), "tiles": dict()}
+        self.secondary_ground = {"de": Image.open(os.path.join("resources", "path.png")), "tiles": dict()}
+        self.buildings = {"ho": Image.open(os.path.join("resources", "houses.png")), "tiles": dict()}
         self.rain = dict()
-        self.decoration_layer = dict()
+        self.decoration_layer = {"tiles": dict()}
         self.npc_layer = dict()
         self.height_map = dict()
-        self.grass_layer = dict()
+        self.grass_layer = {"na": Image.open(os.path.join("resources", "nature.png")), "tiles": dict()}
 
-        self.highest_path = -1
+        self.highest_path = 0
 
         random.seed(seed)
-
-    @staticmethod
-    def setup_default_tile_buffer(tiles):
-        for tile in tiles:
-            if "g_" in tile or "sne_" in tile or "st_" in tile:
-                Map.grass_tile_buffer[tile] = get_tile_file(tile)
-            elif "pd_" in tile:
-                Map.water_tile_buffer[tile] = get_tile_file(tile)
-            elif "p_" in tile:
-                Map.path_tile_buffer[tile] = get_tile_file(tile)
-            elif "r_" in tile:
-                Map.rain_tile_buffer[tile] = get_tile_file(tile)
 
     @staticmethod
     def has_tile_at_position(layer, x, y):
@@ -118,6 +120,19 @@ class Map:
     def out_of_bounds(self, x, y):
         return x < 0 or y < 0 or x >= self.width or y >= self.height
 
+    def get_tile(self, layer, x, y, default=""):
+        try:
+            return getattr(self, layer)["tiles"][(x, y)]
+        except KeyError:
+            return default
+        except AttributeError as a:
+            print(a)
+
+    def get_tile_type(self, layer, x, y, default=""):
+        try:
+            return self.get_tile(layer, x, y, default)[0]
+        except Exception:
+            return default
 
 # get command line options
 width_opt = None
@@ -140,8 +155,15 @@ except getopt.GetoptError as err:
 
 
 # This is the main program
-
-Map.setup_default_tile_buffer(Map.default_buffer_tiles)
+sheet_writers = {
+    "pa": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "path.png"))),
+    "wa": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "water.png"))),
+    "na": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "nature.png"))),
+    "hi": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "hills.png"))),
+    "ro": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "road.png"))),
+    "ho": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "houses.png"))),
+    "de": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "decoration.png")))
+    }
 
 # full hd -> 120,68; my phone -> 68,147
 map_size_x = width_opt or 50  # The horizontal amount of tiles the map consists of
@@ -156,29 +178,32 @@ y_offset = random.randint(0, 1000000)
 if headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 screen = pygame.display.set_mode((screen_Size_X, screen_Size_Y), 0, 32)
+visual = ssm.DrawSheet(screen_Size_X, screen_Size_Y)
 
 to_time = time.time()
 print("*creating landscape*")
 create_hills(random_map, x_offset, y_offset)
 create_rivers(random_map)
 create_beach(random_map, x_offset, y_offset)
-add_random_ends(random_map, "p_1")
+add_random_ends(random_map, ("pa", 0, 0))
 create_hill_edges(random_map)
 print("*builing houses*")
-spawn_house(random_map, "pc", "p_1")
-spawn_house(random_map, "pm", "p_1")
-for house_type in range(1, 10):
+spawn_house(random_map, "pokecenter", ("pa", 0, 0))
+spawn_house(random_map, "pokemart", ("pa", 0, 0))
+spawn_house(random_map, "gym", ("pa", 0, 0))
+spawn_house(random_map, "powerplant", ("pa", 0, 0))
+for house_type in range(22):
     for x in range(1):
-        spawn_house(random_map, house_type, "p_1")
+        spawn_house(random_map, house_type, ("pa", 0, 0))
 # for house in range(2):
 #     spawn_house(random_map, random.randint(1, 9), "p_1")
 random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points
 print("*dijkstra*")
-generate_dijkstra_path(random_map, "p_1")
+generate_dijkstra_path(random_map, ("pa", 0, 0))
 apply_path_sprites(random_map)
 
-create_hill_edges(random_map, True)
+create_hill_edges(random_map, update=True)
 create_lanterns(random_map)
 print("*growing trees*")
 create_trees(random_map, 30, x_offset, y_offset)
@@ -195,18 +220,20 @@ print("*checking the weather forecast*")
 create_rain(random_map, 10, random_map.rain_rate)
 
 print("*rendering*")
-render(random_map.grass_layer)
-render(random_map.ground_layer)
-render(random_map.buildings)
-render(random_map.npc_layer)
-render(random_map.decoration_layer)
-render(random_map.rain)
+render2(random_map, "grass_layer", visual.drawable())
+render2(random_map, "ground_layer", visual.drawable())
+render2(random_map, "secondary_ground", visual.drawable())
+render2(random_map, "buildings", visual.drawable())
+# render(random_map.npc_layer)
+render2(random_map, "decoration_layer", visual.drawable())
+# render(random_map.rain)
 
 # generate_height_map(random_map)
 # random_map.render(random_map.height_map)
 print("time = " + str(time.time() - to_time) + "seconds")
-
 print("Seed: " + str(random_map.seed))
+
+visual.show()
 
 
 def prompt():
@@ -218,10 +245,11 @@ def prompt():
     if save == "y" or save == "w":
         if not os.path.isdir("saved images"):
             os.mkdir("saved images")
-        pygame.image.save(screen, os.path.join("saved images", t + ".png"))
+        visual.save(t)
         cwd = os.getcwd()
-        if save == "w": ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"),
-                                                                   0)
+        if save == "w":
+            ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", t + ".png"), 0)
+
     pygame.quit()
 
 
