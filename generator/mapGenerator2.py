@@ -18,7 +18,7 @@ from heightMapGenerator import create_hills, create_hill_edges
 from npcGenerator import spawn_npc
 from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
 from plantGenerator import create_trees, grow_grass, create_rain
-from pokemonGenerator import spawn_pokemon
+from pokemonGenerator import spawn_pokemons
 from waterGenerator import create_rivers, create_beach
 
 
@@ -94,7 +94,8 @@ sheet_writers = {
     "hi": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "hills.png"))),
     "ro": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "road.png"))),
     "ho": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "houses.png"))),
-    "de": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "decoration.png")))
+    "de": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "decoration.png"))),
+    "po": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "pokemon.png")))
 }
 
 # full hd -> 120,68; my phone -> 68,147
@@ -126,8 +127,6 @@ spawn_house(random_map, "powerplant", ("pa", 0, 0))
 for house_type in range(22):
     for x in range(1):
         spawn_house(random_map, house_type, ("pa", 0, 0))
-# for house in range(2):
-#     spawn_house(random_map, random.randint(1, 9), "p_1")
 random.shuffle(random_map.front_doors)
 random_map.front_doors += random_map.end_points
 print("*dijkstra*")
@@ -139,7 +138,7 @@ create_lanterns(random_map)
 print("*growing trees*")
 create_trees(random_map, 30, x_offset, y_offset)
 print("*spawning pokemon*")
-all_pokemon = spawn_pokemon(random_map)
+all_pokemon = spawn_pokemons(random_map)
 print("*spawning npc*")
 spawn_npc(random_map, 1)
 print("*spawning decorations")
@@ -177,6 +176,9 @@ def prompt():
         cwd = os.getcwd()
         if save == "w":
             ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", file_name + ".png"), 0)
+
+    visual.close()
+    quit()
 
 
 t = Thread(target=prompt)

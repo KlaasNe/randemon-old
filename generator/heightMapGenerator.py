@@ -5,14 +5,14 @@ from noise import snoise2
 
 # Creates a perlin noise field to be used as height map with ints as height ranging from 0 to pmap.max_hill_height
 def create_hills(pmap, x_offset, y_offset):
-    octaves = 1
+    octaves = 2
     freq = 80
     off_x = x_offset
     off_y = y_offset
 
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
-            pmap.tile_heights[(x, y)] = abs(floor((snoise2((x // 3 + off_x) / freq, (y // 3 + off_y) / freq, octaves)) * pmap.max_hill_height))
+            pmap.tile_heights[(x, y)] = abs(floor((snoise2((x // 4 + off_x) / freq, (y // 4 + off_y) / freq, octaves)) * pmap.max_hill_height))
 
 
 # Calculates where to draw edges of hills
