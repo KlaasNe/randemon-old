@@ -1,4 +1,5 @@
-from random import random, randint
+from random import random
+from pathGenerator import get_path_type
 
 
 # Spawns pokemon on the map most in the pmap.ground_layer
@@ -14,12 +15,13 @@ pokemon_data = {
 }
 
 
+# May the odds be ever in your favour.
+def good_odds(odds):
+    return odds > random()
+
+
 def spawn_pokemons(pmap):
     SHINY_PROBABILITY = 0.001
-
-    # May the odds be ever in your favour.
-    def good_odds(odds):
-        return odds > random()
 
     def is_enough_water_space(x1, y1, x2, y2):
         for check_y in range(y1, y2 + 1):
@@ -85,13 +87,12 @@ def spawn_pokemons(pmap):
 
     def spawn_exceguttor(odds):
         exceguttor = False
-        shiny = 0
         for y in range(0, pmap.height):
             for x in range(0, pmap.width):
-                if good_odds(odds) and "p_4" in pmap.ground_layer.get((x, y), ""):
-                    if random() < SHINY_PROBABILITY: shiny = 2
-                    pmap.decoration_layer[(x, y)] = "exc_" + str(1 + shiny)
-                    pmap.decoration_layer[(x, y - 1)] = "exc_" + str(2 + shiny)
+                if good_odds(odds) and get_path_type(pmap, x, y) == 3:
+                    shiny = 2 if random() < SHINY_PROBABILITY else 0
+                    pmap.decoration_layer[(x, y)] = ("po", 6, 1 + shiny)
+                    pmap.decoration_layer[(x, y - 1)] = ("po", 6, shiny)
                 exceguttor = True
         return exceguttor
 
@@ -106,11 +107,24 @@ def spawn_pokemons(pmap):
                     togetic = True
         return togetic
 
+    def spawn_balloon():
+        balloon = False
+        for y in range(0, pmap.height):
+            for x in range(0, pmap.width):
+                if not balloon and good_odds(0.001) and (x + 1, y + 2) not in pmap.ground_layer.keys() and (x + 1, y + 2) not in pmap.buildings.keys() and (x + 1, y + 2) not in pmap.secondary_ground.keys() and y + 2 < pmap.height:
+                    for balloon_tile in range(12):
+                        if balloon_tile == 10:
+                            pmap.secondary_ground[(x + balloon_tile % 3, y + balloon_tile // 3)] = ("de", balloon_tile % 3, balloon_tile // 3)
+                        else:
+                            pmap.decoration_layer[(x + balloon_tile % 3, y + balloon_tile // 3)] = ("de", balloon_tile % 3, balloon_tile // 3)
+                    balloon = True
+
     lapras = spawn_lapras(0.001)
     gyarados = spawn_gyarados(0.0005)
     diglett = spawn_diglett(0.001)
     snorlax = spawn_snorlax(0.025)
-    # exceguttor = spawn_exceguttor(0.0025)
+    exceguttor = spawn_exceguttor(0.0025)
     togetic = spawn_togetic(0.0001)
+    spawn_balloon()
 
     return lapras and diglett and snorlax and exceguttor and gyarados and togetic

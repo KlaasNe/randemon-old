@@ -45,7 +45,7 @@ def create_rivers(pmap):
             return ("wa", 0, 0)
 
         for x, y in pmap.ground_layer.keys():
-            if "wa" in pmap.get_tile_type("ground_layer", x, y) or "b_" in pmap.ground_layer.get((x, y), ""):
+            if "wa" in pmap.get_tile_type("ground_layer", x, y) or "ro" in pmap.ground_layer.get((x, y), ""):
                 pmap.ground_layer[(x, y)] = calculate_water_sprite(x, y)
 
     for y in range(0, pmap.height):

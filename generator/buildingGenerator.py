@@ -43,7 +43,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
         reference_height = pmap.tile_heights.get((x, y), 0)
         for check_y in range(y - 2, y + house_size_y + v_spacing):
             for check_x in range(x - h_spacing, x + house_size_x + h_spacing + 1):
-                if pmap.tile_heights.get((check_x, check_y), -1) != reference_height or "wa" in pmap.get_tile_type("ground_layer", check_x, check_y) or "de" in pmap.get_tile_type("secondary_ground", check_x, check_y) or (check_x, check_y) in pmap.buildings.keys():
+                if pmap.tile_heights.get((check_x, check_y), -1) != reference_height or "wa" in pmap.get_tile_type("ground_layer", check_x, check_y) or "fe" in pmap.get_tile_type("secondary_ground", check_x, check_y) or (check_x, check_y) in pmap.buildings.keys():
                     if pmap.get_tile_type("buildings", check_x, check_y):
                         return check_x, check_y
                     else:
@@ -148,7 +148,7 @@ def create_fence(pmap, x, y, max_y, rel_fence_type, tree=False):
                     new_max_y = y - test_y - 2
                 if new_max_y <= 1: return False
 
-                if "de" == pmap.get_tile_type("secondary_ground", test_x, test_y) or "wa" == pmap.get_tile_type("ground_layer", test_x, test_y):
+                if "fe" == pmap.get_tile_type("secondary_ground", test_x, test_y) or "wa" == pmap.get_tile_type("ground_layer", test_x, test_y):
                     return False
         return new_max_y
 
@@ -168,16 +168,16 @@ def create_fence(pmap, x, y, max_y, rel_fence_type, tree=False):
     if upd_max_y:
         fence_height = pmap.tile_heights.get((x, y), -1)
         size_y = min(size_x // 2 + 1, max_y, upd_max_y)
-        try_build_fence(x, y - size_y, fence_height, ("de", 2, 0 + fence_type))
-        try_build_fence(x - size_x, y - size_y, fence_height, ("de", 0, 0 + fence_type))
+        try_build_fence(x, y - size_y, fence_height, ("fe", 2, 0 + fence_type))
+        try_build_fence(x - size_x, y - size_y, fence_height, ("fe", 0, 0 + fence_type))
         for fence_y in range(y, y - size_y, -1):
-            try_build_fence(x - size_x, fence_y, fence_height, ("de", 0, 1 + fence_type))
-            try_build_fence(x, fence_y, fence_height, ("de", 2, 1 + fence_type))
+            try_build_fence(x - size_x, fence_y, fence_height, ("fe", 0, 1 + fence_type))
+            try_build_fence(x, fence_y, fence_height, ("fe", 2, 1 + fence_type))
         for fence_x in range(x - size_x + 1, x):
             if tree and random.randint(1, 100) == 1:
                 pmap.ground_layer[(fence_x, y - size_y)] = ("na", 1, 2)
             else:
-                try_build_fence(fence_x, y - size_y, fence_height, ("de", 1, 0 + fence_type))
+                try_build_fence(fence_x, y - size_y, fence_height, ("fe", 1, 0 + fence_type))
 
 
 # Adds random points to the sides of the map to have path running to the edge of the screen
@@ -208,7 +208,7 @@ def add_random_ends(pmap, path_type):
             max_height = 0
             for y_around in range(y - 2, y + 3):
                 for x_around in range(x - 3, x + 3):
-                    if "fe_" in pmap.ground_layer.get((x_around, y_around), ""):
+                    if "fe" in pmap.get_tile_type("secondary_ground", x_around, y_around):
                         max_height = -1
                         break
                     else:

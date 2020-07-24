@@ -5,7 +5,7 @@ from noise import snoise2
 
 # Creates a perlin noise field to be used as height map with ints as height ranging from 0 to pmap.max_hill_height
 def create_hills(pmap, x_offset, y_offset):
-    octaves = 2
+    octaves = 1
     freq = 80
     off_x = x_offset
     off_y = y_offset

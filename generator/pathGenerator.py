@@ -6,6 +6,13 @@ HILL_WEIGHT = 32
 WATER_WEIGHT = 32
 
 
+def get_path_type(pmap, x, y):
+    try:
+        return pmap.get_tile("ground_layer", x, y)[2] // 3
+    except IndexError:
+        pass
+
+
 def apply_path_sprites(pmap):
     def calculate_path_sprite(x, y, path_type):
         tiles_around = []
@@ -17,8 +24,6 @@ def apply_path_sprites(pmap):
                 tiles_around.append(1)
             else:
                 tiles_around.append(0)
-            if is_actual_path(pmap, x, y) and "p_4" in str(path_around) and "h_" not in pmap.buildings.get((x, y), "") and "pc_" not in pmap.buildings.get((x, y), "") and "pm_" not in pmap.buildings.get((x, y), ""):
-                pmap.decoration_layer[(x, y)] = "tr_0"
 
         if tiles_around == [1, 1, 1, 1, 1, 1, 0, 1, 1]:
             return ("pa", 2, 2 + 3 * path_type)

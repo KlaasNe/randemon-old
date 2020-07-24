@@ -53,7 +53,7 @@ def create_rain(pmap, odds,  rain_rate):
         for y in range(pmap.height):
             for x in range(pmap.width):
                 if random.randint(0, 100) < rain_rate:
-                    if random.random() < 0.5 and "st" not in pmap.ground_layer.get((x, y), "") and "fe_" not in pmap.ground_layer.get((x, y), "") and "m_" not in pmap.ground_layer.get((x, y), ""):
+                    if random.random() < 0.5  and "fe" not in pmap.get_tile_type("secondary_ground", x, y) and "hi" not in pmap.get_tile_type("ground_layer", x, y):
                         pmap.rain[(x, y)] = "r_" + str(random.randint(3, 5))
                     else:
                         pmap.rain[(x, y)] = "r_" + str(random.randint(1, 2))
