@@ -13,14 +13,14 @@ def make_parser():
         '--w',
         dest='map_size_x',
         type=int,
-        default=60,
+        default=50,
         help='The horizontal amount of tiles the map consists of. full hd (1920x1088) -> 120x68')
 
     parser.add_argument(
         '--h',
         dest='map_size_y',
         type=int,
-        default=60,
+        default=50,
         help='The vertical amount of tiles the map consists of. full hd (1920x1088) -> 120x68')
 
     parser.add_argument(

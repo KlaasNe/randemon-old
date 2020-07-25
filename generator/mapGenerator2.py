@@ -98,6 +98,7 @@ if not args.credits_opt:
         "fe": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "fences.png"))),
         "po": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "pokemon.png"))),
         "de": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "decoration.png"))),
+        "ra": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "rain.png")))
     }
 
     # full hd -> 120,68; my phone -> 68,147
@@ -149,7 +150,7 @@ if not args.credits_opt:
     print("*growing grass*")
     grow_grass(random_map, random_map.tall_grass_coverage, x_offset, y_offset)
     print("*checking the weather forecast*")
-    create_rain(random_map, 10, random_map.rain_rate)
+    create_rain(random_map, 0.1, random_map.rain_rate)
 
     print("*rendering*")
     render2(random_map, "grass_layer", visual.drawable())
@@ -193,7 +194,8 @@ else:
         "\n"
         "C R E D I T S" + "\n\n"
         "* Map generator by Klaas" + "\n"
-        "* Javascript stuff and git assistance by Dirk" + "\n"
+        "* Javascript stuff and various assistance by Dirk" + "\n"
         "* inputs argparser by Bethune Bryant" + "\n"
-        "* Rocket balloon by Akhera" + "\n\n"
+        "* Rocket balloon by Akhera" + "\n"
+        "* Npc sprites ripped by Silentninja" + "\n\n"
         "(Cool ideas and some inspiration from nice redditors on r/pokemon)")

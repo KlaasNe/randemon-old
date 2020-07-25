@@ -49,13 +49,13 @@ def grow_grass(pmap, tall_grass_coverage, x_offset, y_offset):
 # Creates an overlay for the entire map showing rain
 # The amount of rain is given with rain_rate
 def create_rain(pmap, odds,  rain_rate):
-    if random.random() * 100 < odds:
+    if random.random() < odds:
         for y in range(pmap.height):
             for x in range(pmap.width):
-                if random.randint(0, 100) < rain_rate:
-                    if random.random() < 0.5  and "fe" not in pmap.get_tile_type("secondary_ground", x, y) and "hi" not in pmap.get_tile_type("ground_layer", x, y):
-                        pmap.rain[(x, y)] = "r_" + str(random.randint(3, 5))
+                if random.random() < rain_rate:
+                    if random.random() < 0.5 and "fe" != pmap.get_tile_type("secondary_ground", x, y) and "hi" != pmap.get_tile_type("ground_layer", x, y):
+                        pmap.rain[(x, y)] = ("ra", random.randint(0, 2), 1)
                     else:
-                        pmap.rain[(x, y)] = "r_" + str(random.randint(1, 2))
+                        pmap.rain[(x, y)] = ("ra", random.randint(1, 2), 0)
                 else:
-                    pmap.rain[(x, y)] = "r_0"
+                    pmap.rain[(x, y)] = ("ra", 0, 0)
