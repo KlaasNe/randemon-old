@@ -6,19 +6,34 @@ import random
 # No trees above the highest path height
 # Adds an overlay to decoration_layer if the top of the tree overlaps with another tree
 def create_trees(pmap, spawn_rate, x_offset, y_offset):
+
+    def mergeable(x, y):
+        if (x, y - 1) not in pmap.ground_layer.keys() and (x + 1, y - 1) not in pmap.ground_layer.keys():
+            if pmap.get_tile("ground_layer", x, y) == ("na", 2, 2) and pmap.get_tile("ground_layer", x + 1, y) == ("na", 2, 2):
+                if pmap.get_tile("secondary_ground", x, y - 1) == ("na", 2, 1) and pmap.get_tile("secondary_ground", x + 1, y - 1) == ("na", 2, 1):
+                    return True
+        return False
+
     octaves = 2
     freq = 40
-    for y in range(0, pmap.height):
-        for x in range(0, pmap.width):
+    for y in range(pmap.height):
+        for x in range(pmap.width):
             if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path:
-                if (x, y) not in pmap.ground_layer.keys() and (x, y - 1) not in pmap.ground_layer.keys() and (x, y) not in pmap.buildings.keys() and (x, y) not in pmap.decoration_layer.keys() and (x, y - 1) not in pmap.decoration_layer.keys():
+                if (x, y) not in pmap.ground_layer.keys() and (x, y) not in pmap.secondary_ground.keys() and (x, y - 1) not in pmap.secondary_ground.keys() and (x, y) not in pmap.buildings.keys() and (x, y) not in pmap.decoration_layer.keys() and (x, y - 1) not in pmap.decoration_layer.keys():
                     if snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves) + 0.5 < spawn_rate / 100 and random.random() > 0.5:
-                        pmap.ground_layer[(x, y)] = "st_0"
-                        pmap.ground_layer[(x, y - 1)] = "st_1"
-                        if (x, y - 2) not in pmap.ground_layer.keys():
-                            pmap.ground_layer[(x, y - 2)] = "st_2"
-                        else:
-                            pmap.decoration_layer[(x, y - 2)] = "st_2_d"
+                        pmap.decoration_layer[(x, y - 2)] = ("na", 2, 0)
+                        pmap.secondary_ground[(x, y - 1)] = ("na", 2, 1)
+                        pmap.ground_layer[(x, y)] = ("na", 2, 2)
+
+    for y in range(pmap.height):
+        for x in range(pmap.width):
+            if mergeable(x, y):
+                pmap.decoration_layer[(x, y - 2)] = ("na", 1, 5)
+                pmap.decoration_layer[(x + 1, y - 2)] = ("na", 2, 5)
+                pmap.secondary_ground[(x, y - 1)] = ("na", 1, 6)
+                pmap.secondary_ground[(x + 1, y - 1)] = ("na", 2, 6)
+                pmap.ground_layer[(x, y)] = ("na", 1, 7)
+                pmap.ground_layer[(x + 1, y)] = ("na", 2, 7)
 
 
 # The whole map is filled with random green tiles
@@ -30,18 +45,18 @@ def grow_grass(pmap, tall_grass_coverage, x_offset, y_offset):
         sne_probability = snoise2((gx + x_offset) / freq, (gy + y_offset) / freq, octaves) + 0.5
 
         if pmap.tile_heights.get((gx, gy), -1) <= pmap.highest_path:
-            if sne_probability > (tall_grass_coverage / 100) or "l_1" in pmap.decoration_layer.get((gx, gy), "") or "l_5" in pmap.decoration_layer.get((gx, gy), ""):
-                grass_type = random.randint(0, 3)
-                return "g_" + str(grass_type)
+            if sne_probability > (tall_grass_coverage / 100) or "l_1" in pmap.decoration_layer.get((gx, gy), "") or "l_5" in pmap.decoration_layer.get((gx, gy), "") or (x, y - 1) in pmap.buildings.keys() or (x, y) in pmap.secondary_ground.keys():
+                grass_type = random.randint(0, 7)
+                return ("na", 0, grass_type)
             else:
-                sne_type = random.randint(0, 1) * 2
+                sne_type = random.randint(0, 1)
                 # Turn 80 percent of the flowers into tall grass
-                if sne_type == 2 and random.random() < 0.8: sne_type = 0
+                if sne_type == 1 and random.random() < 0.8: return ("na", 1, 0)
                 # Turn 0.5 percent of the tall grass into tall grass with a hidden item
-                if sne_type == 0 and random.random() < 0.005: sne_type = "0_p"
-                return "sne_" + str(sne_type)
+                if sne_type == 0 and random.random() < 0.005: return ("na", 1, 4)
+                return ("na", 1, sne_type)
         else:
-            return "m_0"
+            return ("hi", 0, 0)
 
     for y in range(pmap.height):
         for x in range(pmap.width):
@@ -52,13 +67,13 @@ def grow_grass(pmap, tall_grass_coverage, x_offset, y_offset):
 # Creates an overlay for the entire map showing rain
 # The amount of rain is given with rain_rate
 def create_rain(pmap, odds,  rain_rate):
-    if random.random() * 100 < odds:
+    if random.random() < odds:
         for y in range(pmap.height):
             for x in range(pmap.width):
-                if random.randint(0, 100) < rain_rate:
-                    if random.random() < 0.5 and "st" not in pmap.ground_layer.get((x, y), "") and "fe_" not in pmap.ground_layer.get((x, y), "") and "m_" not in pmap.ground_layer.get((x, y), ""):
-                        pmap.rain[(x, y)] = "r_" + str(random.randint(3, 5))
+                if random.random() < rain_rate:
+                    if random.random() < 0.5 and "fe" != pmap.get_tile_type("secondary_ground", x, y) and "hi" != pmap.get_tile_type("ground_layer", x, y) and (x, y) not in pmap.npc_layer.keys():
+                        pmap.rain[(x, y)] = ("ra", random.randint(0, 2), 1)
                     else:
-                        pmap.rain[(x, y)] = "r_" + str(random.randint(1, 2))
+                        pmap.rain[(x, y)] = ("ra", random.randint(1, 2), 0)
                 else:
-                    pmap.rain[(x, y)] = "r_0"
+                    pmap.rain[(x, y)] = ("ra", 0, 0)

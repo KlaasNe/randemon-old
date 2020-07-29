@@ -3,6 +3,5 @@ decorator==4.4.2
 noise==1.2.2
 numpy==1.18.5
 pip==20.1.1
-pygame==1.9.6
 setuptools==47.3.0
-pillow==7.1.2
+pillow==7.2.0
