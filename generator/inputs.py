@@ -1,13 +1,12 @@
 import argparse
 import random
-import sys
+from sys import maxsize
 
 
 def make_parser():
     """Make the ArgParser object."""
     parser = argparse.ArgumentParser(
-        description=
-        'Landscape generator using the tileset of pokemon fire red')
+        description='Landscape generator using the tileset of pokemon fire red')
 
     parser.add_argument(
         '--w',
@@ -39,7 +38,7 @@ def make_parser():
         '--seed',
         dest='seed_opt',
         type=int,
-        default=random.randint(0, sys.maxsize),
+        default=random.randint(0, maxsize),
         help='The world generation seed')
 
     parser.add_argument(

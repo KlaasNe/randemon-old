@@ -1,4 +1,4 @@
-from random import random
+from random import random, randint
 from pathGenerator import get_path_type
 
 
@@ -20,13 +20,17 @@ def good_odds(odds):
     return odds > random()
 
 
+def random_bool():
+    return randint(0, 1) == 0
+
+
 def spawn_pokemons(pmap):
     SHINY_PROBABILITY = 0.001
 
     def is_enough_water_space(x1, y1, x2, y2):
         for check_y in range(y1, y2 + 1):
             for check_x in range(x1, x2 + 1):
-                if "wa" not in pmap.get_tile_type("ground_layer", check_x, check_y):
+                if "wa" not in pmap.get_tile_type("ground_layer", check_x, check_y) or "po" in pmap.get_tile_type("ground_layer", check_x, check_y):
                     return False
         return True
 
@@ -36,8 +40,9 @@ def spawn_pokemons(pmap):
             for x in range(pmap.width):
                 if good_odds(odds) and is_enough_water_space(x - 1, y - 1, x + 1, y + 2):
                     shiny = 2 if random() < SHINY_PROBABILITY else 0
-                    pmap.ground_layer[(x, y)] = ("po", 1, shiny)
-                    pmap.ground_layer[(x, y + 1)] = ("po", 1, 1 + shiny)
+                    mirror = random_bool()
+                    pmap.ground_layer[(x, y)] = ("po", 1, shiny, mirror)
+                    pmap.ground_layer[(x, y + 1)] = ("po", 1, 1 + shiny, mirror)
                 lapras = True
         return lapras
 
@@ -47,9 +52,13 @@ def spawn_pokemons(pmap):
             for x in range(0, pmap.width):
                 if good_odds(odds) and is_enough_water_space(x - 1, y - 1, x + 2, y + 2):
                     shiny = 2 if random() < SHINY_PROBABILITY else 0
-                    for gyarados_tile in range(4):
-                        pmap.decoration_layer[(x + gyarados_tile % 2, y + gyarados_tile // 2)] = (
-                        "po", 2 + gyarados_tile % 2, gyarados_tile // 2 + shiny)
+                    mirror = random_bool()
+                    if mirror:
+                        for gyarados_tile in range(4):
+                            pmap.ground_layer[(x + gyarados_tile % 2, y + gyarados_tile // 2)] = ("po", 2 + 1 - gyarados_tile % 2, gyarados_tile // 2 + shiny, mirror)
+                    else:
+                        for gyarados_tile in range(4):
+                            pmap.ground_layer[(x + gyarados_tile % 2, y + gyarados_tile // 2)] = ("po", 2 + gyarados_tile % 2, gyarados_tile // 2 + shiny)
                     gyarados = True
         return gyarados
 
@@ -59,7 +68,7 @@ def spawn_pokemons(pmap):
             for x in range(0, pmap.width):
                 if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path and (x, y) not in pmap.ground_layer.keys() and (x, y) not in pmap.buildings.keys() and good_odds(odds):
                     shiny = 2 if random() < SHINY_PROBABILITY else 0
-                    pmap.ground_layer[(x, y)] = ("po", 0, 0 + shiny)
+                    pmap.ground_layer[(x, y)] = ("po", 0, 0 + shiny, random_bool())
                     diglett = True
         return diglett
 
@@ -91,8 +100,9 @@ def spawn_pokemons(pmap):
             for x in range(0, pmap.width):
                 if good_odds(odds) and get_path_type(pmap, x, y) == 3:
                     shiny = 2 if random() < SHINY_PROBABILITY else 0
-                    pmap.decoration_layer[(x, y)] = ("po", 6, 1 + shiny)
-                    pmap.decoration_layer[(x, y - 1)] = ("po", 6, shiny)
+                    mirror = random_bool()
+                    pmap.decoration_layer[(x, y)] = ("po", 6, 1 + shiny, mirror)
+                    pmap.decoration_layer[(x, y - 1)] = ("po", 6, shiny, mirror)
                 exceguttor = True
         return exceguttor
 
@@ -102,8 +112,9 @@ def spawn_pokemons(pmap):
             for x in range(0, pmap.width):
                 if good_odds(odds):
                     shiny = 2 if random() < SHINY_PROBABILITY else 0
-                    pmap.decoration_layer[(x, y)] = ("po", 7, shiny)
-                    pmap.decoration_layer[(x, y + 1)] = ("po", 7, 1 + shiny)
+                    mirror = random_bool()
+                    pmap.decoration_layer[(x, y)] = ("po", 7, shiny, mirror)
+                    pmap.decoration_layer[(x, y + 1)] = ("po", 7, 1 + shiny, mirror)
                     togetic = True
         return togetic
 
@@ -111,7 +122,7 @@ def spawn_pokemons(pmap):
         balloon = False
         for y in range(0, pmap.height):
             for x in range(0, pmap.width):
-                if not balloon and good_odds(0.001) and (x + 1, y + 2) not in pmap.ground_layer.keys() and (x + 1, y + 2) not in pmap.buildings.keys() and (x + 1, y + 2) not in pmap.secondary_ground.keys() and y + 2 < pmap.height:
+                if not balloon and good_odds(0.001) and not pmap.out_of_bounds(x - 2, y) and (x + 1, y + 2) not in pmap.ground_layer.keys() and (x + 1, y + 2) not in pmap.buildings.keys() and (x + 1, y + 2) not in pmap.secondary_ground.keys() and y + 2 < pmap.height:
                     for balloon_tile in range(12):
                         if balloon_tile == 10:
                             pmap.secondary_ground[(x + balloon_tile % 3, y + balloon_tile // 3)] = ("de", balloon_tile % 3, balloon_tile // 3)
@@ -119,8 +130,8 @@ def spawn_pokemons(pmap):
                             pmap.decoration_layer[(x + balloon_tile % 3, y + balloon_tile // 3)] = ("de", balloon_tile % 3, balloon_tile // 3)
                     balloon = True
 
-    lapras = spawn_lapras(0.001)
-    gyarados = spawn_gyarados(0.0005)
+    lapras = spawn_lapras(0.002)
+    gyarados = spawn_gyarados(0.001)
     diglett = spawn_diglett(0.001)
     snorlax = spawn_snorlax(0.025)
     exceguttor = spawn_exceguttor(0.0025)

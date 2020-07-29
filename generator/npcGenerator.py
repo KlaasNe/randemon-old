@@ -1,14 +1,14 @@
 import random
-from pathGenerator import is_actual_path
+from pathGenerator import is_actual_path, get_path_type
 from buildingGenerator import is_inside_cluster
 
 # Lists of sprite numbers which can be spawned at certain locations
 NB_NPC = 55  # The amount of different npcs
-off_Path_Npc = [14, 15, 26, 27, 28, 29, 30, 31, 32, 36, 37, 38, 39, 49]  # Npcs to be spawned off path
-water_Npc = [28, 29, 30]  # Npcs to be spawned in water
+off_Path_Npc = [1, 17, 20, 21, 32, 33, 34, 35, 36, 37, 41, 42, 43, 44, 45]  # Npcs to be spawned off path
+water_Npc = [34, 35, 36]  # Npcs to be spawned in water
 shore_Npc = [31, 32, 37, 38]  # Npcs to be spawned on beach
-bridge_Npc = [31, 32, 36, 37, 38]  # Npcs to be spawned on a bridge
-outside_Npc = [14, 15, 26, 27, 39, 49]  # Npcs to be spawned outside on grass, not on path
+bridge_Npc = [37, 38, 42, 43, 44]  # Npcs to be spawned on a bridge
+outside_Npc = [1, 17, 20, 21, 45]  # Npcs to be spawned outside on grass, not on path
 
 
 # Spawn npc over the map
@@ -17,7 +17,7 @@ def spawn_npc(pmap, population, path_only=False):
     coord = random_npc_coordinates(pmap, population)
     for co in coord:
         x, y = co
-        if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path and (x, y) not in pmap.buildings.keys() and "m_" not in pmap.ground_layer.get((x, y), ""):
+        if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path and (x, y) not in pmap.buildings.keys() and "hi" != pmap.get_tile_type("ground_layer", x, y) and (x, y) not in pmap.secondary_ground.keys():
             if path_only:
                 if is_actual_path(pmap, x, y):
                     npc = get_path_npc()
@@ -32,14 +32,14 @@ def spawn_npc(pmap, population, path_only=False):
 # If an npc is looking to the right (direction == 2), another npc can be spawned adjacent to previous looking at them
 # as if they're talking
 def set_npc(pmap, npc, x, y):
-    direction = 1 if npc == 50 else random.randint(1, 4)  # Npcs nr 50 only has 1 direction
-    pmap.npc_layer[(x, y)] = "npc_" + str(npc) + "_" + str(direction)
-    if direction == 2 and is_actual_path(pmap, x, y):
-        if (x + 1, y) not in pmap.npc_layer.keys() and (x + 1, y) not in pmap.buildings.keys() and "m_" not in pmap.ground_layer.get((x + 1, y), "") and "st_" not in pmap.ground_layer.get((x + 1, y), "") and "fe_" not in pmap.ground_layer.get((x, y), ""):
+    direction = 0 if npc == 54 else random.randint(0, 3)  # Npcs nr 50 only has 1 direction
+    pmap.npc_layer[(x, y)] = ("np", npc % 5 * 4 + direction, npc // 5)
+    if direction == 1 and is_actual_path(pmap, x, y):
+        if (x + 1, y) not in pmap.npc_layer.keys() and (x + 1, y) not in pmap.buildings.keys() and "hi" != pmap.ground_layer.get((x + 1, y), "") and "fe" != pmap.get_tile_type("ground_layer", x + 1, y) and (x + 1, y) not in pmap.secondary_ground.keys():
             snpc = get_path_npc()
-            while snpc == 50:
+            while snpc == 54:
                 snpc = get_path_npc()
-            pmap.npc_layer[(x + 1, y)] = "npc_" + str(snpc) + "_4"
+            pmap.npc_layer[(x + 1, y)] = ("np", snpc % 5 * 4 + 3, snpc // 5)
 
 
 # Determines what kind of npc should be spawned on a certain set of coordinates
@@ -47,11 +47,11 @@ def get_npc(pmap, x, y):
     WATER_LVL = 0.2
     npc_number = None
     if not pmap.raining:
-        if random.random() < WATER_LVL and "pd_" in pmap.ground_layer.get((x, y), "") and is_inside_cluster(pmap, x, y, 20, 1):
+        if random.random() < WATER_LVL and "wa" == pmap.get_tile_type("ground_layer", x, y) and is_inside_cluster(pmap, x, y, 20, 1):
             npc_number = get_water_npc()
-        elif "b_" in pmap.ground_layer.get((x, y), ""):
+        elif "ro" in pmap.ground_layer.get((x, y), ""):
             npc_number = get_bridge_npc()
-        elif random.random() < WATER_LVL and "p_4" in pmap.ground_layer.get((x, y), "") and is_inside_cluster(pmap, x, y, 20, 1):
+        elif random.random() < WATER_LVL and 3 == get_path_type(pmap, x, y) in pmap.ground_layer.get((x, y), "") and is_inside_cluster(pmap, x, y, 20, 1):
             npc_number = get_shore_npc()
     if (x, y) not in pmap.ground_layer.keys():
         npc_number = get_outside_npc()

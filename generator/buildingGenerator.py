@@ -1,5 +1,4 @@
 import random
-from pathGenerator import is_actual_path
 
 
 # house number/name: (position of upper left corner on the tile sheet), (dimensions of the house measured in tiles), (position of the front door)
@@ -80,7 +79,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
     curr_data = house_data[house_type]
     house_size_x, house_size_y = house_data[house_type][1]
 
-    build_spot = search_available_building_spot(40, 99)
+    build_spot = search_available_building_spot(40, 20)
     if build_spot:
         house_x = build_spot[0]
         house_y = build_spot[1]

@@ -1,32 +1,33 @@
-import os
+from os import path
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 class SpriteSheetReader:
 
-    def __init__(self, image, tile_size, margin=0):
+    def __init__(self, image, margin=0):
         self.sprite_sheet = image
-        self.tileSize = tile_size
         self.margin = margin
 
-    def get_tile(self, tile_x, tile_y):
-        pos_x = (self.tileSize * tile_x) + (self.margin * (tile_x + 1))
-        pos_y = (self.tileSize * tile_y) + (self.margin * (tile_y + 1))
-        box = (pos_x, pos_y, pos_x + self.tileSize, pos_y + self.tileSize)
-        return self.sprite_sheet.crop(box)
+    def get_tile(self, tile_x, tile_y, mirror, tile_s_x=16, tile_s_y=16):
+        pos_x = (tile_s_x * tile_x) + (self.margin * (tile_x + 1))
+        pos_y = (tile_s_y * tile_y) + (self.margin * (tile_y + 1))
+        box = (pos_x, pos_y, pos_x + tile_s_x, pos_y + tile_s_y)
+        return ImageOps.mirror(self.sprite_sheet.crop(box)) if mirror else self.sprite_sheet.crop(box)
 
 
 class SpriteSheetWriter:
 
-    def __init__(self, sprite_sheet, tile_size=16):
-        self.sprite_sheet = SpriteSheetReader(sprite_sheet, tile_size)
-        self.tileSize = tile_size
-        self.margin = 1
+    def __init__(self, sprite_sheet, tile_s_x=16, tile_s_y=16):
+        self.sprite_sheet = SpriteSheetReader(sprite_sheet)
+        self.tile_s_x = tile_s_x
+        self.tile_s_y = tile_s_y
 
-    def draw_tile(self, sheet_x, sheet_y, draw_sheet, draw_x, draw_y):
-        image = self.sprite_sheet.get_tile(sheet_x, sheet_y)
-        dest_box = (draw_x, draw_y, draw_x + self.tileSize, draw_y + self.tileSize)
+    def get_tile(self, sheet_x, sheet_y, mirror=False):
+        return self.sprite_sheet.get_tile(sheet_x, sheet_y, mirror, self.tile_s_x, self.tile_s_y)
+
+    def draw_tile(self, image, draw_sheet, draw_x, draw_y):
+        dest_box = (draw_x, draw_y, draw_x + self.tile_s_x, draw_y + self.tile_s_y)
         try:
             draw_sheet.paste(image, dest_box, mask=image)
         except ValueError:
@@ -52,4 +53,4 @@ class DrawSheet:
         self.draw_sheet.close()
 
     def save(self, name):
-        self.draw_sheet.save(os.path.join("saved images", name + ".png"), "png")
+        self.draw_sheet.save(path.join("saved images", name + ".png"), "png")

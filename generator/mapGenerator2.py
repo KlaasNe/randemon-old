@@ -23,19 +23,56 @@ from waterGenerator import create_rivers, create_beach
 
 
 def render2(pmap, layer, draw_sheet):
-    for tile_x, tile_y in getattr(pmap, layer).keys():
+    def try_get_tile(curr_tile):
         try:
+            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2], curr_tile[3])
+        except IndexError:
+            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2])
+        return img
+
+    previous_tile, previous_img = None, None
+    for sw_name in sheet_writers.keys():
+        sheet_writer = sheet_writers[sw_name]
+        for tile_x, tile_y in getattr(pmap, layer).keys():
             current_tile = pmap.get_tile(layer, tile_x, tile_y)
-            sheet_writer = sheet_writers[current_tile[0]]
-            correction = 6 if "npc_" in current_tile else 0  # npc's are slightly larger than a tile
-            sheet_writer.draw_tile(current_tile[1], current_tile[2], draw_sheet, tile_x * 16, tile_y * 16)
-        except Exception:
-            pass
+            if sw_name == current_tile[0]:
+                if current_tile != previous_tile:
+                    try:
+                        tile_img = try_get_tile(current_tile)
+                        sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16)
+                        previous_tile, previous_img = pmap.get_tile(layer, tile_x, tile_y), tile_img
+                    except KeyError:
+                        pass
+                else:
+                    sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16)
+
+
+def render_npc(pmap, layer, draw_sheet):
+    def try_get_tile(curr_tile):
+        try:
+            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2], curr_tile[3])
+        except IndexError:
+            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2])
+        return img
+
+    previous_tile, previous_img = None, None
+    sheet_writer = ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "npc.png")), 20, 23)
+    for tile_x, tile_y in getattr(pmap, layer).keys():
+        current_tile = pmap.get_tile(layer, tile_x, tile_y)
+        if current_tile != previous_tile:
+            try:
+                tile_img = try_get_tile(current_tile)
+                sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
+                previous_tile, previous_img = pmap.get_tile(layer, tile_x, tile_y), tile_img
+            except KeyError:
+                pass
+        else:
+            sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
 
 
 class Map:
 
-    TILE_SIZE = 16  # Length of 1 tile in pixels
+    TILE_SIZE = 16  # Side of a tile in pixels
 
     def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate,
                  seed=random.randint(0, sys.maxsize)):
@@ -78,16 +115,17 @@ class Map:
     def get_tile_type(self, layer, x, y, default=""):
         try:
             return self.get_tile(layer, x, y, default)[0]
-        except Exception:
+        except IndexError:
             return default
 
+
+# Here starts the main program
 
 # get command line options
 parser = inputs.make_parser()
 args = parser.parse_args()
 
 if not args.credits_opt:
-    # This is the main program
     sheet_writers = {
         "pa": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "path.png"))),
         "wa": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "water.png"))),
@@ -105,7 +143,7 @@ if not args.credits_opt:
     map_size_x = args.map_size_x  # The horizontal amount of tiles the map consists of
     map_size_y = args.map_size_y  # The vertical amount of tiles the map consists of
     all_pokemon = False
-    random_map = Map(args.map_size_x, args.map_size_y, 5, 40, 20, 20, args.seed_opt)
+    random_map = Map(args.map_size_x, args.map_size_y, 5, 40, 20, 0.2, args.seed_opt)
     screen_Size_X = Map.TILE_SIZE * args.map_size_x
     screen_Size_Y = Map.TILE_SIZE * args.map_size_y
     x_offset = random.randint(0, 1000000)
@@ -132,8 +170,10 @@ if not args.credits_opt:
             spawn_house(random_map, house_type, ("pa", 0, 0))
     random.shuffle(random_map.front_doors)
     random_map.front_doors += random_map.end_points
+    ditime = time.time()
     print("*dijkstra*")
     generate_dijkstra_path(random_map, ("pa", 0, 0))
+    print("dijkstratime = " + str(time.time() - ditime) + " seconds")
     apply_path_sprites(random_map)
 
     create_hill_edges(random_map, update=True)
@@ -153,13 +193,15 @@ if not args.credits_opt:
     create_rain(random_map, 0.1, random_map.rain_rate)
 
     print("*rendering*")
+    retime = time.time()
     render2(random_map, "grass_layer", visual.drawable())
     render2(random_map, "ground_layer", visual.drawable())
     render2(random_map, "secondary_ground", visual.drawable())
     render2(random_map, "buildings", visual.drawable())
-    # render(random_map.npc_layer)
+    render_npc(random_map, "npc_layer", visual.drawable())
     render2(random_map, "decoration_layer", visual.drawable())
     render2(random_map, "rain", visual.drawable())
+    print("rendertime = " + str(time.time() - retime) + " seconds")
 
     # generate_height_map(random_map)
     # random_map.render(random_map.height_map)
