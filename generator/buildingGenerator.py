@@ -38,11 +38,11 @@ house_data = {
 def spawn_house(pmap, house_type, house_front_path_type):
 
     # checks if a chosen position has enough free space for the house + spacing, starting from the top left corner
-    def unavailable_building_spot(x, y, h_spacing, v_spacing):
-        reference_height = pmap.tile_heights.get((x, y), 0)
-        for check_y in range(y - 2, y + house_size_y + v_spacing):
-            for check_x in range(x - h_spacing, x + house_size_x + h_spacing + 1):
-                if pmap.tile_heights.get((check_x, check_y), -1) != reference_height or "wa" in pmap.get_tile_type("ground_layer", check_x, check_y) or "fe" in pmap.get_tile_type("secondary_ground", check_x, check_y) or (check_x, check_y) in pmap.buildings.keys():
+    def unavailable_building_spot(x1, y1, x2, y2):
+        reference_height = pmap.tile_heights.get((x1, y1), 0)
+        for check_y in range(y1, y2 + 1):
+            for check_x in range(x1, x2 + 1):
+                if pmap.tile_heights.get((check_x, check_y), -1) != reference_height or "wa" == pmap.get_tile_type("ground_layer", check_x, check_y) or "fe" == pmap.get_tile_type("secondary_ground", check_x, check_y) or (check_x, check_y) in pmap.buildings.keys():
                     if pmap.get_tile_type("buildings", check_x, check_y):
                         return check_x, check_y
                     else:
@@ -55,19 +55,19 @@ def spawn_house(pmap, house_type, house_front_path_type):
     # enough space available, builds the house adjacent on the right to the house previously found
     def search_available_building_spot(cluster_radius, max_attempts):
         attempts = 1
-        house_x_attempt = random.randint(1, pmap.width - house_size_x)
-        house_y_attempt = random.randint(1, pmap.height - house_size_y)
-        unavailable_spot = unavailable_building_spot(house_x_attempt, house_y_attempt, 2, 3)
-        while attempts < max_attempts and unavailable_spot or not is_inside_cluster(pmap, house_x_attempt, house_y_attempt, cluster_radius, 3):
+        try_x = random.randint(1, pmap.width - house_size_x)
+        try_y = random.randint(1, pmap.height - house_size_y)
+        unavailable_spot = unavailable_building_spot(try_x - 2, try_y - 2, try_x + house_size_x + 2, try_y + house_size_y + 2)
+        while attempts < max_attempts and unavailable_spot or not is_inside_cluster(pmap, try_x, try_y, cluster_radius, 3):
             attempts += 1
-            house_x_attempt = random.randint(1, pmap.width - house_size_x)
-            house_y_attempt = random.randint(1, pmap.height - house_size_y)
-            unavailable_spot = unavailable_building_spot(house_x_attempt, house_y_attempt, 2, 3)
+            try_x = random.randint(1, pmap.width - house_size_x)
+            try_y = random.randint(1, pmap.height - house_size_y)
+            unavailable_spot = unavailable_building_spot(try_x - 2, try_y - 2, try_x + house_size_x + 2, try_y + house_size_y + 2)
             if not isinstance(unavailable_spot, bool):
                 lower_right_of_house = find_lower_right_of_house(unavailable_spot[0], unavailable_spot[1], house_size_y)
-                house_x_attempt, house_y_attempt = lower_right_of_house
-                unavailable_spot = unavailable_building_spot(house_x_attempt, house_y_attempt, 0, 2)
-        return (house_x_attempt, house_y_attempt) if attempts <= max_attempts and not unavailable_spot and is_inside_cluster(pmap, house_x_attempt, house_y_attempt, cluster_radius, 3) else False
+                try_x, try_y = lower_right_of_house
+                unavailable_spot = unavailable_building_spot(try_x, try_y - 2, try_x + house_size_x + 2, try_y + house_size_y + 2)
+        return (try_x, try_y) if attempts <= max_attempts and not unavailable_spot and is_inside_cluster(pmap, try_x, try_y, cluster_radius, 3) else False
 
     # search for the lower right corner of a house
     def find_lower_right_of_house(x, y, size_y):
@@ -79,7 +79,8 @@ def spawn_house(pmap, house_type, house_front_path_type):
     curr_data = house_data[house_type]
     house_size_x, house_size_y = house_data[house_type][1]
 
-    build_spot = search_available_building_spot(40, 20)
+    max_attempts = house_size_x * house_size_y
+    build_spot = search_available_building_spot(40, max_attempts)
     if build_spot:
         house_x = build_spot[0]
         house_y = build_spot[1]
@@ -91,12 +92,12 @@ def spawn_house(pmap, house_type, house_front_path_type):
             for front_x in range(house_size_x):
                 if (house_x + front_x, house_y + house_size_y + front_y) not in pmap.ground_layer.keys():
                     pmap.ground_layer[(house_x + front_x, house_y + house_size_y + front_y)] = house_front_path_type
-        # if house_type != "pokecenter" and house_type != "pokemart":
-        #     if random.randint(0, 1) == 1 and not pmap.has_tile_at_position(pmap.ground_layer, house_x - 1, house_y + house_size_y - 2):
-        #         pmap.buildings[(house_x - 1, house_y + house_size_y - 1)] = "mbx_0"
-        #         pmap.buildings[(house_x - 1, house_y + house_size_y - 2)] = "mbx_1"
+        if isinstance(house_type, int):
+            if random.randint(0, 1) == 1 and not (house_x - 1, house_y + house_size_y - 2) in pmap.buildings.keys():
+                pmap.secondary_ground[(house_x - 1, house_y + house_size_y - 2)] = ("de", 7, 2)
+                pmap.secondary_ground[(house_x - 1, house_y + house_size_y - 1)] = ("de", 7, 3)
 
-            if isinstance(house_type, int) and random.randint(1, 4) == 1:
+            if random.randint(1, 4) == 1:
                 create_fence(pmap, house_x + house_size_x - 1, house_y + 1, 5, 1, True)
 
 
@@ -187,36 +188,37 @@ def add_random_ends(pmap, path_type):
         end_side = random.randint(0, 3)
         while end_side in end_sides:
             end_side = random.randint(0, 3)
-        x = 1
-        y = 1
+
+        end_x = 1
+        end_y = 1
         if end_side == 0:
-            x = random.randint(0 + pmap.width // 4, 0 + 3 * (pmap.width // 4))
+            end_x = random.randint(0 + pmap.width // 4, 0 + 3 * (pmap.width // 4))
             end_sides.append(0)
         elif end_side == 1:
-            x = pmap.width - 1
-            y = random.randint(0 + pmap.height // 4, 0 + 3 * (pmap.height // 4))
+            end_x = pmap.width - 1
+            end_y = random.randint(0 + pmap.height // 4, 0 + 3 * (pmap.height // 4))
             end_sides.append(1)
         elif end_side == 2:
-            x = random.randint(0 + pmap.width // 4, 0 + 3 * (pmap.width // 4))
-            y = pmap.height - 1
+            end_x = random.randint(0 + pmap.width // 4, 0 + 3 * (pmap.width // 4))
+            end_y = pmap.height - 1
             end_sides.append(2)
         elif end_side == 3:
-            y = random.randint(0 + pmap.height // 4, 0 + 3 * (pmap.height // 4))
+            end_y = random.randint(0 + pmap.height // 4, 0 + 3 * (pmap.height // 4))
             end_sides.append(3)
 
-            max_height = 0
-            for y_around in range(y - 2, y + 3):
-                for x_around in range(x - 3, x + 3):
-                    if "fe" in pmap.get_tile_type("secondary_ground", x_around, y_around):
-                        max_height = -1
-                        break
-                    else:
-                        max_height = max(max_height, pmap.tile_heights.get((x_around, y_around), 0))
+        max_height = 0
+        for y_around in range(end_y - 2, end_y + 3):
+            for x_around in range(end_x - 3, end_x + 3):
+                if "fe" == pmap.get_tile_type("secondary_ground", x_around, y_around):
+                    max_height = -1
+                    break
+                else:
+                    max_height = max(max_height, pmap.tile_heights.get((x_around, y_around), 0))
 
-            if max_height > 1:
-                pmap.end_points.append((x, y))
-                pmap.ground_layer[(x, y)] = path_type
-                for y_around in range(y - 2, y + 3):
-                    for x_around in range(x - 3, x + 3):
-                        if not pmap.out_of_bounds(x_around, y_around) and "wa" not in pmap.get_tile_type("ground_layer", x_around, y_around):
-                            pmap.tile_heights[(x_around, y_around)] = max_height
+        if max_height > 1:
+            pmap.end_points.append((end_x, end_y))
+            pmap.ground_layer[(end_x, end_y)] = path_type
+            for y_around in range(end_y - 2, end_y + 3):
+                for x_around in range(end_x - 3, end_x + 3):
+                    if not pmap.out_of_bounds(x_around, y_around) and "wa" != pmap.get_tile_type("ground_layer", x_around, y_around):
+                        pmap.tile_heights[(x_around, y_around)] = max_height

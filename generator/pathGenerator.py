@@ -21,8 +21,10 @@ def apply_path_sprites(pmap):
         tiles_around = []
         for around in range(0, 9):
             path_around = pmap.get_tile_type("ground_layer", x + around % 3 - 1, y + around // 3 - 1)
-            if "pa" in path_around or "ro" in path_around:
+            if "pa" == path_around or "ro" == path_around:
                 tiles_around.append(1)
+                if (x, y) not in pmap.buildings.keys() and is_actual_path(pmap, x, y) and get_path_type(pmap, x + around % 3 - 1, y + around // 3 - 1) == 3:
+                    pmap.decoration_layer[(x, y)] = ("de", 6, 3)
             else:
                 tiles_around.append(0)
 
@@ -83,14 +85,12 @@ def generate_dijkstra_path(pmap, house_path_type):
             previous_tile.append(pmap.width * [(0, 0)])
 
     def handle_current_tile():
-        current_x = current_tile[0]
-        current_y = current_tile[1]
-        visited[current_y][current_x] = True
-        for tile_around in range(4):
-            around_x = current_x - 1 + ((2 * tile_around) + 1) % 3
-            around_y = current_y - 1 + ((2 * tile_around) + 1) // 3
+        curr_x = current_tile[0]
+        curr_y = current_tile[1]
+        visited[curr_y][curr_x] = True
+        for around_x, around_y in [(curr_x, curr_y - 1), (curr_x, curr_y + 1), (curr_x - 1, curr_y), (curr_x + 1, curr_y)]:
             if not pmap.out_of_bounds(around_x, around_y):
-                new_weight = current_weight[current_y][current_x] + weight[around_y][around_x]
+                new_weight = current_weight[curr_y][curr_x] + weight[around_y][around_x]
                 if not visited[around_y][around_x] and current_weight[around_y][around_x] > new_weight:
                     current_weight[around_y][around_x] = new_weight
                     previous_tile[around_y][around_x] = current_tile
@@ -168,7 +168,12 @@ def generate_dijkstra_path(pmap, house_path_type):
 def determine_weight(pmap, x, y, avoid_hill_corners=True):
 
     def is_corner(x, y):
-        return pmap.get_tile_type("ground_layer", x, y) == "hi" and pmap.get_tile("ground_layer", x, y)[2] in [1, 3]
+        if pmap.get_tile_type("ground_layer", x, y) == "hi" and pmap.get_tile("ground_layer", x, y)[2] in [1, 3]:
+            return True
+        elif pmap.get_tile("ground_layer", x, y) == ("hi", 3, 0) and pmap.get_tile_type("ground_layer", x, y - 1) == "hi":
+            return True
+        else:
+            return False
 
     if "ho" == pmap.get_tile_type("buildings", x, y) or "ho" == pmap.get_tile_type("buildings", x - 1, y) or "ho" == pmap.get_tile_type("buildings", x, y - 1) or "ho" == pmap.get_tile_type("buildings", x - 1, y - 1):return 999999
     if "fe" == pmap.get_tile_type("secondary_ground", x, y) or "fe" == pmap.get_tile_type("secondary_ground", x - 1, y) or "fe" == pmap.get_tile_type("secondary_ground", x, y - 1): return 999999
@@ -272,14 +277,15 @@ def create_lanterns(pmap):
 
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
-            if is_actual_path(pmap, x - 1, y) and (x - 1, y) not in pmap.buildings.keys():
-                if random() < 0.08 and check_availability_zone(x, y - 2, x + 2, y + 1):
-                    pmap.secondary_ground[(x, y)] = ("de", 4, 2)
-                    pmap.decoration_layer[(x, y - 1)] = ("de", 4, 1)
-                    pmap.decoration_layer[(x, y - 2)] = ("de", 4, 0)
-                    pmap.secondary_ground[(x + 1, y)] = ("de", 5, 2)
-            if is_actual_path(pmap, x + 1, y) and (x + 1, y) not in pmap.buildings.keys():
-                if random() < 0.08 and check_availability_zone(x, y - 2, x, y + 1):
-                    pmap.secondary_ground[(x, y)] = ("de", 3, 2)
-                    pmap.decoration_layer[(x, y - 1)] = ("de", 3, 1)
-                    pmap.decoration_layer[(x, y - 2)] = ("de", 3, 0)
+            if pmap.get_tile_type("secondary_ground", x, y) != "fe":
+                if is_actual_path(pmap, x - 1, y) and (x - 1, y) not in pmap.buildings.keys() and (x - 1, y) not in pmap.secondary_ground.keys():
+                    if random() < 0.08 and check_availability_zone(x, y - 2, x + 2, y + 1):
+                        pmap.secondary_ground[(x, y)] = ("de", 4, 2)
+                        pmap.decoration_layer[(x, y - 1)] = ("de", 4, 1)
+                        pmap.decoration_layer[(x, y - 2)] = ("de", 4, 0)
+                        pmap.secondary_ground[(x + 1, y)] = ("de", 5, 2)
+                if is_actual_path(pmap, x + 1, y) and (x + 1, y) not in pmap.buildings.keys() and (x + 1, y) not in pmap.secondary_ground.keys():
+                    if random() < 0.08 and check_availability_zone(x, y - 2, x, y + 1):
+                        pmap.secondary_ground[(x, y)] = ("de", 3, 2)
+                        pmap.decoration_layer[(x, y - 1)] = ("de", 3, 1)
+                        pmap.decoration_layer[(x, y - 2)] = ("de", 3, 0)

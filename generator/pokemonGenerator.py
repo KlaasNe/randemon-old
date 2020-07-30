@@ -118,24 +118,11 @@ def spawn_pokemons(pmap):
                     togetic = True
         return togetic
 
-    def spawn_balloon():
-        balloon = False
-        for y in range(0, pmap.height):
-            for x in range(0, pmap.width):
-                if not balloon and good_odds(0.001) and not pmap.out_of_bounds(x - 2, y) and (x + 1, y + 2) not in pmap.ground_layer.keys() and (x + 1, y + 2) not in pmap.buildings.keys() and (x + 1, y + 2) not in pmap.secondary_ground.keys() and y + 2 < pmap.height:
-                    for balloon_tile in range(12):
-                        if balloon_tile == 10:
-                            pmap.secondary_ground[(x + balloon_tile % 3, y + balloon_tile // 3)] = ("de", balloon_tile % 3, balloon_tile // 3)
-                        else:
-                            pmap.decoration_layer[(x + balloon_tile % 3, y + balloon_tile // 3)] = ("de", balloon_tile % 3, balloon_tile // 3)
-                    balloon = True
-
     lapras = spawn_lapras(0.002)
     gyarados = spawn_gyarados(0.001)
-    diglett = spawn_diglett(0.001)
+    diglett = spawn_diglett(0.0005)
     snorlax = spawn_snorlax(0.025)
     exceguttor = spawn_exceguttor(0.0025)
     togetic = spawn_togetic(0.0001)
-    spawn_balloon()
 
     return lapras and diglett and snorlax and exceguttor and gyarados and togetic
