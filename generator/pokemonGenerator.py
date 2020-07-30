@@ -118,7 +118,7 @@ def spawn_pokemons(pmap):
                     togetic = True
         return togetic
 
-    lapras = spawn_lapras(0.002)
+    lapras = spawn_lapras(0.001)
     gyarados = spawn_gyarados(0.001)
     diglett = spawn_diglett(0.0005)
     snorlax = spawn_snorlax(0.025)

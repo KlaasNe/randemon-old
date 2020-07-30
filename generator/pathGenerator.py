@@ -1,8 +1,8 @@
 from sys import maxsize
 
 PATH_WEIGHT = 1
-GRASS_WEIGHT = 4
-HILL_WEIGHT = 16
+GRASS_WEIGHT = 8
+HILL_WEIGHT = 32
 WATER_WEIGHT = 32
 
 
@@ -187,7 +187,7 @@ def determine_weight(pmap, x, y, avoid_hill_corners=True):
     if pmap.get_tile_type("ground_layer", x - 1, y) == "hi" or pmap.get_tile_type("ground_layer", x, y - 1) == "hi" or pmap.get_tile_type("ground_layer", x - 1, y - 1) == "hi": return HILL_WEIGHT
     if pmap.get_tile_type("ground_layer", x, y) == "wa" or pmap.get_tile_type("ground_layer", x - 1, y) == "wa" or pmap.get_tile_type("ground_layer", x, y - 1) == "wa" or pmap.get_tile_type("ground_layer", x - 1, y - 1) == "wa": return WATER_WEIGHT
     if is_actual_path(pmap, x, y) and is_actual_path(pmap, x - 1, y) and is_actual_path(pmap, x, y - 1) and is_actual_path(pmap, x - 1, y - 1): return PATH_WEIGHT
-    if pmap.get_tile_type("ground_layer", x, y) == "" or pmap.get_tile_type("ground_layer", x - 1, y) == "" or pmap.get_tile_type("ground_layer", x, y - 1) == "": return GRASS_WEIGHT
+    if pmap.get_tile_type("ground_layer", x, y) == "" or pmap.get_tile_type("ground_layer", x - 1, y) == "" or pmap.get_tile_type("ground_layer", x, y - 1) == "" or get_path_type(pmap, x, y) == 3: return GRASS_WEIGHT
     return 999999
 
 

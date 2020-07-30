@@ -160,7 +160,7 @@ if not args.credits_opt:
     create_beach(random_map, x_offset, y_offset)
     add_random_ends(random_map, ("pa", 0, 0))
     create_hill_edges(random_map)
-    print("*builing houses*")
+    house = time.time()
     spawn_house(random_map, "pokecenter", ("pa", 0, 0))
     spawn_house(random_map, "pokemart", ("pa", 0, 0))
     spawn_house(random_map, "gym", ("pa", 0, 0))
@@ -170,31 +170,21 @@ if not args.credits_opt:
             spawn_house(random_map, house_type, ("pa", 0, 0))
     random.shuffle(random_map.front_doors)
     random_map.front_doors += random_map.end_points
-    ditime = time.time()
-    print("*dijkstra*")
     generate_dijkstra_path(random_map, ("pa", 0, 0))
     apply_path_sprites(random_map)
-    print("dijkstratime = " + str(time.time() - ditime) + " seconds")
 
     create_hill_edges(random_map, update=True)
-    print("*growing trees*")
     create_trees(random_map, 30, x_offset, y_offset)
-    print("*spawning pokemon*")
     all_pokemon = spawn_pokemons(random_map)
-    print("*spawning npc*")
     spawn_npc(random_map, 1)
-    print("*spawning decorations")
     create_lanterns(random_map)
     spawn_truck(random_map, 0.05)
     spawn_rocks(random_map, 0.01)
     spawn_balloon(random_map)
-    print("*growing grass*")
     grow_grass(random_map, random_map.tall_grass_coverage, x_offset, y_offset)
-    print("*checking the weather forecast*")
     create_rain(random_map, 0.1, random_map.rain_rate)
 
     print("*rendering*")
-    retime = time.time()
     render2(random_map, "grass_layer", visual.drawable())
     render2(random_map, "ground_layer", visual.drawable())
     render2(random_map, "secondary_ground", visual.drawable())
@@ -202,15 +192,11 @@ if not args.credits_opt:
     render_npc(random_map, "npc_layer", visual.drawable())
     render2(random_map, "decoration_layer", visual.drawable())
     render2(random_map, "rain", visual.drawable())
-    print("rendertime = " + str(time.time() - retime) + " seconds")
 
     # generate_height_map(random_map)
     # random_map.render(random_map.height_map)
     print("time = " + str(time.time() - to_time) + " seconds")
     print("Seed: " + str(random_map.seed))
-
-    if not args.headless_opt: visual.show()
-
 
     def prompt():
         save = "y" if args.save_opt else input("Save this image? (y/n/w): ")
@@ -226,11 +212,18 @@ if not args.credits_opt:
         visual.close()
         quit()
 
+    def image_thread():
+        if not args.headless_opt:
+            visual.show()
 
     t = Thread(target=prompt)
     t.daemon = True
+    img_t = Thread(target=image_thread)
+    img_t.daemon = True
     t.start()
+    img_t.start()
     t.join()
+    img_t.join()
 
 else:
     print(
