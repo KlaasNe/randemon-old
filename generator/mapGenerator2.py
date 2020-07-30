@@ -12,7 +12,7 @@ import inputs
 import spriteSheetManager as ssm
 # from worldMap import image_grayscale_to_dict
 from buildingGenerator import spawn_house, add_random_ends
-from decorationGenerator import spawn_truck, spawn_rocks
+from decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
 # from worldMap import image_grayscale_to_dict
 from heightMapGenerator import create_hills, create_hill_edges
 from npcGenerator import spawn_npc
@@ -173,11 +173,10 @@ if not args.credits_opt:
     ditime = time.time()
     print("*dijkstra*")
     generate_dijkstra_path(random_map, ("pa", 0, 0))
-    print("dijkstratime = " + str(time.time() - ditime) + " seconds")
     apply_path_sprites(random_map)
+    print("dijkstratime = " + str(time.time() - ditime) + " seconds")
 
     create_hill_edges(random_map, update=True)
-    create_lanterns(random_map)
     print("*growing trees*")
     create_trees(random_map, 30, x_offset, y_offset)
     print("*spawning pokemon*")
@@ -185,8 +184,10 @@ if not args.credits_opt:
     print("*spawning npc*")
     spawn_npc(random_map, 1)
     print("*spawning decorations")
+    create_lanterns(random_map)
     spawn_truck(random_map, 0.05)
     spawn_rocks(random_map, 0.01)
+    spawn_balloon(random_map)
     print("*growing grass*")
     grow_grass(random_map, random_map.tall_grass_coverage, x_offset, y_offset)
     print("*checking the weather forecast*")
