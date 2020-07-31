@@ -42,7 +42,7 @@ def make_parser():
         help='The world generation seed')
 
     parser.add_argument(
-        '--c',
+        '-c',
         dest='credits_opt',
         action='store_true',
         help='Show credits')
