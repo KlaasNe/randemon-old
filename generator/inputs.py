@@ -47,4 +47,18 @@ def make_parser():
         action='store_true',
         help='Show credits')
 
+    parser.add_argument(
+        '--splith',
+        dest='x_split',
+        type=int,
+        default=1,
+        help='Split the result horizontally')
+
+    parser.add_argument(
+        '--splitv',
+        dest='y_split',
+        type=int,
+        default=1,
+        help='Split the result vertically')
+
     return parser

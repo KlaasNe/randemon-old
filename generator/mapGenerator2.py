@@ -140,14 +140,17 @@ if not args.credits_opt:
     }
 
     # full hd -> 120,68; my phone -> 68,147
-    map_size_x = args.map_size_x  # The horizontal amount of tiles the map consists of
-    map_size_y = args.map_size_y  # The vertical amount of tiles the map consists of
+    x_maps = args.x_split
+    y_maps = args.y_split
+    map_size_x = args.map_size_x * x_maps  # The horizontal amount of tiles the map consists of
+    map_size_y = args.map_size_y * y_maps  # The vertical amount of tiles the map consists of
     all_pokemon = False
-    random_map = Map(args.map_size_x, args.map_size_y, 5, 40, 20, 0.2, args.seed_opt)
-    screen_Size_X = Map.TILE_SIZE * args.map_size_x
-    screen_Size_Y = Map.TILE_SIZE * args.map_size_y
+    screen_Size_X = Map.TILE_SIZE * map_size_x
+    screen_Size_Y = Map.TILE_SIZE * map_size_y
     x_offset = random.randint(0, 1000000)
     y_offset = random.randint(0, 1000000)
+
+    random_map = Map(map_size_x, map_size_y, 5, 30, 10, 0.2, args.seed_opt)
 
     if args.headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -199,14 +202,20 @@ if not args.credits_opt:
     print("Seed: " + str(random_map.seed))
 
     def prompt():
-        save = "y" if args.save_opt else input("Save this image? (y/n/w): ")
+        if args.save_opt:
+            save = "y"
+        else:
+            save = input("Save this image? (y/n/w): ")
         file_name = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
         if save == "y" or save == "w":
             if not os.path.isdir("saved images"):
                 os.mkdir("saved images")
-            visual.save(file_name)
-            cwd = os.getcwd()
+            if x_maps * y_maps == 1:
+                visual.save(file_name)
+            else:
+                visual.save_split(file_name, x_maps, y_maps)
             if save == "w":
+                cwd = os.getcwd()
                 ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", file_name + ".png"), 0)
 
         visual.close()
