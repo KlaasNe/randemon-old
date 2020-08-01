@@ -54,3 +54,10 @@ class DrawSheet:
 
     def save(self, name):
         self.draw_sheet.save(path.join("saved images", name + ".png"), "png")
+
+    def save_split(self, name, x_split, y_split):
+        size_x, size_y = self.sheet_size_x // x_split, self.sheet_size_y // y_split
+        for y in range(y_split):
+            for x in range(x_split):
+                box = (x * size_x, y * size_y, (x + 1) * size_x, (y + 1) * size_y)
+                self.draw_sheet.crop(box).save(path.join("saved images", name + str((x, y)) + ".png"), "png")
