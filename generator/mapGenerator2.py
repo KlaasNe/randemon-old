@@ -175,7 +175,7 @@ if not args.credits_opt:
     x_offset = random.randint(0, 1000000)
     y_offset = random.randint(0, 1000000)
 
-    random_map = Map(map_size_x, map_size_y, 5, 30, 10, 0.2, args.seed_opt)
+    random_map = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2, args.seed_opt)
 
     if args.headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 

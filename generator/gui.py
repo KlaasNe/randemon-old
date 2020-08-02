@@ -18,12 +18,23 @@ from functools import partial
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(255, 250)
+        Dialog.resize(380, 320)
         self.pushButton_generate = QtWidgets.QPushButton(Dialog)
-        self.pushButton_generate.setGeometry(QtCore.QRect(70, 180, 121, 23))
+        self.pushButton_generate.setGeometry(QtCore.QRect(130, 280, 121, 23))
         self.pushButton_generate.setObjectName("pushButton_generate")
-        self.formLayoutWidget = QtWidgets.QWidget(Dialog)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(60, 50, 141, 128))
+        self.label_title = QtWidgets.QLabel(Dialog)
+        self.label_title.setGeometry(QtCore.QRect(100, 10, 181, 21))
+        self.label_title.setTextFormat(QtCore.Qt.AutoText)
+        self.label_title.setScaledContents(False)
+        self.label_title.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_title.setObjectName("label_title")
+        self.Tabs = QtWidgets.QTabWidget(Dialog)
+        self.Tabs.setGeometry(QtCore.QRect(20, 40, 341, 231))
+        self.Tabs.setObjectName("Tabs")
+        self.settingsTab = QtWidgets.QWidget()
+        self.settingsTab.setObjectName("settingsTab")
+        self.formLayoutWidget = QtWidgets.QWidget(self.settingsTab)
+        self.formLayoutWidget.setGeometry(QtCore.QRect(100, 40, 141, 131))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
         self.formLayout.setContentsMargins(0, 0, 0, 0)
@@ -46,58 +57,82 @@ class Ui_Dialog(object):
         self.lineEdit_seed = QtWidgets.QLineEdit(self.formLayoutWidget)
         self.lineEdit_seed.setObjectName("lineEdit_seed")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.lineEdit_seed)
-        self.checkBox_headless = QtWidgets.QCheckBox(self.formLayoutWidget)
-        self.checkBox_headless.setChecked(True)
-        self.checkBox_headless.setObjectName("checkBox_headless")
-        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.checkBox_headless)
         self.checkBox_save = QtWidgets.QCheckBox(self.formLayoutWidget)
         self.checkBox_save.setObjectName("checkBox_save")
-        self.checkBox_save.setChecked(True)
-        self.checkBox_save.setDisabled(True)
-        self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.checkBox_save)
-        self.label_title = QtWidgets.QLabel(Dialog)
-        self.label_title.setGeometry(QtCore.QRect(40, 10, 181, 21))
-        self.label_title.setTextFormat(QtCore.Qt.AutoText)
-        self.label_title.setScaledContents(False)
-        self.label_title.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_title.setObjectName("label_title")
-
-        self.label_done = QtWidgets.QLabel(Dialog)
-        self.label_done.setGeometry(QtCore.QRect(40, 210, 181, 21))
-        self.label_done.setTextFormat(QtCore.Qt.AutoText)
-        self.label_done.setScaledContents(False)
-        self.label_done.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_done.setObjectName("label_done")
-        self.label_done.setVisible(False)
-
-        self.label_generating = QtWidgets.QLabel(Dialog)
-        self.label_generating.setGeometry(QtCore.QRect(40, 210, 181, 21))
-        self.label_generating.setTextFormat(QtCore.Qt.AutoText)
-        self.label_generating.setScaledContents(False)
-        self.label_generating.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_generating.setObjectName("label_generating")
-        self.label_generating.setVisible(False)
+        self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.checkBox_save)
+        self.checkBox_headless = QtWidgets.QCheckBox(self.formLayoutWidget)
+        self.checkBox_headless.setChecked(False)
+        self.checkBox_headless.setObjectName("checkBox_headless")
+        self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.checkBox_headless)
+        self.Tabs.addTab(self.settingsTab, "")
+        self.advancedTab = QtWidgets.QWidget()
+        self.advancedTab.setObjectName("advancedTab")
+        self.label_3 = QtWidgets.QLabel(self.advancedTab)
+        self.label_3.setGeometry(QtCore.QRect(10, 70, 91, 21))
+        self.label_3.setObjectName("label_3")
+        self.label_2 = QtWidgets.QLabel(self.advancedTab)
+        self.label_2.setGeometry(QtCore.QRect(10, 40, 101, 20))
+        self.label_2.setObjectName("label_2")
+        self.label = QtWidgets.QLabel(self.advancedTab)
+        self.label.setGeometry(QtCore.QRect(10, 10, 91, 21))
+        self.label.setObjectName("label")
+        self.spinBox_maxHillHeight = QtWidgets.QSpinBox(self.advancedTab)
+        self.spinBox_maxHillHeight.setGeometry(QtCore.QRect(280, 10, 42, 22))
+        self.spinBox_maxHillHeight.setMaximum(100)
+        self.spinBox_maxHillHeight.setProperty("value", 5)
+        self.spinBox_maxHillHeight.setObjectName("spinBox_maxHillHeight")
+        self.spinBox_tallGrass = QtWidgets.QSpinBox(self.advancedTab)
+        self.spinBox_tallGrass.setGeometry(QtCore.QRect(280, 40, 42, 22))
+        self.spinBox_tallGrass.setProperty("value", 30)
+        self.spinBox_tallGrass.setObjectName("spinBox_tallGrass")
+        self.horizontalSlider_tallGrassCoverage = QtWidgets.QSlider(self.advancedTab)
+        self.horizontalSlider_tallGrassCoverage.setGeometry(QtCore.QRect(130, 40, 141, 22))
+        self.horizontalSlider_tallGrassCoverage.setMaximum(100)
+        self.horizontalSlider_tallGrassCoverage.setSliderPosition(30)
+        self.horizontalSlider_tallGrassCoverage.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider_tallGrassCoverage.setObjectName("horizontalSlider_tallGrassCoverage")
+        self.label_4 = QtWidgets.QLabel(self.advancedTab)
+        self.label_4.setGeometry(QtCore.QRect(120, 140, 101, 16))
+        self.label_4.setObjectName("label_4")
+        self.horizontalSlider = QtWidgets.QSlider(self.advancedTab)
+        self.horizontalSlider.setGeometry(QtCore.QRect(130, 70, 141, 22))
+        self.horizontalSlider.setMaximum(100)
+        self.horizontalSlider.setSliderPosition(10)
+        self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
+        self.horizontalSlider.setObjectName("horizontalSlider")
+        self.spinBox_trees = QtWidgets.QSpinBox(self.advancedTab)
+        self.spinBox_trees.setGeometry(QtCore.QRect(280, 70, 42, 22))
+        self.spinBox_trees.setProperty("value", 10)
+        self.spinBox_trees.setObjectName("spinBox_trees")
+        self.Tabs.addTab(self.advancedTab, "")
 
         self.retranslateUi(Dialog)
-
+        self.Tabs.setCurrentIndex(0)
+        self.horizontalSlider.valueChanged['int'].connect(self.spinBox_trees.setValue)
+        self.spinBox_trees.valueChanged['int'].connect(self.horizontalSlider.setValue)
+        self.horizontalSlider_tallGrassCoverage.valueChanged['int'].connect(self.spinBox_tallGrass.setValue)
+        self.spinBox_tallGrass.valueChanged['int'].connect(self.horizontalSlider_tallGrassCoverage.setValue)
         self.pushButton_generate.clicked.connect(self.generate_clicked)
-
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Randemon Generator"))
+        Dialog.setWindowTitle(_translate("Dialog", "Randémon"))
         self.pushButton_generate.setText(_translate("Dialog", "Generate"))
+        self.label_title.setText(_translate("Dialog", "Randemon Generator"))
         self.label_width.setText(_translate("Dialog", "width"))
         self.lineEdit_width.setText(_translate("Dialog", "50"))
         self.label_height.setText(_translate("Dialog", "height"))
         self.lineEdit_height.setText(_translate("Dialog", "50"))
         self.label_seed.setText(_translate("Dialog", "seed"))
-        self.checkBox_headless.setText(_translate("Dialog", "headless"))
         self.checkBox_save.setText(_translate("Dialog", "save"))
-        self.label_title.setText(_translate("Dialog", "Randemon Generator"))
-        self.label_done.setText(_translate("Dialog", "Render complete"))
-        self.label_generating.setText(_translate("Dialog", "Generating..."))
+        self.checkBox_headless.setText(_translate("Dialog", "headless"))
+        self.Tabs.setTabText(self.Tabs.indexOf(self.settingsTab), _translate("Dialog", "Settings"))
+        self.label_3.setText(_translate("Dialog", "Tree coverage"))
+        self.label_2.setText(_translate("Dialog", "Tall grass coverage"))
+        self.label.setText(_translate("Dialog", "Maximal hill height"))
+        self.label_4.setText(_translate("Dialog", "More comming soon!"))
+        self.Tabs.setTabText(self.Tabs.indexOf(self.advancedTab), _translate("Dialog", "Advanced"))
 
     def generate_clicked(self):
         comm_str = "python mapGenerator2.py "
@@ -116,7 +151,25 @@ class Ui_Dialog(object):
             val = str(int(self.lineEdit_seed.text()))
             comm_str += '--seed ' + val + " "
         except Exception:
-            print('no seed')
+            pass
+
+        try:
+            val = str(self.spinBox_maxHillHeight.value())
+            comm_str += '--maxheight ' + val + " "
+        except Exception:
+            pass
+
+        try:
+            val = str(self.spinBox_tallGrass.value())
+            comm_str += '--grass ' + val + " "
+        except Exception:
+            comm_str += '--grass ' + "0" + " "
+
+        try:
+            val = str(self.spinBox_trees.value())
+            comm_str += '--trees ' + val + " "
+        except Exception:
+            comm_str += '--trees ' + "0" + " "
 
         if self.checkBox_headless.isChecked():
             comm_str += "--headless "
@@ -130,13 +183,11 @@ class Ui_Dialog(object):
         return
 
     def runCommand(self, command):
-        self.label_done.setVisible(False)
-        self.label_generating.setVisible(True)
+        # self.label_done.setVisible(False)
+        # self.label_generating.setVisible(True)
         os.system(command)
-        self.label_generating.setVisible(False)
-        self.label_done.setVisible(True)
-
-
+        # self.label_generating.setVisible(False)
+        # self.label_done.setVisible(True)
 
 
 class MainWindow(QMainWindow):
@@ -144,6 +195,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
