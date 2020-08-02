@@ -91,5 +91,3 @@ def generate_height_map(pmap):
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             pmap.height_map[(x, y)] = "height_" + str(pmap.tile_heights[(x, y)])
-
-# tile_Heights = [] image_grayscale_to_dict("world_height_map_downscaled2.jpg")
