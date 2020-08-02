@@ -61,4 +61,11 @@ def make_parser():
         default=1,
         help='Split the result vertically')
 
+    parser.add_argument(
+        '--export',
+        dest='export_opt',
+        action='store_true',
+        help='Export the map as a json file'
+    )
+
     return parser
