@@ -225,21 +225,24 @@ if not args.credits_opt:
         if args.save_opt:
             save = "y"
         else:
-            save = input("Save this image? (y/n/w): ")
+            save = "n"
+        #else:
+        #    save = input("Save this image? (y/n/w): ")
         file_name = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
         if args.export_opt:
             json_string = random_map.toJSON()
             file = open(path.join("saved images", file_name + ".json"), "w")
             file.write(json_string)
             file.close()
-        if save == "y" or save == "w":
+        if save == "y" or save == "w" or args.save_bg:
             if not os.path.isdir("saved images"):
                 os.mkdir("saved images")
             if x_maps * y_maps == 1:
                 visual.save(file_name)
             else:
                 visual.save_split(file_name, x_maps, y_maps)
-            if save == "w":
+
+            if args.save_bg:
                 cwd = os.getcwd()
                 ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", file_name + ".png"),
                                                            0)

@@ -2,6 +2,15 @@ import argparse
 import random
 from sys import maxsize
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def make_parser():
     """Make the ArgParser object."""
@@ -28,11 +37,22 @@ def make_parser():
         action='store_true',
         help='Run in headless mode.')
 
+    # argument https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
     parser.add_argument(
         '--save',
         dest='save_opt',
-        action='store_true',
+        type=str2bool,
+        nargs='?',
+        const=True,
+        default=False,
+        #action='store_true',
         help='Save generated image.')
+
+    parser.add_argument(
+        '--save_bg',
+        dest='save_bg',
+        action='store_true',
+        help='Set image as windows background.')
 
     parser.add_argument(
         '--seed',
