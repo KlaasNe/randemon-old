@@ -1,6 +1,7 @@
 import React from 'react'
 import * as PIXI from 'pixi.js'
 import io from 'socket.io-client'
+import map from './map.json'
 
 
 class Game extends React.Component {
@@ -10,7 +11,7 @@ class Game extends React.Component {
         this.pixi_cnt = null
         this.app = new PIXI.Application({backgroundColor: 0xaaaaaa})
         window.app = this.app
-        this.scale = 2
+        this.scale = 1.5
         this.players = new Map()
     }
 
@@ -90,6 +91,7 @@ class Game extends React.Component {
             this.addPlayer(player)
         }.bind(this))
     }
+
     addPlayer = player => {
         let sprite = this.createPlayerSprite(player)
         console.log('adding player', player)
@@ -97,6 +99,7 @@ class Game extends React.Component {
         this.world.addChild(sprite)
         this.players.set(player.id, sprite)
     }
+
     removePlayer = id => {
         let sprite = this.players.get(id)
         console.log('removing player', id)
@@ -195,11 +198,31 @@ class Game extends React.Component {
         this.image.width *= this.scale
         this.image.height *= this.scale
         this.app.stage.addChild(this.world)
-        this.world.addChild(this.image)
+        //this.world.addChild(this.image)
+        let renderLayers = ['grass_layer','ground_layer','secondary_ground','buildings','npc_layer','decoration_layer','rain']
+        for(let layer of renderLayers) {
+            console.log(layer)
+            for(let x of Object.keys(map[layer])) {
+                for(let y of Object.keys(map[layer][x])) {
+                    let l = map[layer][x][y]
+                    let tilename = l[0]
+                    let tilex = l[1]
+                    let tiley = l[2]
+
+                    let tile = new PIXI.Sprite.from(this.tileSheet[tilename][tilex][tiley])
+                    tile.width *= this.scale
+                    tile.height *= this.scale
+                    tile.position.x = x*16 * this.scale
+                    tile.position.y = y*16 * this.scale
+                    this.world.addChild(tile)
+                }
+            }
+        }
+
     }
     doneLoading = e => {
-        this.loadBackground2()
         this.createPlayerSheet()
+        this.loadBackground2()
         this.createPlayer()
 
         let dir = {
@@ -342,17 +365,23 @@ class Game extends React.Component {
             return new PIXI.Rectangle(x * w, y * h, w, h)
         }
 
-        let nameList = ['pa', 'wa', 'na', 'hi', 'ro', 'ho', 'fe', 'po', 'de', 'ra']
+        let nameList = ['pa', 'wa', 'na', 'hi', 'ro', 'ho', 'fe', 'po', 'de', 'ra', 'np']
 
         this.tileSheet = {}
         for(let name of nameList) {
             let sh = new PIXI.BaseTexture.from(this.app.loader.resources[name].url)
             // [x][y]
             this.tileSheet[name] = {}
-            for(let x = 0; x < sh.width/16; x++) {
+            let tileW = 16
+            let tileH = 16
+            if(name === 'np') {
+                tileW = 20
+                tileH = 23
+            }
+            for(let x = 0; x < sh.width/tileW; x++) {
                 this.tileSheet[name][x] = {}
-                for(let y = 0; y < sh.height/16; y++) {
-                    this.tileSheet[name][x][y] = new PIXI.Texture(sh,cutOut(x,y,16,16))
+                for(let y = 0; y < sh.height/tileH; y++) {
+                    this.tileSheet[name][x][y] = new PIXI.Texture(sh,cutOut(x,y,tileW,tileH))
                 }
             }
         }
@@ -374,6 +403,7 @@ class Game extends React.Component {
         app.loader.add('po', 'assets/tiles/pokemon.png')
         app.loader.add('de', 'assets/tiles/decoration.png')
         app.loader.add('ra', 'assets/tiles/rain.png')
+        app.loader.add('np', 'assets/tiles/npc.png')
 
         app.loader.load(this.doneLoading)
 
