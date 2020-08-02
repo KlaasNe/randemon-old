@@ -12,10 +12,8 @@ from PIL import Image
 
 import utilities.inputs as inputs
 import utilities.spriteSheetManager as ssm
-# from worldMap import image_grayscale_to_dict
 from generators.buildingGenerator import spawn_house, add_random_ends
 from generators.decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
-# from worldMap import image_grayscale_to_dict
 from generators.heightMapGenerator import create_hills, create_hill_edges
 from generators.npcGenerator import spawn_npc
 from generators.pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
@@ -173,12 +171,10 @@ if not args.credits_opt:
         "ra": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "rain.png")))
     }
 
-    # full hd -> 120,68; my phone -> 68,147
     x_maps = args.x_split
     y_maps = args.y_split
-    map_size_x = args.map_size_x * x_maps  # The horizontal amount of tiles the map consists of
-    map_size_y = args.map_size_y * y_maps  # The vertical amount of tiles the map consists of
-    all_pokemon = False
+    map_size_x = args.map_size_x * x_maps
+    map_size_y = args.map_size_y * y_maps
     screen_Size_X = Map.TILE_SIZE * map_size_x
     screen_Size_Y = Map.TILE_SIZE * map_size_y
     x_offset = random.randint(0, 1000000)
@@ -229,9 +225,6 @@ if not args.credits_opt:
     render_npc(random_map, "npc_layer", visual.drawable())
     render2(random_map, "decoration_layer", visual.drawable())
     render2(random_map, "rain", visual.drawable())
-
-    # generate_height_map(random_map)
-    # random_map.render(random_map.height_map)
     print("time = " + str(time.time() - to_time) + " seconds")
     print("Seed: " + str(random_map.seed))
 
