@@ -20,7 +20,7 @@ def create_trees(pmap, spawn_rate, x_offset, y_offset):
         for x in range(pmap.width):
             if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path:
                 if (x, y) not in pmap.ground_layer.keys() and (x, y) not in pmap.secondary_ground.keys() and (x, y - 1) not in pmap.secondary_ground.keys() and (x, y) not in pmap.buildings.keys() and (x, y) not in pmap.decoration_layer.keys() and (x, y - 1) not in pmap.decoration_layer.keys():
-                    if abs(snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves)) > spawn_rate / 100 and random.random() > 0.5:
+                    if abs(snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves)) > 1 - (spawn_rate / 100) and random.random() > 0.5:
                         pmap.decoration_layer[(x, y - 2)] = ("na", 2, 0)
                         pmap.secondary_ground[(x, y - 1)] = ("na", 2, 1)
                         pmap.ground_layer[(x, y)] = ("na", 2, 2)
@@ -42,7 +42,7 @@ def grow_grass(pmap, tall_grass_coverage, x_offset, y_offset):
     def random_grass(gx, gy):
         octaves = 2
         freq = 20
-        sne_probability = abs(snoise2((gx + x_offset) / freq, (gy + y_offset) / freq, octaves)) * 2
+        sne_probability = abs(snoise2((gx + x_offset) / freq, (gy + y_offset) / freq, octaves))
         if pmap.tile_heights.get((gx, gy), -1) <= pmap.highest_path:
             if sne_probability < 1 - (tall_grass_coverage / 100) or "l_1" in pmap.decoration_layer.get((gx, gy), "") or "l_5" in pmap.decoration_layer.get((gx, gy), "") or (x, y - 1) in pmap.buildings.keys() or (x, y) in pmap.secondary_ground.keys():
                 grass_type = random.randint(0, 7)
