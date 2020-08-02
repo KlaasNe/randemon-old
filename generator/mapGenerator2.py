@@ -7,19 +7,20 @@ import time
 from threading import Thread
 
 from PIL import Image
-
-import inputs
-import spriteSheetManager as ssm
+import utilities.inputs as inputs
+import utilities.spriteSheetManager as ssm
 # from worldMap import image_grayscale_to_dict
-from buildingGenerator import spawn_house, add_random_ends
-from decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
+from generators.buildingGenerator import spawn_house, add_random_ends
+from generators.decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
 # from worldMap import image_grayscale_to_dict
-from heightMapGenerator import create_hills, create_hill_edges
-from npcGenerator import spawn_npc
-from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
-from plantGenerator import create_trees, grow_grass, create_rain
-from pokemonGenerator import spawn_pokemons
-from waterGenerator import create_rivers, create_beach
+from generators.heightMapGenerator import create_hills, create_hill_edges
+from generators.npcGenerator import spawn_npc
+from generators.pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
+from generators.plantGenerator import create_trees, grow_grass, create_rain
+from generators.pokemonGenerator import spawn_pokemons
+from generators.waterGenerator import create_rivers, create_beach
+import json
+from os import path
 
 
 def render2(pmap, layer, draw_sheet):
@@ -70,8 +71,26 @@ def render_npc(pmap, layer, draw_sheet):
             sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
 
 
-class Map:
+def tupleToArrayStr(tup):
+    resp = "["
+    for val in tup:
+        resp += str(val) + ","
+    resp = resp[:-1]
+    resp += "]"
+    return resp
 
+
+def dictToObject(dic, value_convert=True):
+    obj = {}
+    for key, val in dic.items():
+        key2 = tupleToArrayStr(key)
+        val2 = tupleToArrayStr(val) if value_convert else val
+        obj[key2] = val2
+
+    return obj
+
+
+class Map:
     TILE_SIZE = 16  # Side of a tile in pixels
 
     def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate,
@@ -117,6 +136,20 @@ class Map:
             return self.get_tile(layer, x, y, default)[0]
         except IndexError:
             return default
+
+    def toJSON(self):
+        resp = {
+            'buildings': dictToObject(self.buildings),
+            'ground_layer': dictToObject(self.ground_layer),
+            'secondary_ground': dictToObject(self.secondary_ground),
+            'rain': dictToObject(self.rain),
+            'decoration_layer': dictToObject(self.decoration_layer),
+            'npc_layer': dictToObject(self.npc_layer),
+            'height_map': dictToObject(self.height_map),
+            'grass_layer': dictToObject(self.grass_layer),
+            'tile_heights': dictToObject(self.tile_heights, False)
+        }
+        return json.dumps(resp, sort_keys=True, indent=2, separators=(',', ': '))
 
 
 # Here starts the main program
@@ -201,12 +234,18 @@ if not args.credits_opt:
     print("time = " + str(time.time() - to_time) + " seconds")
     print("Seed: " + str(random_map.seed))
 
+
     def prompt():
         if args.save_opt:
             save = "y"
         else:
             save = input("Save this image? (y/n/w): ")
         file_name = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
+        if args.export_opt:
+            json_string = random_map.toJSON()
+            file = open(path.join("saved images", file_name + ".json"), "w")
+            file.write(json_string)
+            file.close()
         if save == "y" or save == "w":
             if not os.path.isdir("saved images"):
                 os.mkdir("saved images")
@@ -216,14 +255,17 @@ if not args.credits_opt:
                 visual.save_split(file_name, x_maps, y_maps)
             if save == "w":
                 cwd = os.getcwd()
-                ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", file_name + ".png"), 0)
+                ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", file_name + ".png"),
+                                                           0)
 
         visual.close()
         quit()
 
+
     def image_thread():
         if not args.headless_opt:
             visual.show()
+
 
     t = Thread(target=prompt)
     t.daemon = True
@@ -238,9 +280,9 @@ else:
     print(
         "\n"
         "C R E D I T S" + "\n\n"
-        "* Map generator by Klaas" + "\n"
-        "* Javascript stuff and various assistance by Dirk" + "\n"
-        "* inputs argparser by Bethune Bryant" + "\n"
-        "* Rocket balloon by Akhera" + "\n"
-        "* Npc sprites ripped by Silentninja" + "\n\n"
-        "(Cool ideas and some inspiration from nice redditors on r/pokemon)")
+                          "* Map generator by Klaas" + "\n"
+                                                       "* Javascript stuff and various assistance by Dirk" + "\n"
+                                                                                                             "* inputs argparser by Bethune Bryant" + "\n"
+                                                                                                                                                      "* Rocket balloon by Akhera" + "\n"
+                                                                                                                                                                                     "* Npc sprites ripped by Silentninja" + "\n\n"
+                                                                                                                                                                                                                             "(Cool ideas and some inspiration from nice redditors on r/pokemon)")

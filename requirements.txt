@@ -5,3 +5,4 @@ numpy==1.18.5
 pip==20.1.1
 setuptools==47.3.0
 pillow==7.2.0
+pyqt5==5.15.0

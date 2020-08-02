@@ -42,7 +42,7 @@ def make_parser():
         help='The world generation seed')
 
     parser.add_argument(
-        '--c',
+        '-c',
         dest='credits_opt',
         action='store_true',
         help='Show credits')
@@ -60,5 +60,12 @@ def make_parser():
         type=int,
         default=1,
         help='Split the result vertically')
+
+    parser.add_argument(
+        '--export',
+        dest='export_opt',
+        action='store_true',
+        help='Export the map as a json file'
+    )
 
     return parser

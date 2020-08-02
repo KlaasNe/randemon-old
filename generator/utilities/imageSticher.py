@@ -14,7 +14,7 @@ for image in range(x_Images * y_Images):
         image_Number = str(image)
 
     try:
-        screen.blit(pygame.image.load(os.path.join("saved images", image_Number + ".png")), (x_Size_Image * (image % x_Images), y_Size_Image * (image // x_Images)))
+        screen.blit(pygame.image.load(os.path.join("../saved images", image_Number + ".png")), (x_Size_Image * (image % x_Images), y_Size_Image * (image // x_Images)))
     except Exception as e:
         print(e)
 
@@ -23,4 +23,4 @@ pygame.display.update()
 save = input("Save this image? (y/n): ")
 t = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
 if save == "y":
-    pygame.image.save(screen, os.path.join("saved images", t+".png"))
+    pygame.image.save(screen, os.path.join("../saved images", t + ".png"))
