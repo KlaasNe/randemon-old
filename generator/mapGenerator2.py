@@ -1,12 +1,15 @@
 import ctypes
 import datetime
+import json
 import os
 import random
 import sys
 import time
+from os import path
 from threading import Thread
 
 from PIL import Image
+
 import utilities.inputs as inputs
 import utilities.spriteSheetManager as ssm
 # from worldMap import image_grayscale_to_dict
@@ -19,8 +22,6 @@ from generators.pathGenerator import apply_path_sprites, generate_dijkstra_path,
 from generators.plantGenerator import create_trees, grow_grass, create_rain
 from generators.pokemonGenerator import spawn_pokemons
 from generators.waterGenerator import create_rivers, create_beach
-import json
-from os import path
 
 
 def render2(pmap, layer, draw_sheet):
@@ -279,10 +280,10 @@ if not args.credits_opt:
 else:
     print(
         "\n"
-        "C R E D I T S" + "\n\n"
-                          "* Map generator by Klaas" + "\n"
-                                                       "* Javascript stuff and various assistance by Dirk" + "\n"
-                                                                                                             "* inputs argparser by Bethune Bryant" + "\n"
-                                                                                                                                                      "* Rocket balloon by Akhera" + "\n"
-                                                                                                                                                                                     "* Npc sprites ripped by Silentninja" + "\n\n"
-                                                                                                                                                                                                                             "(Cool ideas and some inspiration from nice redditors on r/pokemon)")
+        "C R E D I T S" + "\n\n" +
+        "* Map generator by Klaas" + "\n" +
+        "* Javascript stuff and various assistance by Dirk" + "\n" +
+        "* inputs argparser by Bethune Bryant" + "\n" +
+        "* Rocket balloon by Akhera" + "\n" +
+        "* Npc sprites ripped by Silentninja" + "\n\n" +
+        "(Cool ideas and some inspiration from nice redditors on r/pokemon)")
