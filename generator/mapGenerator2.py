@@ -87,9 +87,7 @@ def dictToObject(dic, value_convert=True):
 class Map:
     TILE_SIZE = 16  # Side of a tile in pixels
 
-    def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate,
-                 seed=random.randint(0, sys.maxsize)):
-        self.seed = seed
+    def __init__(self, width, height, max_hill_height, tall_grass_coverage, tree_coverage, rain_rate):
         self.width = width
         self.height = height
         self.max_hill_height = max_hill_height
@@ -111,8 +109,6 @@ class Map:
         self.grass_layer = dict()
 
         self.highest_path = 0
-
-        random.seed(seed)
 
     def out_of_bounds(self, x, y):
         return x < 0 or y < 0 or x >= self.width or y >= self.height
@@ -166,6 +162,7 @@ if not args.credits_opt:
         "ra": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "rain.png")))
     }
 
+    random.seed(args.seed_opt)
     x_maps = args.x_split
     y_maps = args.y_split
     map_size_x = args.map_size_x * x_maps
@@ -175,7 +172,7 @@ if not args.credits_opt:
     x_offset = random.randint(0, 1000000)
     y_offset = random.randint(0, 1000000)
 
-    random_map = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2, args.seed_opt)
+    random_map = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2)
 
     if args.headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -221,7 +218,7 @@ if not args.credits_opt:
     render2(random_map, "decoration_layer", visual.drawable())
     render2(random_map, "rain", visual.drawable())
     print("time = " + str(time.time() - to_time) + " seconds")
-    print("Seed: " + str(random_map.seed))
+    print("Seed: " + str(args.seed_opt))
 
 
     def prompt():
