@@ -7,19 +7,18 @@ import time
 from threading import Thread
 
 from PIL import Image
-
-import inputs
-import spriteSheetManager as ssm
+import utilities.inputs as inputs
+import utilities.spriteSheetManager as ssm
 # from worldMap import image_grayscale_to_dict
-from buildingGenerator import spawn_house, add_random_ends
-from decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
+from generators.buildingGenerator import spawn_house, add_random_ends
+from generators.decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
 # from worldMap import image_grayscale_to_dict
-from heightMapGenerator import create_hills, create_hill_edges
-from npcGenerator import spawn_npc
-from pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
-from plantGenerator import create_trees, grow_grass, create_rain
-from pokemonGenerator import spawn_pokemons
-from waterGenerator import create_rivers, create_beach
+from generators.heightMapGenerator import create_hills, create_hill_edges
+from generators.npcGenerator import spawn_npc
+from generators.pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
+from generators.plantGenerator import create_trees, grow_grass, create_rain
+from generators.pokemonGenerator import spawn_pokemons
+from generators.waterGenerator import create_rivers, create_beach
 
 
 def render2(pmap, layer, draw_sheet):

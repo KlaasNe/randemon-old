@@ -1,7 +1,7 @@
 import math
 import random
 
-from pathGenerator import is_actual_path
+from generators.pathGenerator import is_actual_path
 
 
 # Spawns a truck on top of path
