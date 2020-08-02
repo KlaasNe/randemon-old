@@ -72,22 +72,17 @@ def render_npc(pmap, layer, draw_sheet):
             sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
 
 
-def tupleToArrayStr(tup):
-    resp = "["
-    for val in tup:
-        resp += str(val) + ","
-    resp = resp[:-1]
-    resp += "]"
-    return resp
+def tupleToArray(tup):
+    return [x for x in tup]
 
 
 def dictToObject(dic, value_convert=True):
     obj = {}
     for key, val in dic.items():
-        key2 = tupleToArrayStr(key)
-        val2 = tupleToArrayStr(val) if value_convert else val
-        obj[key2] = val2
-
+        if not key[0] in obj:
+            obj[key[0]] = {}
+        val2 = tupleToArray(val) if value_convert else val
+        obj[int(key[0])][int(key[1])] = val2
     return obj
 
 
