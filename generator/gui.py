@@ -23,7 +23,7 @@ class Ui_Dialog(object):
         self.pushButton_generate.setGeometry(QtCore.QRect(70, 180, 121, 23))
         self.pushButton_generate.setObjectName("pushButton_generate")
         self.formLayoutWidget = QtWidgets.QWidget(Dialog)
-        self.formLayoutWidget.setGeometry(QtCore.QRect(60, 50, 141, 141))
+        self.formLayoutWidget.setGeometry(QtCore.QRect(60, 50, 141, 128))
         self.formLayoutWidget.setObjectName("formLayoutWidget")
         self.formLayout = QtWidgets.QFormLayout(self.formLayoutWidget)
         self.formLayout.setContentsMargins(0, 0, 0, 0)
