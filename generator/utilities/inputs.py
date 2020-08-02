@@ -65,7 +65,27 @@ def make_parser():
         '--export',
         dest='export_opt',
         action='store_true',
-        help='Export the map as a json file'
-    )
+        help='Export the map as a json file')
+
+    parser.add_argument(
+        '--maxheight',
+        dest='max_hill_height',
+        type=int,
+        default=5,
+        help='Maximal height of a hill')
+
+    parser.add_argument(
+        '--grass',
+        dest='tall_grass_coverage',
+        type=int,
+        default=30,
+        help='Percentage of the map to be covered with tall grass')
+
+    parser.add_argument(
+        '--trees',
+        dest='tree_coverage',
+        type=int,
+        default=10,
+        help='Percentage of the map to be covered with trees')
 
     return parser

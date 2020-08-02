@@ -70,22 +70,17 @@ def render_npc(pmap, layer, draw_sheet):
             sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
 
 
-def tupleToArrayStr(tup):
-    resp = "["
-    for val in tup:
-        resp += str(val) + ","
-    resp = resp[:-1]
-    resp += "]"
-    return resp
+def tupleToArray(tup):
+    return [x for x in tup]
 
 
 def dictToObject(dic, value_convert=True):
     obj = {}
     for key, val in dic.items():
-        key2 = tupleToArrayStr(key)
-        val2 = tupleToArrayStr(val) if value_convert else val
-        obj[key2] = val2
-
+        if not key[0] in obj:
+            obj[key[0]] = {}
+        val2 = tupleToArray(val) if value_convert else val
+        obj[int(key[0])][int(key[1])] = val2
     return obj
 
 
@@ -180,7 +175,7 @@ if not args.credits_opt:
     x_offset = random.randint(0, 1000000)
     y_offset = random.randint(0, 1000000)
 
-    random_map = Map(map_size_x, map_size_y, 5, 30, 10, 0.2, args.seed_opt)
+    random_map = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2, args.seed_opt)
 
     if args.headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -207,7 +202,7 @@ if not args.credits_opt:
     apply_path_sprites(random_map)
 
     create_hill_edges(random_map, update=True)
-    create_trees(random_map, random.tree_coverage, x_offset, y_offset)
+    create_trees(random_map, random_map.tree_coverage, x_offset, y_offset)
     all_pokemon = spawn_pokemons(random_map)
     spawn_npc(random_map, 1)
     create_lanterns(random_map)
