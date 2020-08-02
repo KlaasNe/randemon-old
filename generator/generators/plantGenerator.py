@@ -20,7 +20,7 @@ def create_trees(pmap, spawn_rate, x_offset, y_offset):
         for x in range(pmap.width):
             if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path:
                 if (x, y) not in pmap.ground_layer.keys() and (x, y) not in pmap.secondary_ground.keys() and (x, y - 1) not in pmap.secondary_ground.keys() and (x, y) not in pmap.buildings.keys() and (x, y) not in pmap.decoration_layer.keys() and (x, y - 1) not in pmap.decoration_layer.keys():
-                    if abs(snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves)) > spawn_rate / 100 and random.random() > 0.5:
+                    if abs(snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves)) * 2 > 1 - (spawn_rate / 100) and random.random() > 0.5:
                         pmap.decoration_layer[(x, y - 2)] = ("na", 2, 0)
                         pmap.secondary_ground[(x, y - 1)] = ("na", 2, 1)
                         pmap.ground_layer[(x, y)] = ("na", 2, 2)
