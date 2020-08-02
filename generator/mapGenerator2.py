@@ -207,7 +207,7 @@ if not args.credits_opt:
     apply_path_sprites(random_map)
 
     create_hill_edges(random_map, update=True)
-    create_trees(random_map, 30, x_offset, y_offset)
+    create_trees(random_map, random.tree_coverage, x_offset, y_offset)
     all_pokemon = spawn_pokemons(random_map)
     spawn_npc(random_map, 1)
     create_lanterns(random_map)
