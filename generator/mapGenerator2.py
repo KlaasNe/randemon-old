@@ -162,7 +162,7 @@ if not args.credits_opt:
         "ra": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "rain.png")))
     }
 
-    random.seed(args.seed_opt)
+    random.seed(args.seed_opt)  # seed debuggen voor ballon over fences linksonder
     x_maps = args.x_split
     y_maps = args.y_split
     map_size_x = args.map_size_x * x_maps
