@@ -67,7 +67,7 @@ def spawn_balloon(pmap):
     balloon = False
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
-            if not balloon and random.random() < 0.001 and not pmap.out_of_bounds(x - 2, y) and (x + 1, y + 2) not in pmap.ground_layer.keys() and (x + 1, y + 2) not in pmap.buildings.keys() and (x + 1, y + 2) not in pmap.secondary_ground.keys() and y + 2 < pmap.height:
+            if not balloon and random.random() < 0.001 and not pmap.out_of_bounds(x - 2, y) and (x + 1, y + 3) not in pmap.ground_layer.keys() and (x + 1, y + 3) not in pmap.buildings.keys() and (x + 1, y + 3) not in pmap.secondary_ground.keys() and y + 2 < pmap.height:
                 for balloon_tile in range(12):
                     if balloon_tile >= 9:
                         pmap.secondary_ground[(x + balloon_tile % 3, y + balloon_tile // 3)] = ("de", balloon_tile % 3, balloon_tile // 3)
