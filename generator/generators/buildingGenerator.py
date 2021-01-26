@@ -128,7 +128,7 @@ def get_house_type(pmap, x, y):
         if curr_house_x <= house_type_x < curr_house_x + curr_house_size_x:
             if curr_house_y <= house_type_y < curr_house_y + curr_house_size_y:
                 return house
-    raise Exception("Unexisting house at " + str(x, y))
+    raise Exception("UnexistingHouse" + str(x, y))
 
 
 def is_special_building(pmap, x, y):

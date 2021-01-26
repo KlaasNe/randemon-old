@@ -20,19 +20,19 @@ def create_rivers(pmap):
                 else:
                     tiles_around.append(0)
 
-            if tiles_around[0] == 0 and tiles_around[1:9] == 8 * [1]:
+            if tiles_around[0] == 0 and tiles_around[1:9] == [1] * 8:
                 return "wa", 2, 2
             elif tiles_around[2] == 0 and tiles_around[0:2] + tiles_around[3:9] == 8 * [1]:
                 return "wa", 1, 2
-            elif tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1:
+            elif all((tiles_around[1], tiles_around[3], tiles_around[5], tiles_around[7])):
                 return "wa", 0, 0
-            elif tiles_around[1] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1:
+            elif all((tiles_around[1], tiles_around[5], tiles_around[7])):
                 return "wa", 1, 0
-            elif tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1:
+            elif all((tiles_around[1], tiles_around[3], tiles_around[5])):
                 return "wa", 4, 0
-            elif tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[7] == 1:
+            elif all((tiles_around[1], tiles_around[3], tiles_around[7])):
                 return "wa", 2, 0
-            elif tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1:
+            elif all((tiles_around[3], tiles_around[5], tiles_around[7])):
                 return "wa", 3, 0
             elif tiles_around[5] == 1 and tiles_around[7] == 1:
                 return "wa", 3, 1

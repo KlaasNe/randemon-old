@@ -36,23 +36,23 @@ def apply_path_sprites(pmap):
             return "pa", 3, 2 + 3 * path_type
         elif tiles_around == [0, 1, 1, 1, 1, 1, 1, 1, 1]:
             return "pa", 4, 2 + 3 * path_type
-        elif tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 1] or (tiles_around[1] == 1 and tiles_around[3] == 1 and tiles_around[5] == 1 and tiles_around[7] == 1):
+        elif tiles_around == [1, 1, 1, 1, 1, 1, 1, 1, 1] or all((tiles_around[1], tiles_around[3], tiles_around[5], tiles_around[7])):
             return "pa", 0, 0 + 3 * path_type
-        elif tiles_around == [0, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 0, 1, 1] or tiles_around == [0, 1, 1, 0, 1, 1, 1, 1, 1] or tiles_around == [1, 1, 1, 0, 1, 1, 1, 1, 1]:
+        elif tiles_around in ([0, 1, 1, 0, 1, 1, 0, 1, 1], [1, 1, 1, 0, 1, 1, 0, 1, 1], [0, 1, 1, 0, 1, 1, 1, 1, 1], [1, 1, 1, 0, 1, 1, 1, 1, 1]):
             return "pa", 1, 0 + 3 * path_type
-        elif tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 0] or tiles_around == [1, 1, 1, 1, 1, 1, 0, 0, 1] or tiles_around == [1, 1, 1, 1, 1, 1, 1, 0, 1]:
+        elif tiles_around in ([1, 1, 1, 1, 1, 1, 0, 0, 0], [1, 1, 1, 1, 1, 1, 1, 0, 0], [1, 1, 1, 1, 1, 1, 0, 0, 1], [1, 1, 1, 1, 1, 1, 1, 0, 1]):
             return "pa", 4, 0 + 3 * path_type
-        elif tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 0] or tiles_around == [1, 1, 0, 1, 1, 0, 1, 1, 1] or tiles_around == [1, 1, 1, 1, 1, 0, 1, 1, 1]:
+        elif tiles_around in ([1, 1, 0, 1, 1, 0, 1, 1, 0], [1, 1, 1, 1, 1, 0, 1, 1, 0], [1, 1, 0, 1, 1, 0, 1, 1, 1], [1, 1, 1, 1, 1, 0, 1, 1, 1]):
             return "pa", 2, 0 + 3 * path_type
-        elif tiles_around == [0, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 0, 1, 1, 1, 1, 1, 1] or tiles_around == [0, 0, 1, 1, 1, 1, 1, 1, 1] or tiles_around == [1, 0, 1, 1, 1, 1, 1, 1, 1]:
+        elif tiles_around in ([0, 0, 0, 1, 1, 1, 1, 1, 1], [1, 0, 0, 1, 1, 1, 1, 1, 1], [0, 0, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 1, 1, 1, 1, 1, 1]):
             return "pa", 3, 0 + 3 * path_type
-        elif tiles_around[5] == 1 and tiles_around[7] == 1 and tiles_around[8] == 1:
+        elif all((tiles_around[5], tiles_around[7], tiles_around[8])):
             return "pa", 3, 1 + 3 * path_type
-        elif tiles_around[1] == 1 and tiles_around[2] == 1 and tiles_around[5] == 1:
+        elif all((tiles_around[1], tiles_around[2], tiles_around[5])):
             return "pa", 1, 1 + 3 * path_type
-        elif tiles_around[0] == 1 and tiles_around[1] == 1 and tiles_around[3] == 1:
+        elif all((tiles_around[0], tiles_around[1], tiles_around[3])):
             return "pa", 2, 1 + 3 * path_type
-        elif tiles_around[3] == 1 and tiles_around[6] == 1 and tiles_around[7] == 1:
+        elif all((tiles_around[3], tiles_around[6], tiles_around[7])):
             return "pa", 4, 1 + 3 * path_type
         return "na", 0, 0
 

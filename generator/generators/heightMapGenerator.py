@@ -37,33 +37,34 @@ def create_hill_edges(pmap, hill_type=0, update=False):
 
         # using the array of relative heights, this calculates the sprite for the hill texture
         hills_around = get_hills_around_tile()
+        h = 5 * hill_type
         if pmap.tile_heights.get((x, y), 0) < 2: return -1
         if hills_around[3] == 0 and hills_around[6] == -1 and hills_around[7] == 0:
-            return "hi", 0 + (5 * hill_type), 1
+            return "hi", 0 + h, 1
         if hills_around[5] == 0 and hills_around[7] == 0 and hills_around[8] == -1:
-            return "hi", 0 + (5 * hill_type), 2
+            return "hi", 0 + h, 2
         if hills_around[0] == -1 and hills_around[1] == 0 and hills_around[3] == 0:
-            return "hi", 3 + (5 * hill_type), 0
+            return "hi", 3 + h, 0
         if hills_around[1] == 0 and hills_around[2] == -1 and hills_around[5] == 0:
-            return "hi", 3 + (5 * hill_type), 0
+            return "hi", 3 + h, 0
         if hills_around[1] == 0 and hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == 0:
             return -1
         if hills_around[1] == 0 and hills_around[3] == -1 and hills_around[7] == 0:
-            return "hi", 1 + (5 * hill_type), 0
+            return "hi", 1 + h, 0
         if hills_around[3] == 0 and hills_around[5] == 0 and hills_around[7] == -1:
-            return "hi", 4 + (5 * hill_type), 0
+            return "hi", 4 + h, 0
         if hills_around[1] == 0 and hills_around[5] == -1 and hills_around[7] == 0:
-            return "hi", 2 + (5 * hill_type), 0
+            return "hi", 2 + h, 0
         if hills_around[1] == -1 and hills_around[3] == 0 and hills_around[5] == 0:
-            return "hi", 3 + (5 * hill_type), 0
+            return "hi", 3 + h, 0
         if hills_around[1] == -1 and hills_around[3] == -1:
-            return "hi", 1 + (5 * hill_type), 1
+            return "hi", 1 + h, 1
         if hills_around[3] == -1 and hills_around[7] == -1:
-            return "hi", 3 + (5 * hill_type), 1
+            return "hi", 3 + h, 1
         if hills_around[5] == -1 and hills_around[7] == -1:
-            return "hi", 4 + (5 * hill_type), 1
+            return "hi", 4 + h, 1
         if hills_around[1] == -1 and hills_around[5] == -1:
-            return "hi", 2 + (5 * hill_type), 1
+            return "hi", 2 + h, 1
         return -1
 
     for y in range(0, pmap.height):
@@ -81,12 +82,12 @@ def create_hill_edges(pmap, hill_type=0, update=False):
                         pmap.ground_layer[(x, y)] = hill_edge_texture
                     elif (x, y) not in pmap.ground_layer.keys():
                         pmap.ground_layer[(x, y)] = hill_edge_texture
-            elif hill_edge_texture == -1 and "hi" == pmap.get_tile_type("ground_layer", x, y):
+            elif pmap.get_tile_type("ground_layer", x, y) == "hi":
                 pmap.ground_layer.pop((x, y))
 
 
 # Creates a visual height map which can be rendered
-# It's a feature for debugging (pls dont set max height over 15 when using this)
+# It's a feature for debugging (pls don't set max height over 15 when using this)
 def generate_height_map(pmap):
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):

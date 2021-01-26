@@ -163,14 +163,10 @@ if not args.credits_opt:
     }
 
     random.seed(args.seed_opt)  # seed debuggen voor ballon over fences linksonder
-    x_maps = args.x_split
-    y_maps = args.y_split
-    map_size_x = args.map_size_x * x_maps
-    map_size_y = args.map_size_y * y_maps
-    screen_Size_X = Map.TILE_SIZE * map_size_x
-    screen_Size_Y = Map.TILE_SIZE * map_size_y
-    x_offset = random.randint(0, 1000000)
-    y_offset = random.randint(0, 1000000)
+    x_maps, y_maps = args.x_split, args.y_split
+    map_size_x, map_size_y = args.map_size_x * x_maps, args.map_size_y * y_maps
+    screen_Size_X, screen_Size_Y = Map.TILE_SIZE * map_size_x, Map.TILE_SIZE * map_size_y
+    x_offset, y_offset = random.randint(0, 1000000), random.randint(0, 1000000)
 
     random_map = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2)
 
@@ -226,23 +222,23 @@ if not args.credits_opt:
             save = "y"
         else:
             save = input("Save this image? (y/n/w): ")
-        file_name = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
+        file_n = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
         if args.export_opt:
             json_string = random_map.toJSON()
-            file = open(path.join("saved images", file_name + ".json"), "w")
-            file.write(json_string)
-            file.close()
+            file_n = open(path.join("saved images", file_n + ".json"), "w")
+            file_n.write(json_string)
+            file_n.close()
         if save == "y" or save == "w":
             if not os.path.isdir("saved images"):
                 os.mkdir("saved images")
             if x_maps * y_maps == 1:
-                visual.save(file_name)
+                visual.save(file_n)
             else:
-                visual.save_split(file_name, x_maps, y_maps)
+                visual.save_split(file_n, x_maps, y_maps)
             if save == "w":
                 cwd = os.getcwd()
-                ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(cwd, "saved images", file_name + ".png"),
-                                                           0)
+                file_path = os.path.join(cwd, "saved images", file_n + ".png")
+                ctypes.windll.user32.SystemParametersInfoW(20, 0, file_path, 0)
 
         visual.close()
         quit()
