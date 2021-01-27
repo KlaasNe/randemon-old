@@ -79,7 +79,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
     curr_data = house_data[house_type]
     house_size_x, house_size_y = house_data[house_type][1]
 
-    max_attempts = house_size_x * house_size_y
+    max_attempts = house_size_x * house_size_y * 5
     build_spot = search_available_building_spot(40, max_attempts)
     if build_spot:
         house_x = build_spot[0]
@@ -128,7 +128,7 @@ def get_house_type(pmap, x, y):
         if curr_house_x <= house_type_x < curr_house_x + curr_house_size_x:
             if curr_house_y <= house_type_y < curr_house_y + curr_house_size_y:
                 return house
-    raise Exception("Unexisting house at " + str(x, y))
+    raise Exception("UnexistingHouse" + str(x, y))
 
 
 def is_special_building(pmap, x, y):
