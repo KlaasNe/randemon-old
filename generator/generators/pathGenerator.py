@@ -23,8 +23,8 @@ def apply_path_sprites(pmap):
             path_around = pmap.get_tile_type("ground_layer", x + around % 3 - 1, y + around // 3 - 1)
             if "pa" == path_around or "ro" == path_around:
                 tiles_around.append(1)
-                if (x, y) not in pmap.buildings.keys() and is_actual_path(pmap, x, y) and get_path_type(pmap, x + around % 3 - 1, y + around // 3 - 1) == 3:
-                    pmap.decoration_layer[(x, y)] = ("de", 6, 3)
+                # if (x, y) not in pmap.buildings.keys() and is_actual_path(pmap, x, y) and get_path_type(pmap, x + around % 3 - 1, y + around // 3 - 1) == 3:
+                #     pmap.decoration_layer[(x, y)] = ("de", 6, 3)
             else:
                 tiles_around.append(0)
 
@@ -90,7 +90,7 @@ def generate_dijkstra_path(pmap, house_path_type):
         visited[curr_y][curr_x] = True
         for around_x, around_y in [(curr_x, curr_y - 1), (curr_x, curr_y + 1), (curr_x - 1, curr_y), (curr_x + 1, curr_y)]:
             if not pmap.out_of_bounds(around_x, around_y):
-                new_weight = current_weight[curr_y][curr_x] + weight[around_y][around_x]
+                new_weight = current_weight[curr_y][curr_x] + weight[around_y][around_x] + abs(target_tile[0] - curr_x + target_tile[1] - curr_y)
                 if not visited[around_y][around_x] and current_weight[around_y][around_x] > new_weight:
                     current_weight[around_y][around_x] = new_weight
                     previous_tile[around_y][around_x] = current_tile
@@ -146,11 +146,11 @@ def generate_dijkstra_path(pmap, house_path_type):
         previous_tile[current_tile[1]][current_tile[0]] = (0, 0)
         handle_tiles[(current_tile[0], current_tile[1])] = 0
         handle_current_tile()
-        while not current_tile == target_tile and current_weight[current_tile[1]][current_tile[0]] < 1999999:
+        while not current_tile == target_tile and current_weight[current_tile[1]][current_tile[0]] < 999999:
             current_tile = find_min_tile()
             handle_current_tile()
 
-        if current_weight[current_tile[1]][current_tile[0]] < 1999999:
+        if current_weight[current_tile[1]][current_tile[0]] < 999999:
             path = set()
             while not previous_tile[current_tile[1]][current_tile[0]] == (0, 0):
                 path.add(current_tile)

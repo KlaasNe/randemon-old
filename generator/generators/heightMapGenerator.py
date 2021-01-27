@@ -11,7 +11,7 @@ def create_hills(pmap, off_x, off_y):
     for y in range(0, pmap.height):
         for x in range(0, pmap.width):
             noise = snoise2((x // 4 + off_x) / freq, (y // 4 + off_y) / freq, octaves)
-            pmap.tile_heights[(x, y)] = abs(floor(noise * max_height))
+            pmap.tile_heights[(x, y)] = abs(floor(noise * max_height + 1))
 
 
 # Calculates where to draw edges of hills

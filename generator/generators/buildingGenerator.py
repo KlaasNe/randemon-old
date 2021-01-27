@@ -79,7 +79,7 @@ def spawn_house(pmap, house_type, house_front_path_type):
     curr_data = house_data[house_type]
     house_size_x, house_size_y = house_data[house_type][1]
 
-    max_attempts = house_size_x * house_size_y
+    max_attempts = house_size_x * house_size_y * 5
     build_spot = search_available_building_spot(40, max_attempts)
     if build_spot:
         house_x = build_spot[0]
