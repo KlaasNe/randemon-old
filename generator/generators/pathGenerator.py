@@ -1,6 +1,6 @@
 from sys import maxsize
 
-PATH_WEIGHT = 1
+PATH_WEIGHT = -1
 GRASS_WEIGHT = 8
 HILL_WEIGHT = 32
 WATER_WEIGHT = 32
@@ -21,7 +21,7 @@ def apply_path_sprites(pmap):
         tiles_around = []
         for around in range(0, 9):
             path_around = pmap.get_tile_type("ground_layer", x + around % 3 - 1, y + around // 3 - 1)
-            if "pa" == path_around or "ro" == path_around:
+            if ("pa" == path_around and get_path_type(pmap, x + around % 3 - 1, y + around // 3 - 1) == path_type) or "ro" == path_around:
                 tiles_around.append(1)
                 # if (x, y) not in pmap.buildings.keys() and is_actual_path(pmap, x, y) and get_path_type(pmap, x + around % 3 - 1, y + around // 3 - 1) == 3:
                 #     pmap.decoration_layer[(x, y)] = ("de", 6, 3)
@@ -90,7 +90,7 @@ def generate_dijkstra_path(pmap, house_path_type):
         visited[curr_y][curr_x] = True
         for around_x, around_y in [(curr_x, curr_y - 1), (curr_x, curr_y + 1), (curr_x - 1, curr_y), (curr_x + 1, curr_y)]:
             if not pmap.out_of_bounds(around_x, around_y):
-                new_weight = current_weight[curr_y][curr_x] + weight[around_y][around_x] + abs(target_tile[0] - curr_x + target_tile[1] - curr_y)
+                new_weight = current_weight[curr_y][curr_x] + weight[around_y][around_x] + abs(target_tile[0] - curr_x) + abs(target_tile[1] - curr_y)
                 if not visited[around_y][around_x] and current_weight[around_y][around_x] > new_weight:
                     current_weight[around_y][around_x] = new_weight
                     previous_tile[around_y][around_x] = current_tile

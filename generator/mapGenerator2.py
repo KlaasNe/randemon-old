@@ -186,8 +186,8 @@ if not args.credits_opt:
     spawn_house(random_map, "pokemart", ("pa", 0, 0))
     spawn_house(random_map, "gym", ("pa", 0, 0))
     spawn_house(random_map, "powerplant", ("pa", 0, 0))
-    for house_type in range(22):
-        for x in range(1):
+    for x in range(1):
+        for house_type in range(22):
             spawn_house(random_map, house_type, ("pa", 0, 0))
     random.shuffle(random_map.front_doors)
     random_map.front_doors += random_map.end_points
@@ -201,7 +201,7 @@ if not args.credits_opt:
     create_lanterns(random_map)
     spawn_truck(random_map, 0.05)
     spawn_rocks(random_map, 0.01)
-    spawn_balloon(random_map)
+    # spawn_balloon(random_map)
     grow_grass(random_map, random_map.tall_grass_coverage, x_offset, y_offset)
     create_rain(random_map, 0.1, random_map.rain_rate)
 
