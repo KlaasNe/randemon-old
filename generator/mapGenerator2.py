@@ -3,65 +3,17 @@ import datetime
 import json
 import os
 import random
-import sys
 import time
 from os import path
 from threading import Thread
 
 from PIL import Image
 
-import utilities.inputs as inputs
-import utilities.spriteSheetManager as ssm
+import utilities.parser as inputs
+import image.spriteSheetManager as ssm
 from generators import *
 from Layers import *
-
-
-def render2(pmap, layer, draw_sheet):
-    def try_get_tile(curr_tile):
-        try:
-            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2], curr_tile[3])
-        except IndexError:
-            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2])
-        return img
-
-    previous_tile, previous_img = None, None
-    for sw_name in sheet_writers.keys():
-        sheet_writer = sheet_writers[sw_name]
-        for tile_x, tile_y in getattr(pmap, layer).keys():
-            current_tile = pmap.get_tile(layer, tile_x, tile_y)
-            if sw_name == current_tile[0]:
-                if current_tile != previous_tile:
-                    try:
-                        tile_img = try_get_tile(current_tile)
-                        sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16)
-                        previous_tile, previous_img = pmap.get_tile(layer, tile_x, tile_y), tile_img
-                    except KeyError:
-                        pass
-                else:
-                    sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16)
-
-
-def render_npc(pmap, layer, draw_sheet):
-    def try_get_tile(curr_tile):
-        try:
-            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2], curr_tile[3])
-        except IndexError:
-            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2])
-        return img
-
-    previous_tile, previous_img = None, None
-    sheet_writer = ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "npc.png")), 20, 23)
-    for tile_x, tile_y in getattr(pmap, layer).keys():
-        current_tile = pmap.get_tile(layer, tile_x, tile_y)
-        if current_tile != previous_tile:
-            try:
-                tile_img = try_get_tile(current_tile)
-                sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
-                previous_tile, previous_img = pmap.get_tile(layer, tile_x, tile_y), tile_img
-            except KeyError:
-                pass
-        else:
-            sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
+from image.render import render2, render_npc
 
 
 def tupleToArray(tup):
@@ -144,18 +96,7 @@ parser = inputs.make_parser()
 args = parser.parse_args()
 
 if not args.credits_opt:
-    sheet_writers = {
-        "pa": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "path.png"))),
-        "wa": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "water.png"))),
-        "na": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "nature.png"))),
-        "hi": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "hills.png"))),
-        "ro": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "road.png"))),
-        "ho": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "houses.png"))),
-        "fe": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "fences.png"))),
-        "po": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "pokemon.png"))),
-        "de": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "decoration.png"))),
-        "ra": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "rain.png")))
-    }
+
 
     random.seed(args.seed_opt)
     x_maps, y_maps = args.x_split, args.y_split
