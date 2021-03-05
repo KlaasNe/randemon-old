@@ -13,7 +13,7 @@ from PIL import Image
 import utilities.inputs as inputs
 import utilities.spriteSheetManager as ssm
 from generators import *
-from domain import *
+from Layers import *
 
 
 def render2(pmap, layer, draw_sheet):
@@ -93,14 +93,15 @@ class Map:
         self.front_doors = []
         self.end_points = []
         self.tile_heights = dict()
-        self.ground_layer = Layer("ground", (self.width, self.height))
-        self.secondary_ground = dict()
-        self.buildings = dict()
-        self.rain = dict()
-        self.decoration_layer = dict()
-        self.npc_layer = dict()
-        self.height_map = dict()
-        self.grass_layer = dict()
+        size = (self.width, self.height)
+        self.ground = Layer("ground", size)
+        self.ground2 = Layer("ground2", size)
+        self.buildings = Layer("buildings", size)
+        self.rain = Layer("rain", size)
+        self.decoration = Layer("decoration", size)
+        self.npc = Layer("npc", size)
+        self.hills = Layer("hills", size)
+        self.plants = Layer("plants", size)
 
         self.highest_path = 0
 
@@ -124,11 +125,11 @@ class Map:
     def toJSON(self):
         resp = {
             'buildings': dictToObject(self.buildings),
-            'ground_layer': dictToObject(self.ground_layer),
-            'secondary_ground': dictToObject(self.secondary_ground),
+            'ground_layer': dictToObject(self.ground),
+            'secondary_ground': dictToObject(self.ground2),
             'rain': dictToObject(self.rain),
-            'decoration_layer': dictToObject(self.decoration_layer),
-            'npc_layer': dictToObject(self.npc_layer),
+            'decoration_layer': dictToObject(self.decoration),
+            'npc_layer': dictToObject(self.npc),
             'height_map': dictToObject(self.height_map),
             'grass_layer': dictToObject(self.grass_layer),
             'tile_heights': dictToObject(self.tile_heights, False)
@@ -171,8 +172,8 @@ if not args.credits_opt:
     to_time = time.time()
     print("*creating landscape*")
     create_hills(random_map, x_offset, y_offset)
-    create_rivers(random_map.ground_layer, random_map.tile_heights)
-    create_beach(random_map.ground_layer, random_map.tile_heights, x_offset, y_offset)
+    create_rivers(random_map.ground, random_map.tile_heights)
+    create_beach(random_map.ground, random_map.tile_heights, x_offset, y_offset)
     add_random_ends(random_map, ("pa", 0, 0))
     create_hill_edges(random_map)
     house = time.time()
