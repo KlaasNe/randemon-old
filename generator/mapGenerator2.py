@@ -57,33 +57,16 @@ class Map:
 
         self.highest_path = 0
 
-    def out_of_bounds(self, x, y):
-        return x < 0 or y < 0 or x >= self.width or y >= self.height
-
-    def get_tile(self, layer, x, y, default=""):
-        try:
-            return getattr(self, layer)[(x, y)]
-        except KeyError:
-            return default
-        except AttributeError as a:
-            print(a)
-
-    def get_tile_type(self, layer, x, y, default=""):
-        try:
-            return self.get_tile(layer, x, y, default)[0]
-        except IndexError:
-            return default
-
     def toJSON(self):
         resp = {
-            'buildings': dictToObject(self.buildings),
-            'ground_layer': dictToObject(self.ground),
-            'secondary_ground': dictToObject(self.ground2),
-            'rain': dictToObject(self.rain),
-            'decoration_layer': dictToObject(self.decoration),
-            'npc_layer': dictToObject(self.npc),
-            'height_map': dictToObject(self.height_map),
-            'grass_layer': dictToObject(self.grass_layer),
+            'buildings': dictToObject(self.buildings.get_tiles()),
+            'ground_layer': dictToObject(self.ground.get_tiles()),
+            'secondary_ground': dictToObject(self.ground2.get_tiles()),
+            'rain': dictToObject(self.rain.get_tiles()),
+            'decoration_layer': dictToObject(self.decoration.get_tiles()),
+            'npc_layer': dictToObject(self.npc.get_tiles()),
+            'height_map': dictToObject(self.hills.get_tiles()),
+            'grass_layer': dictToObject(self.plants.get_tiles()),
             'tile_heights': dictToObject(self.tile_heights, False)
         }
         return json.dumps(resp, sort_keys=True, indent=2, separators=(',', ': '))
@@ -97,14 +80,13 @@ args = parser.parse_args()
 
 if not args.credits_opt:
 
-
     random.seed(args.seed_opt)
     x_maps, y_maps = args.x_split, args.y_split
     map_size_x, map_size_y = args.map_size_x * x_maps, args.map_size_y * y_maps
     screen_Size_X, screen_Size_Y = Map.TILE_SIZE * map_size_x, Map.TILE_SIZE * map_size_y
     x_offset, y_offset = random.randint(0, 1000000), random.randint(0, 1000000)
 
-    random_map = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2)
+    rmap = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2)
 
     if args.headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -112,43 +94,43 @@ if not args.credits_opt:
 
     to_time = time.time()
     print("*creating landscape*")
-    create_hills(random_map, x_offset, y_offset)
-    create_rivers(random_map.ground, random_map.tile_heights)
-    create_beach(random_map.ground, random_map.tile_heights, x_offset, y_offset)
-    add_random_ends(random_map, ("pa", 0, 0))
-    create_hill_edges(random_map)
-    house = time.time()
-    spawn_house(random_map, "pokecenter", ("pa", 0, 0))
-    spawn_house(random_map, "pokemart", ("pa", 0, 0))
-    spawn_house(random_map, "gym", ("pa", 0, 0))
-    spawn_house(random_map, "powerplant", ("pa", 0, 0))
+    rmap.tile_heights = generate_height_map((rmap.width, rmap.height), rmap.max_hill_height, x_offset, y_offset)
+    create_rivers(rmap.ground, rmap.tile_heights)
+    create_beach(rmap.ground, rmap.tile_heights, x_offset, y_offset)
+    # add_random_ends(rmap, ("pa", 0, 0))
+    create_hill_edges(rmap, rmap.ground, rmap.tile_heights)
+    # house = time.time()
+    spawn_house(rmap, rmap.buildings, "pokecenter", ("pa", 0, 0))
+    spawn_house(rmap, rmap.buildings, "pokemart", ("pa", 0, 0))
+    spawn_house(rmap, rmap.buildings, "gym", ("pa", 0, 0))
+    spawn_house(rmap, rmap.buildings, "powerplant", ("pa", 0, 0))
     for x in range(1):
         for house_type in range(22):
-            spawn_house(random_map, house_type, ("pa", 0, 0))
-    random.shuffle(random_map.front_doors)
-    random_map.front_doors += random_map.end_points
-    generate_dijkstra_path(random_map, ("pa", 0, 0))
-    apply_path_sprites(random_map)
-
-    create_hill_edges(random_map, update=True)
-    create_trees(random_map, random_map.tree_coverage, x_offset, y_offset)
-    all_pokemon = spawn_pokemons(random_map)
-    spawn_npc(random_map, 1)
-    create_lanterns(random_map)
-    spawn_truck(random_map, 0.05)
-    spawn_rocks(random_map, 0.01)
-    spawn_balloon(random_map)
-    grow_grass(random_map, random_map.tall_grass_coverage, x_offset, y_offset)
-    create_rain(random_map, 0.1, random_map.rain_rate)
+            spawn_house(rmap, rmap.buildings, house_type, ("pa", 0, 0))
+    # random.shuffle(rmap.front_doors)
+    # rmap.front_doors += rmap.end_points
+    # generate_dijkstra_path(rmap, ("pa", 0, 0))
+    # apply_path_sprites(rmap)
+    #
+    # create_hill_edges(rmap, update=True)
+    # create_trees(rmap, rmap.tree_coverage, x_offset, y_offset)
+    # all_pokemon = spawn_pokemons(rmap)
+    # spawn_npc(rmap, 1)
+    # create_lanterns(rmap)
+    # spawn_truck(rmap, 0.05)
+    # spawn_rocks(rmap, 0.01)
+    # spawn_balloon(rmap)
+    # grow_grass(rmap, rmap.tall_grass_coverage, x_offset, y_offset)
+    # create_rain(rmap, 0.1, rmap.rain_rate)
 
     print("*rendering*")
-    render2(random_map, "grass_layer", visual.drawable())
-    render2(random_map, "ground_layer", visual.drawable())
-    render2(random_map, "secondary_ground", visual.drawable())
-    render2(random_map, "buildings", visual.drawable())
-    render_npc(random_map, "npc_layer", visual.drawable())
-    render2(random_map, "decoration_layer", visual.drawable())
-    render2(random_map, "rain", visual.drawable())
+    render2(rmap.plants, visual.drawable())
+    render2(rmap.ground, visual.drawable())
+    render2(rmap.ground2, visual.drawable())
+    render2(rmap.buildings, visual.drawable())
+    # render_npc(rmap, "npc_layer", visual.drawable())
+    # render2(rmap, "decoration_layer", visual.drawable())
+    # render2(rmap, "rain", visual.drawable())
     print("time = " + str(time.time() - to_time) + " seconds")
     print("Seed: " + str(args.seed_opt))
 
@@ -160,7 +142,7 @@ if not args.credits_opt:
             save = input("Save this image? (y/n/w): ")
         file_n = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
         if args.export_opt:
-            json_string = random_map.toJSON()
+            json_string = rmap.toJSON()
             file_n = open(path.join("saved images", file_n + ".json"), "w")
             file_n.write(json_string)
             file_n.close()
@@ -200,7 +182,7 @@ else:
         "C R E D I T S" + "\n\n" +
         "* Map generator by Klaas" + "\n" +
         "* Javascript stuff and various assistance by Dirk" + "\n" +
-        "* inputs argparser by Bethune Bryant" + "\n" +
+        "* argparser by Bethune Bryant" + "\n" +
         "* Rocket balloon by Akhera" + "\n" +
         "* Npc sprites ripped by Silentninja" + "\n\n" +
         "(Cool ideas and some inspiration from nice redditors on r/pokemon)")

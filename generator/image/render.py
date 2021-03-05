@@ -3,7 +3,7 @@ import os
 from .spriteSheetManager import *
 
 
-def render2(pmap, layer, draw_sheet):
+def render2(layer, draw_sheet):
     def try_get_tile(curr_tile):
         try:
             img = sheet_writer.get_tile(curr_tile[1], curr_tile[2], curr_tile[3])
@@ -14,14 +14,14 @@ def render2(pmap, layer, draw_sheet):
     previous_tile, previous_img = None, None
     for sw_name in sheet_writers.keys():
         sheet_writer = sheet_writers[sw_name]
-        for tile_x, tile_y in getattr(pmap, layer).keys():
-            current_tile = pmap.get_tile(layer, tile_x, tile_y)
+        for tile_x, tile_y in layer.get_ex_pos():
+            current_tile = layer.get_tile((tile_x, tile_y))
             if sw_name == current_tile[0]:
                 if current_tile != previous_tile:
                     try:
                         tile_img = try_get_tile(current_tile)
                         sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16)
-                        previous_tile, previous_img = pmap.get_tile(layer, tile_x, tile_y), tile_img
+                        previous_tile, previous_img = layer.get_tile((tile_x, tile_y)), tile_img
                     except KeyError:
                         pass
                 else:
