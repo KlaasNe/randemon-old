@@ -12,14 +12,8 @@ from PIL import Image
 
 import utilities.inputs as inputs
 import utilities.spriteSheetManager as ssm
-from generators.buildingGenerator import spawn_house, add_random_ends
-from generators.decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
-from generators.heightMapGenerator import create_hills, create_hill_edges
-from generators.npcGenerator import spawn_npc
-from generators.pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
-from generators.plantGenerator import create_trees, grow_grass, create_rain
-from generators.pokemonGenerator import spawn_pokemons
-from generators.waterGenerator import create_rivers, create_beach
+from generators import *
+from domain import *
 
 
 def render2(pmap, layer, draw_sheet):
@@ -99,7 +93,7 @@ class Map:
         self.front_doors = []
         self.end_points = []
         self.tile_heights = dict()
-        self.ground_layer = dict()
+        self.ground_layer = Layer("ground", (self.width, self.height))
         self.secondary_ground = dict()
         self.buildings = dict()
         self.rain = dict()
@@ -162,7 +156,7 @@ if not args.credits_opt:
         "ra": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "rain.png")))
     }
 
-    random.seed(args.seed_opt)  # seed debuggen voor ballon over fences linksonder
+    random.seed(args.seed_opt)
     x_maps, y_maps = args.x_split, args.y_split
     map_size_x, map_size_y = args.map_size_x * x_maps, args.map_size_y * y_maps
     screen_Size_X, screen_Size_Y = Map.TILE_SIZE * map_size_x, Map.TILE_SIZE * map_size_y
@@ -177,8 +171,8 @@ if not args.credits_opt:
     to_time = time.time()
     print("*creating landscape*")
     create_hills(random_map, x_offset, y_offset)
-    create_rivers(random_map)
-    create_beach(random_map, x_offset, y_offset)
+    create_rivers(random_map.ground_layer, random_map.tile_heights)
+    create_beach(random_map.ground_layer, random_map.tile_heights, x_offset, y_offset)
     add_random_ends(random_map, ("pa", 0, 0))
     create_hill_edges(random_map)
     house = time.time()
@@ -201,7 +195,7 @@ if not args.credits_opt:
     create_lanterns(random_map)
     spawn_truck(random_map, 0.05)
     spawn_rocks(random_map, 0.01)
-    # spawn_balloon(random_map)
+    spawn_balloon(random_map)
     grow_grass(random_map, random_map.tall_grass_coverage, x_offset, y_offset)
     create_rain(random_map, 0.1, random_map.rain_rate)
 
