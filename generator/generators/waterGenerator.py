@@ -4,7 +4,7 @@ from noise import snoise2
 
 
 # Creates rivers for pmap
-def create_rivers(pmap):
+def create_rivers(layer, height_map):
     # Chooses the right name for water tiles (pd_*)
     def apply_water_sprites():
 
@@ -13,9 +13,9 @@ def create_rivers(pmap):
 
             tiles_around = []
             for around in range(0, 9):
-                path_around = pmap.get_tile_type("ground_layer", x + (around % 3) - 1, y + math.floor(around / 3) - 1)
+                path_around = layer.get_tile_type((x + (around % 3) - 1, y + math.floor(around / 3) - 1))
                 if "pa" not in path_around and "wa" in path_around \
-                        or pmap.out_of_bounds(x + (around % 3) - 1, y + math.floor(around / 3) - 1):
+                        or layer.out_of_bounds(x + (around % 3) - 1, y + math.floor(around / 3) - 1):
                     tiles_around.append(1)
                 else:
                     tiles_around.append(0)
@@ -44,34 +44,34 @@ def create_rivers(pmap):
                 return "wa", 4, 1
             return "wa", 0, 0
 
-        for x, y in pmap.ground_layer.keys():
-            if "wa" == pmap.get_tile_type("ground_layer", x, y) or "ro" == pmap.ground_layer.get((x, y), ""):
-                pmap.ground_layer[(x, y)] = calculate_water_sprite(x, y)
+        for x, y in layer.get_ex_pos():
+            if "wa" == layer.get_tile_type((x, y)) or "ro" == layer.get_tile((x, y)):
+                layer.set_tile((x, y), calculate_water_sprite(x, y))
 
-    for y in range(0, pmap.height):
-        for x in range(0, pmap.width):
-            if pmap.tile_heights[(x, y)] == 0:
-                pmap.ground_layer[(x, y)] = ("wa", 0, 0)
+    for y in range(0, layer.sy):
+        for x in range(0, layer.sx):
+            if height_map[(x, y)] == 0:
+                layer.set_tile((x, y), ("wa", 0, 0))
 
     apply_water_sprites()
 
 
 # Creates sandy path around rivers; inside a perlin noise field
-def create_beach(pmap, x_offset, y_offset):
+def create_beach(layer, height_map, x_offset, y_offset):
     def check_for_water_around(x, y, beach_width):
         for around in range(0, (beach_width + 2) ** 2):
             check_x = x + around % (beach_width + 2) - beach_width + 1
             check_y = y + around // (beach_width + 2) - beach_width + 1
-            if pmap.get_tile_type("ground_layer", check_x, check_y) == "wa":
+            if layer.get_tile_type((check_x, check_y)) == "wa":
                 return True
         return False
 
     octaves = 1
     freq = 100
-    for y in range(0, pmap.height):
-        for x in range(0, pmap.width):
+    for y in range(0, layer.sy):
+        for x in range(0, layer.sx):
             beach = snoise2((x + x_offset) / freq, (y + y_offset) / freq, octaves) + 0.5 > 0.5
-            if beach and ((x, y) not in pmap.ground_layer.keys()
-                          and pmap.tile_heights.get((x, y), 0) == 1
+            if beach and ((x, y) not in layer.get_ex_pos()
+                          and height_map.get((x, y), 0) == 1
                           and check_for_water_around(x, y, 4)):
-                pmap.ground_layer[(x, y)] = ("pa", 0, 9)
+                layer.set_tile((x, y), ("pa", 0, 9))

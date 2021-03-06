@@ -3,71 +3,17 @@ import datetime
 import json
 import os
 import random
-import sys
 import time
 from os import path
 from threading import Thread
 
 from PIL import Image
 
-import utilities.inputs as inputs
-import utilities.spriteSheetManager as ssm
-from generators.buildingGenerator import spawn_house, add_random_ends
-from generators.decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
-from generators.heightMapGenerator import create_hills, create_hill_edges
-from generators.npcGenerator import spawn_npc
-from generators.pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
-from generators.plantGenerator import create_trees, grow_grass, create_rain
-from generators.pokemonGenerator import spawn_pokemons
-from generators.waterGenerator import create_rivers, create_beach
-
-
-def render2(pmap, layer, draw_sheet):
-    def try_get_tile(curr_tile):
-        try:
-            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2], curr_tile[3])
-        except IndexError:
-            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2])
-        return img
-
-    previous_tile, previous_img = None, None
-    for sw_name in sheet_writers.keys():
-        sheet_writer = sheet_writers[sw_name]
-        for tile_x, tile_y in getattr(pmap, layer).keys():
-            current_tile = pmap.get_tile(layer, tile_x, tile_y)
-            if sw_name == current_tile[0]:
-                if current_tile != previous_tile:
-                    try:
-                        tile_img = try_get_tile(current_tile)
-                        sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16)
-                        previous_tile, previous_img = pmap.get_tile(layer, tile_x, tile_y), tile_img
-                    except KeyError:
-                        pass
-                else:
-                    sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16)
-
-
-def render_npc(pmap, layer, draw_sheet):
-    def try_get_tile(curr_tile):
-        try:
-            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2], curr_tile[3])
-        except IndexError:
-            img = sheet_writer.get_tile(curr_tile[1], curr_tile[2])
-        return img
-
-    previous_tile, previous_img = None, None
-    sheet_writer = ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "npc.png")), 20, 23)
-    for tile_x, tile_y in getattr(pmap, layer).keys():
-        current_tile = pmap.get_tile(layer, tile_x, tile_y)
-        if current_tile != previous_tile:
-            try:
-                tile_img = try_get_tile(current_tile)
-                sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
-                previous_tile, previous_img = pmap.get_tile(layer, tile_x, tile_y), tile_img
-            except KeyError:
-                pass
-        else:
-            sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
+import image.spriteSheetManager as ssm
+import utilities.parser as inputs
+from Layers import *
+from generators import *
+from image.render import render2, render_npc
 
 
 def tupleToArray(tup):
@@ -99,44 +45,28 @@ class Map:
         self.front_doors = []
         self.end_points = []
         self.tile_heights = dict()
-        self.ground_layer = dict()
-        self.secondary_ground = dict()
-        self.buildings = dict()
-        self.rain = dict()
-        self.decoration_layer = dict()
-        self.npc_layer = dict()
-        self.height_map = dict()
-        self.grass_layer = dict()
+        size = (self.width, self.height)
+        self.ground = Layer("ground", size)
+        self.ground2 = Layer("ground2", size)
+        self.buildings = Layer("buildings", size)
+        self.rain = Layer("rain", size)
+        self.decoration = Layer("decoration", size)
+        self.npc = Layer("npc", size)
+        self.hills = Layer("hills", size)
+        self.plants = Layer("plants", size)
 
         self.highest_path = 0
 
-    def out_of_bounds(self, x, y):
-        return x < 0 or y < 0 or x >= self.width or y >= self.height
-
-    def get_tile(self, layer, x, y, default=""):
-        try:
-            return getattr(self, layer)[(x, y)]
-        except KeyError:
-            return default
-        except AttributeError as a:
-            print(a)
-
-    def get_tile_type(self, layer, x, y, default=""):
-        try:
-            return self.get_tile(layer, x, y, default)[0]
-        except IndexError:
-            return default
-
     def toJSON(self):
         resp = {
-            'buildings': dictToObject(self.buildings),
-            'ground_layer': dictToObject(self.ground_layer),
-            'secondary_ground': dictToObject(self.secondary_ground),
-            'rain': dictToObject(self.rain),
-            'decoration_layer': dictToObject(self.decoration_layer),
-            'npc_layer': dictToObject(self.npc_layer),
-            'height_map': dictToObject(self.height_map),
-            'grass_layer': dictToObject(self.grass_layer),
+            'buildings': dictToObject(self.buildings.get_tiles()),
+            'ground_layer': dictToObject(self.ground.get_tiles()),
+            'secondary_ground': dictToObject(self.ground2.get_tiles()),
+            'rain': dictToObject(self.rain.get_tiles()),
+            'decoration_layer': dictToObject(self.decoration.get_tiles()),
+            'npc_layer': dictToObject(self.npc.get_tiles()),
+            'height_map': dictToObject(self.hills.get_tiles()),
+            'grass_layer': dictToObject(self.plants.get_tiles()),
             'tile_heights': dictToObject(self.tile_heights, False)
         }
         return json.dumps(resp, sort_keys=True, indent=2, separators=(',', ': '))
@@ -149,26 +79,14 @@ parser = inputs.make_parser()
 args = parser.parse_args()
 
 if not args.credits_opt:
-    sheet_writers = {
-        "pa": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "path.png"))),
-        "wa": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "water.png"))),
-        "na": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "nature.png"))),
-        "hi": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "hills.png"))),
-        "ro": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "road.png"))),
-        "ho": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "houses.png"))),
-        "fe": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "fences.png"))),
-        "po": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "pokemon.png"))),
-        "de": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "decoration.png"))),
-        "ra": ssm.SpriteSheetWriter(Image.open(os.path.join("resources", "rain.png")))
-    }
 
-    random.seed(args.seed_opt)  # seed debuggen voor ballon over fences linksonder
+    random.seed(args.seed_opt)  # 7192208489443471800
     x_maps, y_maps = args.x_split, args.y_split
     map_size_x, map_size_y = args.map_size_x * x_maps, args.map_size_y * y_maps
     screen_Size_X, screen_Size_Y = Map.TILE_SIZE * map_size_x, Map.TILE_SIZE * map_size_y
     x_offset, y_offset = random.randint(0, 1000000), random.randint(0, 1000000)
 
-    random_map = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2)
+    rmap = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2)
 
     if args.headless_opt: os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -176,43 +94,43 @@ if not args.credits_opt:
 
     to_time = time.time()
     print("*creating landscape*")
-    create_hills(random_map, x_offset, y_offset)
-    create_rivers(random_map)
-    create_beach(random_map, x_offset, y_offset)
-    add_random_ends(random_map, ("pa", 0, 0))
-    create_hill_edges(random_map)
-    house = time.time()
-    spawn_house(random_map, "pokecenter", ("pa", 0, 0))
-    spawn_house(random_map, "pokemart", ("pa", 0, 0))
-    spawn_house(random_map, "gym", ("pa", 0, 0))
-    spawn_house(random_map, "powerplant", ("pa", 0, 0))
+    rmap.tile_heights = generate_height_map((rmap.width, rmap.height), rmap.max_hill_height, x_offset, y_offset)
+    create_rivers(rmap.ground, rmap.tile_heights)
+    create_beach(rmap.ground, rmap.tile_heights, x_offset, y_offset)
+    add_random_ends(rmap, ("pa", 0, 0))
+    create_hill_edges(rmap, rmap.ground, rmap.tile_heights)
+    # house = time.time()
+    spawn_house(rmap, rmap.buildings, "pokecenter", ("pa", 0, 0))
+    spawn_house(rmap, rmap.buildings, "pokemart", ("pa", 0, 0))
+    spawn_house(rmap, rmap.buildings, "gym", ("pa", 0, 0))
+    spawn_house(rmap, rmap.buildings, "powerplant", ("pa", 0, 0))
     for x in range(1):
         for house_type in range(22):
-            spawn_house(random_map, house_type, ("pa", 0, 0))
-    random.shuffle(random_map.front_doors)
-    random_map.front_doors += random_map.end_points
-    generate_dijkstra_path(random_map, ("pa", 0, 0))
-    apply_path_sprites(random_map)
-
-    create_hill_edges(random_map, update=True)
-    create_trees(random_map, random_map.tree_coverage, x_offset, y_offset)
-    all_pokemon = spawn_pokemons(random_map)
-    spawn_npc(random_map, 1)
-    create_lanterns(random_map)
-    spawn_truck(random_map, 0.05)
-    spawn_rocks(random_map, 0.01)
-    # spawn_balloon(random_map)
-    grow_grass(random_map, random_map.tall_grass_coverage, x_offset, y_offset)
-    create_rain(random_map, 0.1, random_map.rain_rate)
+            spawn_house(rmap, rmap.buildings, house_type, ("pa", 0, 0))
+    random.shuffle(rmap.front_doors)
+    rmap.front_doors += rmap.end_points
+    generate_dijkstra_path(rmap, rmap.ground, ("pa", 0, 0))
+    apply_path_sprites(rmap, rmap.ground)
+    #
+    create_hill_edges(rmap, rmap.ground, rmap.tile_heights, update=True)
+    create_trees(rmap, rmap.ground, rmap.tree_coverage, x_offset, y_offset)
+    all_pokemon = spawn_pokemons(rmap)
+    spawn_npc(rmap, rmap.npc, 1)
+    create_lanterns(rmap)
+    spawn_truck(rmap, 0.05)
+    spawn_rocks(rmap, 0.01)
+    spawn_balloon(rmap)
+    grow_grass(rmap, rmap.tall_grass_coverage, x_offset, y_offset)
+    create_rain(rmap, rmap.rain, 0.1, rmap.rain_rate)
 
     print("*rendering*")
-    render2(random_map, "grass_layer", visual.drawable())
-    render2(random_map, "ground_layer", visual.drawable())
-    render2(random_map, "secondary_ground", visual.drawable())
-    render2(random_map, "buildings", visual.drawable())
-    render_npc(random_map, "npc_layer", visual.drawable())
-    render2(random_map, "decoration_layer", visual.drawable())
-    render2(random_map, "rain", visual.drawable())
+    render2(rmap.plants, visual.drawable())
+    render2(rmap.ground, visual.drawable())
+    render2(rmap.ground2, visual.drawable())
+    render2(rmap.buildings, visual.drawable())
+    render_npc(rmap.npc, visual.drawable())
+    render2(rmap.decoration, visual.drawable())
+    render2(rmap.rain, visual.drawable())
     print("time = " + str(time.time() - to_time) + " seconds")
     print("Seed: " + str(args.seed_opt))
 
@@ -224,7 +142,7 @@ if not args.credits_opt:
             save = input("Save this image? (y/n/w): ")
         file_n = datetime.datetime.now().strftime("%G-%m-%d %H-%M-%S")
         if args.export_opt:
-            json_string = random_map.toJSON()
+            json_string = rmap.toJSON()
             file_n = open(path.join("saved images", file_n + ".json"), "w")
             file_n.write(json_string)
             file_n.close()
@@ -264,7 +182,7 @@ else:
         "C R E D I T S" + "\n\n" +
         "* Map generator by Klaas" + "\n" +
         "* Javascript stuff and various assistance by Dirk" + "\n" +
-        "* inputs argparser by Bethune Bryant" + "\n" +
+        "* argparser by Bethune Bryant" + "\n" +
         "* Rocket balloon by Akhera" + "\n" +
         "* Npc sprites ripped by Silentninja" + "\n\n" +
         "(Cool ideas and some inspiration from nice redditors on r/pokemon)")
