@@ -36,19 +36,14 @@ def render_npc(layer, draw_sheet):
             img = sheet_writer.get_tile(curr_tile[1], curr_tile[2])
         return img
 
-    previous_tile, previous_img = None, None
     sheet_writer = SpriteSheetWriter(Image.open(os.path.join("resources", "npc.png")), 20, 23)
     for tile_x, tile_y in layer.get_ex_pos():
         current_tile = layer.get_tile((tile_x, tile_y))
-        if current_tile != previous_tile:
-            try:
-                tile_img = try_get_tile(current_tile)
-                sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
-                previous_tile, previous_img = layer.get_tile((tile_x, tile_y)), tile_img
-            except KeyError:
-                pass
-        else:
-            sheet_writer.draw_tile(previous_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
+        try:
+            tile_img = try_get_tile(current_tile)
+            sheet_writer.draw_tile(tile_img, draw_sheet, tile_x * 16, tile_y * 16 - 7)
+        except KeyError:
+            pass
 
 
 sheet_writers = {

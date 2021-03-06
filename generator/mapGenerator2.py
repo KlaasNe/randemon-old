@@ -80,7 +80,7 @@ args = parser.parse_args()
 
 if not args.credits_opt:
 
-    random.seed(args.seed_opt)  # 7192208489443471800
+    random.seed(args.seed_opt)
     x_maps, y_maps = args.x_split, args.y_split
     map_size_x, map_size_y = args.map_size_x * x_maps, args.map_size_y * y_maps
     screen_Size_X, screen_Size_Y = Map.TILE_SIZE * map_size_x, Map.TILE_SIZE * map_size_y
