@@ -15,6 +15,7 @@ def generate_height_map(size, max_height, off_x, off_y):
             height_map[(x, y)] = abs(floor(noise * max_height + 1))
     return height_map
 
+
 # Creates a visual height map which can be rendered
 # It's a feature for debugging (pls don't set max height over 15 when using this)
 def generate_visual_height_map(pmap):

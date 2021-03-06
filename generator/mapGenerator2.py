@@ -9,10 +9,10 @@ from threading import Thread
 
 from PIL import Image
 
-import utilities.parser as inputs
 import image.spriteSheetManager as ssm
-from generators import *
+import utilities.parser as inputs
 from Layers import *
+from generators import *
 from image.render import render2, render_npc
 
 
@@ -80,7 +80,7 @@ args = parser.parse_args()
 
 if not args.credits_opt:
 
-    random.seed(args.seed_opt)
+    random.seed(args.seed_opt)  # 7192208489443471800
     x_maps, y_maps = args.x_split, args.y_split
     map_size_x, map_size_y = args.map_size_x * x_maps, args.map_size_y * y_maps
     screen_Size_X, screen_Size_Y = Map.TILE_SIZE * map_size_x, Map.TILE_SIZE * map_size_y
@@ -97,7 +97,7 @@ if not args.credits_opt:
     rmap.tile_heights = generate_height_map((rmap.width, rmap.height), rmap.max_hill_height, x_offset, y_offset)
     create_rivers(rmap.ground, rmap.tile_heights)
     create_beach(rmap.ground, rmap.tile_heights, x_offset, y_offset)
-    # add_random_ends(rmap, ("pa", 0, 0))
+    add_random_ends(rmap, ("pa", 0, 0))
     create_hill_edges(rmap, rmap.ground, rmap.tile_heights)
     # house = time.time()
     spawn_house(rmap, rmap.buildings, "pokecenter", ("pa", 0, 0))
@@ -107,30 +107,30 @@ if not args.credits_opt:
     for x in range(1):
         for house_type in range(22):
             spawn_house(rmap, rmap.buildings, house_type, ("pa", 0, 0))
-    # random.shuffle(rmap.front_doors)
-    # rmap.front_doors += rmap.end_points
-    # generate_dijkstra_path(rmap, ("pa", 0, 0))
-    # apply_path_sprites(rmap)
+    random.shuffle(rmap.front_doors)
+    rmap.front_doors += rmap.end_points
+    generate_dijkstra_path(rmap, rmap.ground, ("pa", 0, 0))
+    apply_path_sprites(rmap, rmap.ground)
     #
-    # create_hill_edges(rmap, update=True)
-    # create_trees(rmap, rmap.tree_coverage, x_offset, y_offset)
-    # all_pokemon = spawn_pokemons(rmap)
-    # spawn_npc(rmap, 1)
-    # create_lanterns(rmap)
-    # spawn_truck(rmap, 0.05)
-    # spawn_rocks(rmap, 0.01)
-    # spawn_balloon(rmap)
-    # grow_grass(rmap, rmap.tall_grass_coverage, x_offset, y_offset)
-    # create_rain(rmap, 0.1, rmap.rain_rate)
+    create_hill_edges(rmap, rmap.ground, rmap.tile_heights, update=True)
+    create_trees(rmap, rmap.ground, rmap.tree_coverage, x_offset, y_offset)
+    all_pokemon = spawn_pokemons(rmap)
+    spawn_npc(rmap, rmap.npc, 1)
+    create_lanterns(rmap)
+    spawn_truck(rmap, 0.05)
+    spawn_rocks(rmap, 0.01)
+    spawn_balloon(rmap)
+    grow_grass(rmap, rmap.tall_grass_coverage, x_offset, y_offset)
+    create_rain(rmap, rmap.rain, 0.1, rmap.rain_rate)
 
     print("*rendering*")
     render2(rmap.plants, visual.drawable())
     render2(rmap.ground, visual.drawable())
     render2(rmap.ground2, visual.drawable())
     render2(rmap.buildings, visual.drawable())
-    # render_npc(rmap, "npc_layer", visual.drawable())
-    # render2(rmap, "decoration_layer", visual.drawable())
-    # render2(rmap, "rain", visual.drawable())
+    render_npc(rmap.npc, visual.drawable())
+    render2(rmap.decoration, visual.drawable())
+    render2(rmap.rain, visual.drawable())
     print("time = " + str(time.time() - to_time) + " seconds")
     print("Seed: " + str(args.seed_opt))
 

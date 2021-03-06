@@ -209,7 +209,7 @@ def add_random_ends(pmap, path_type):
         max_height = 0
         for y_around in range(end_y - 2, end_y + 3):
             for x_around in range(end_x - 3, end_x + 3):
-                if "fe" == pmap.get_tile_type("secondary_ground", x_around, y_around):
+                if "fe" == pmap.ground2.get_tile_type((x_around, y_around)):
                     max_height = -1
                     break
                 else:
@@ -217,8 +217,8 @@ def add_random_ends(pmap, path_type):
 
         if max_height > 1:
             pmap.end_points.append((end_x, end_y))
-            pmap.ground_layer[(end_x, end_y)] = path_type
+            pmap.ground.set_tile((end_x, end_y), path_type)
             for y_around in range(end_y - 2, end_y + 3):
                 for x_around in range(end_x - 3, end_x + 3):
-                    if not pmap.out_of_bounds(x_around, y_around) and "wa" != pmap.get_tile_type("ground_layer", x_around, y_around):
+                    if not pmap.ground2.out_of_bounds(x_around, y_around) and "wa" != pmap.ground.get_tile_type((x_around, y_around)):
                         pmap.tile_heights[(x_around, y_around)] = max_height

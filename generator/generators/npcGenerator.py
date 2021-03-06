@@ -13,33 +13,33 @@ outside_Npc = [1, 17, 20, 21, 45]  # Npcs to be spawned outside on grass, not on
 
 # Spawn npc over the map
 # If path_only is set to True, npcs will only spawn on path
-def spawn_npc(pmap, population, path_only=False):
+def spawn_npc(pmap, layer, population, path_only=False):
     coord = random_npc_coordinates(pmap, population)
     for co in coord:
         x, y = co
-        if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path and (x, y) not in pmap.buildings.keys() and "hi" != pmap.get_tile_type("ground_layer", x, y) and (x, y) not in pmap.secondary_ground.keys():
+        if pmap.tile_heights.get((x, y), -1) <= pmap.highest_path and (x, y) not in pmap.buildings.get_ex_pos() and "hi" != pmap.ground.get_tile_type((x, y)) and (x, y) not in pmap.ground2.get_ex_pos():
             if path_only:
-                if is_actual_path(pmap, x, y):
+                if is_actual_path(pmap.ground, x, y):
                     npc = get_path_npc()
-                    set_npc(pmap, npc, x, y)
+                    set_npc(layer, npc, x, y)
             else:
                 npc = get_npc(pmap, x, y)
                 if npc is not None:
-                    set_npc(pmap, npc, x, y)
+                    set_npc(pmap, pmap.npc, npc, x, y)
 
 
 # Spawns an npc on a given set of coordinates, each npc looking at a certain direction
 # If an npc is looking to the right (direction == 2), another npc can be spawned adjacent to previous looking at them
 # as if they're talking
-def set_npc(pmap, npc, x, y):
+def set_npc(pmap, layer, npc, x, y):
     direction = 0 if npc == 54 else random.randint(0, 3)  # Npcs nr 50 only has 1 direction
-    pmap.npc_layer[(x, y)] = ("np", npc % 5 * 4 + direction, npc // 5)
-    if direction == 1 and is_actual_path(pmap, x, y):
-        if (x + 1, y) not in pmap.npc_layer.keys() and (x + 1, y) not in pmap.buildings.keys() and "hi" != pmap.ground_layer.get((x + 1, y), "") and "fe" != pmap.get_tile_type("ground_layer", x + 1, y) and (x + 1, y) not in pmap.secondary_ground.keys():
+    layer.set_tile((x, y), ("np", npc % 5 * 4 + direction, npc // 5))
+    if direction == 1 and is_actual_path(pmap.ground, x, y):
+        if (x + 1, y) not in layer.get_ex_pos() and (x + 1, y) not in pmap.buildings.get_ex_pos() and "hi" != pmap.ground.get_tile((x + 1, y)) and "fe" != pmap.ground.get_tile(x + 1, y) and (x + 1, y) not in pmap.ground2.get_ex_pos():
             snpc = get_path_npc()
             while snpc == 54:
                 snpc = get_path_npc()
-            pmap.npc_layer[(x + 1, y)] = ("np", snpc % 5 * 4 + 3, snpc // 5)
+            layer.set_tile((x + 1, y), ("np", snpc % 5 * 4 + 3, snpc // 5))
 
 
 # Determines what kind of npc should be spawned on a certain set of coordinates
@@ -47,15 +47,15 @@ def get_npc(pmap, x, y):
     WATER_LVL = 0.2
     npc_number = None
     if not pmap.raining:
-        if random.random() < WATER_LVL and "wa" == pmap.get_tile_type("ground_layer", x, y) and is_inside_cluster(pmap, x, y, 20, 1):
+        if random.random() < WATER_LVL and "wa" == pmap.ground.get_tile_type((x, y)) and is_inside_cluster(pmap, x, y, 20, 1):
             npc_number = get_water_npc()
-        elif "ro" in pmap.ground_layer.get((x, y), ""):
+        elif "ro" == pmap.ground.get_tile((x, y)):
             npc_number = get_bridge_npc()
-        elif random.random() < WATER_LVL and 3 == get_path_type(pmap, x, y) in pmap.ground_layer.get((x, y), "") and is_inside_cluster(pmap, x, y, 20, 1):
+        elif random.random() < WATER_LVL and 3 == get_path_type(pmap.ground, x, y) in pmap.ground.get_tile((x, y)) and is_inside_cluster(pmap, x, y, 20, 1):
             npc_number = get_shore_npc()
-    if (x, y) not in pmap.ground_layer.keys():
+    if (x, y) not in pmap.ground.get_ex_pos():
         npc_number = get_outside_npc()
-    elif is_actual_path(pmap, x, y):
+    elif is_actual_path(pmap.ground, x, y):
         npc_number = get_path_npc()
     return npc_number
 
