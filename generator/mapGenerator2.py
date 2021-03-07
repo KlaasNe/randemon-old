@@ -121,7 +121,7 @@ if not args.credits_opt:
     all_pokemon = spawn_pokemons(rmap)
     spawn_npc(rmap, rmap.npc, 1)
     create_lanterns(rmap)
-    # spawn_truck(rmap, 0.05)
+    spawn_truck(rmap, 0.05)
     spawn_rocks(rmap, 0.01)
     spawn_umbrellas(rmap)
     spawn_balloon(rmap)
