@@ -11,6 +11,7 @@ from PIL import Image
 
 import image.spriteSheetManager as ssm
 import utilities.parser as inputs
+from utilities import *
 from Layers import *
 from generators import *
 from image.render import render2, render_npc
@@ -93,21 +94,23 @@ if not args.credits_opt:
 
     visual = ssm.DrawSheet(screen_Size_X, screen_Size_Y)
 
-    to_time = time.time()
+    to_time = time()
     print("*creating landscape*")
     rmap.tile_heights = generate_height_map((rmap.width, rmap.height), rmap.max_hill_height, x_offset, y_offset)
     create_rivers(rmap.ground, rmap.tile_heights)
     create_beach(rmap.ground, rmap.tile_heights, x_offset, y_offset)
     add_random_ends(rmap, path_type)
     create_hill_edges(rmap, rmap.ground, rmap.tile_heights)
-    house = time.time()
+    # house = time()
     spawn_house(rmap, rmap.buildings, "pokecenter", path_type)
     spawn_house(rmap, rmap.buildings, "pokemart", path_type)
     spawn_house(rmap, rmap.buildings, "gym", path_type)
     spawn_house(rmap, rmap.buildings, "powerplant", path_type)
     for x in range(1):
-        for house_type in range(22):
+        for osso in range(22):
+            house_type = random.randint(0, 21)
             spawn_house(rmap, rmap.buildings, house_type, path_type)
+    # print("time = " + str(time() - house) + " seconds")
     random.shuffle(rmap.front_doors)
     rmap.front_doors += rmap.end_points
     generate_dijkstra_path(rmap, rmap.ground, path_type)
@@ -118,7 +121,7 @@ if not args.credits_opt:
     all_pokemon = spawn_pokemons(rmap)
     spawn_npc(rmap, rmap.npc, 1)
     create_lanterns(rmap)
-    spawn_truck(rmap, 0.05)
+    # spawn_truck(rmap, 0.05)
     spawn_rocks(rmap, 0.01)
     spawn_umbrellas(rmap)
     spawn_balloon(rmap)
@@ -133,7 +136,7 @@ if not args.credits_opt:
     render_npc(rmap.npc, visual.drawable())
     render2(rmap.decoration, visual.drawable())
     render2(rmap.rain, visual.drawable())
-    print("time = " + str(time.time() - to_time) + " seconds")
+    print("time = " + str(time() - to_time) + " seconds")
     print("Seed: " + str(args.seed_opt))
 
 
