@@ -8,10 +8,10 @@ from generators.pathGenerator import is_actual_path, get_path_type
 def spawn_truck(pmap, odds):
     for x in range(pmap.width):
         for y in range(pmap.height):
-            if random.random() < odds and check_for_ground(pmap.ground, x, y, 1, 3) and is_actual_path(pmap.ground, x, y + 2) and is_actual_path(pmap.ground, x + 2, y + 2):
+            if random.random() < odds and pmap.ground.empty_area((x, y), (x + 2, y + 1)) and is_actual_path(pmap.ground, x, y + 2) and is_actual_path(pmap.ground, x + 2, y + 2):
                 if check_for_building(pmap.buildings, x, y, 3, 3) and flat_surface(pmap, x, y + 1, 3, 2) and check_for_decoration(pmap.decoration, x, y, 3, 3):
-                    for truck_tile in range(9):
-                        pmap.ground2.set_tile((x + truck_tile % 3, y + math.floor(truck_tile / 3)), ("de", 7 + truck_tile % 3, truck_tile // 3))
+                    for truck_tile in range(6):
+                        pmap.decoration.set_tile((x + truck_tile % 3, y + math.floor(truck_tile / 3)), ("de", 7 + truck_tile % 3, truck_tile // 3))
                     return
 
 
@@ -46,7 +46,7 @@ def check_for_ground(layer, x, y, x_size, y_size):
 def check_for_decoration(layer, x, y, x_size, y_size):
     for check_y in range(y, y + y_size + 1):
         for check_x in range(x, x + x_size + 1):
-            if layer.out_of_bounds(check_x, check_y) or (check_x, check_y) in layer.decoration_layer.keys():
+            if layer.out_of_bounds(check_x, check_y) or (check_x, check_y) in layer.get_ex_pos():
                 return False
     return True
 
