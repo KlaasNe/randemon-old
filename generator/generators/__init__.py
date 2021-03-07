@@ -1,6 +1,6 @@
 from .buildingGenerator import spawn_house, add_random_ends
-from .decorationGenerator import spawn_truck, spawn_rocks, spawn_balloon
-from .heightMapGenerator import generate_height_map
+from .decorationGenerator import *
+from .heightMapGenerator import *
 from .npcGenerator import spawn_npc
 from .pathGenerator import apply_path_sprites, generate_dijkstra_path, create_lanterns
 from .plantGenerator import create_trees, grow_grass, create_rain

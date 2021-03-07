@@ -60,8 +60,8 @@ def create_rivers(layer, height_map):
 def create_beach(layer, height_map, x_offset, y_offset):
     def check_for_water_around(x, y, beach_width):
         for around in range(0, (beach_width + 2) ** 2):
-            check_x = x + around % (beach_width + 2) - beach_width + 1
-            check_y = y + around // (beach_width + 2) - beach_width + 1
+            check_x = x + around % (beach_width + 2) - beach_width
+            check_y = y + around // (beach_width + 2) - beach_width
             if layer.get_tile_type((check_x, check_y)) == "wa":
                 return True
         return False

@@ -47,11 +47,11 @@ def get_npc(pmap, x, y):
     WATER_LVL = 0.2
     npc_number = None
     if not pmap.raining:
-        if random.random() < WATER_LVL and "wa" == pmap.ground.get_tile_type((x, y)) and is_inside_cluster(pmap, x, y, 20, 1):
+        if random.random() < WATER_LVL and "wa" == pmap.ground.get_tile_type((x, y)) and is_inside_cluster(pmap, x, y, 8, 1):
             npc_number = get_water_npc()
         elif "ro" == pmap.ground.get_tile((x, y)):
             npc_number = get_bridge_npc()
-        elif random.random() < WATER_LVL and 3 == get_path_type(pmap.ground, x, y) in pmap.ground.get_tile((x, y)) and is_inside_cluster(pmap, x, y, 20, 1):
+        elif random.random() < WATER_LVL and 3 == get_path_type(pmap.ground, x, y) in pmap.ground.get_tile((x, y)) and is_inside_cluster(pmap, x, y, 8, 1):
             npc_number = get_shore_npc()
     if (x, y) not in pmap.ground.get_ex_pos():
         npc_number = get_outside_npc()

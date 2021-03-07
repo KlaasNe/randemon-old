@@ -85,6 +85,7 @@ if not args.credits_opt:
     map_size_x, map_size_y = args.map_size_x * x_maps, args.map_size_y * y_maps
     screen_Size_X, screen_Size_Y = Map.TILE_SIZE * map_size_x, Map.TILE_SIZE * map_size_y
     x_offset, y_offset = random.randint(0, 1000000), random.randint(0, 1000000)
+    path_type = ("pa", 0, 0)
 
     rmap = Map(map_size_x, map_size_y, args.max_hill_height, args.tall_grass_coverage, args.tree_coverage, 0.2)
 
@@ -97,21 +98,21 @@ if not args.credits_opt:
     rmap.tile_heights = generate_height_map((rmap.width, rmap.height), rmap.max_hill_height, x_offset, y_offset)
     create_rivers(rmap.ground, rmap.tile_heights)
     create_beach(rmap.ground, rmap.tile_heights, x_offset, y_offset)
-    add_random_ends(rmap, ("pa", 0, 0))
+    add_random_ends(rmap, path_type)
     create_hill_edges(rmap, rmap.ground, rmap.tile_heights)
-    # house = time.time()
-    spawn_house(rmap, rmap.buildings, "pokecenter", ("pa", 0, 0))
-    spawn_house(rmap, rmap.buildings, "pokemart", ("pa", 0, 0))
-    spawn_house(rmap, rmap.buildings, "gym", ("pa", 0, 0))
-    spawn_house(rmap, rmap.buildings, "powerplant", ("pa", 0, 0))
+    house = time.time()
+    spawn_house(rmap, rmap.buildings, "pokecenter", path_type)
+    spawn_house(rmap, rmap.buildings, "pokemart", path_type)
+    spawn_house(rmap, rmap.buildings, "gym", path_type)
+    spawn_house(rmap, rmap.buildings, "powerplant", path_type)
     for x in range(1):
         for house_type in range(22):
-            spawn_house(rmap, rmap.buildings, house_type, ("pa", 0, 0))
+            spawn_house(rmap, rmap.buildings, house_type, path_type)
     random.shuffle(rmap.front_doors)
     rmap.front_doors += rmap.end_points
-    generate_dijkstra_path(rmap, rmap.ground, ("pa", 0, 0))
+    generate_dijkstra_path(rmap, rmap.ground, path_type)
     apply_path_sprites(rmap, rmap.ground)
-    #
+
     create_hill_edges(rmap, rmap.ground, rmap.tile_heights, update=True)
     create_trees(rmap, rmap.ground, rmap.tree_coverage, x_offset, y_offset)
     all_pokemon = spawn_pokemons(rmap)
@@ -119,6 +120,7 @@ if not args.credits_opt:
     create_lanterns(rmap)
     spawn_truck(rmap, 0.05)
     spawn_rocks(rmap, 0.01)
+    spawn_umbrellas(rmap)
     spawn_balloon(rmap)
     grow_grass(rmap, rmap.tall_grass_coverage, x_offset, y_offset)
     create_rain(rmap, rmap.rain, 0.1, rmap.rain_rate)
@@ -184,5 +186,6 @@ else:
         "* Javascript stuff and various assistance by Dirk" + "\n" +
         "* argparser by Bethune Bryant" + "\n" +
         "* Rocket balloon by Akhera" + "\n" +
+        "* Some sprites from a spritesheet ripped by Heartlessdragoon" + "\n" +
         "* Npc sprites ripped by Silentninja" + "\n\n" +
         "(Cool ideas and some inspiration from nice redditors on r/pokemon)")
