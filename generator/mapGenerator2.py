@@ -7,8 +7,6 @@ import time
 from os import path
 from threading import Thread
 
-from PIL import Image
-
 import image.spriteSheetManager as ssm
 import utilities.parser as inputs
 from utilities import *
@@ -101,7 +99,7 @@ if not args.credits_opt:
     create_beach(rmap.ground, rmap.tile_heights, x_offset, y_offset)
     add_random_ends(rmap, path_type)
     create_hill_edges(rmap, rmap.ground, rmap.tile_heights)
-    # house = time()
+    # # house = time()
     spawn_house(rmap, rmap.buildings, "pokecenter", path_type)
     spawn_house(rmap, rmap.buildings, "pokemart", path_type)
     spawn_house(rmap, rmap.buildings, "gym", path_type)
@@ -118,6 +116,7 @@ if not args.credits_opt:
 
     create_hill_edges(rmap, rmap.ground, rmap.tile_heights, update=True)
     create_trees(rmap, rmap.ground, rmap.tree_coverage, x_offset, y_offset)
+    # grow_snake_bushes(rmap.ground, 0.1, 0.9)
     all_pokemon = spawn_pokemons(rmap)
     spawn_npc(rmap, rmap.npc, 1)
     create_lanterns(rmap)
