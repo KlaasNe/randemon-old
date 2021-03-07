@@ -1,7 +1,7 @@
 import math
 import random
 
-from generators.pathGenerator import is_actual_path
+from generators.pathGenerator import is_actual_path, get_path_type
 
 
 # Spawns a truck on top of path
@@ -74,3 +74,15 @@ def spawn_balloon(pmap):
                     else:
                         pmap.decoration.set_tile((x + balloon_tile % 3, y + balloon_tile // 3), ("de", balloon_tile % 3, balloon_tile // 3))
                 return
+
+
+def spawn_umbrellas(pmap):
+    if not pmap.raining:
+        for x, y in pmap.ground.get_ex_pos():
+            if get_path_type(pmap.ground, x - 1, y) == 3 == get_path_type(pmap.ground, x + 2, y + 2):
+                if random.random() < 0.05 and pmap.ground2.empty_area((x, y), (x + 1, y + 2)):
+                    umb_type = random.randint(0, 2) * 3
+                    for uy in range(y, y + 3):
+                        for ux in range(x, x + 2):
+                            pmap.ground2.set_tile((ux, uy), ("de", ux - x + 10, uy - y + umb_type))
+

@@ -8,7 +8,7 @@ def generate_height_map(size, max_height, off_x, off_y):
     sx, sy = size
     height_map = dict()
     octaves = 2
-    freq = 80
+    freq = 50
     for y in range(0, sy):
         for x in range(0, sx):
             noise = snoise2((x // 4 + off_x) / freq, (y // 4 + off_y) / freq, octaves)

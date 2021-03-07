@@ -100,8 +100,8 @@ def spawn_pokemons(pmap):
                 if good_odds(odds) and get_path_type(pmap.ground, x, y) == 3:
                     shiny = 2 if random() < SHINY_PROBABILITY else 0
                     mirror = coinflip()
-                    pmap.decoration.set_tile((x, y), ("po", 6, 1 + shiny, mirror))
-                    pmap.decoration.set_tile((x, y - 1), ("po", 6, shiny, mirror))
+                    pmap.ground2.set_tile((x, y), ("po", 6, 1 + shiny, mirror))
+                    pmap.ground2.set_tile((x, y - 1), ("po", 6, shiny, mirror))
                 exceguttor = True
         return exceguttor
 
