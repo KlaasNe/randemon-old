@@ -1,3 +1,5 @@
+# I gave up and restarted this project [here](https://github.com/KlaasNe/Randemon-2)
+
 # randemon
 Landscape generator using the tileset of pokemon fire red
 
